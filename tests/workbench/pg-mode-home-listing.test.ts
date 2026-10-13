@@ -174,4 +174,74 @@ describe('home listing', () => {
     await expect(listStages()).rejects.toThrow(/403/);
     expect(mocks.listDocuments).not.toHaveBeenCalled();
   });
+
+  // The access-code gate answers every /api/* request with this exact 401
+  // until ACCESS_CODE is entered (middleware.ts). It is an expected pre-auth
+  // state, not a persistence outage, so the owner listings answer an empty
+  // list rather than throwing — otherwise a first-time visitor sees the
+  // "Persistence is unavailable" toast before they have even typed the code.
+  function accessCodeRequiredResponse() {
+    return new Response(
+      JSON.stringify({ success: false, errorCode: 'INVALID_REQUEST', error: 'Access code required' }),
+      { status: 401, headers: { 'Content-Type': 'application/json' } },
+    );
+  }
+
+  it('answers an empty course list for the access-code gate 401 instead of throwing', async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(accessCodeRequiredResponse());
+
+    const { listStages } = await import('@/lib/utils/stage-storage');
+    await expect(listStages()).resolves.toEqual([]);
+  });
+
+  it('answers an empty folder list for the access-code gate 401 instead of throwing', async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(accessCodeRequiredResponse());
+
+    const { listFolders } = await import('@/lib/utils/stage-storage');
+    await expect(listFolders()).resolves.toEqual([]);
+  });
+
+  it('still throws for a 401 that is not the access-code gate', async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ error: { code: 'INVALID_CREDENTIAL' } }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    const { listStages } = await import('@/lib/utils/stage-storage');
+    await expect(listStages()).rejects.toThrow(/401/);
+  });
+
+  it('mounts behind the access-code gate with no persistence warning', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url === '/api/stages' || url === '/api/folders') return accessCodeRequiredResponse();
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    await act(async () =>
+      root?.render(
+        createElement(Harness, {
+          onDiscovery: (value) => {
+            discovery = value;
+          },
+        }),
+      ),
+    );
+
+    // The gate has not let the request through yet, but that is not a
+    // persistence failure: the library mounts empty and ready, and no
+    // "Persistence is unavailable" toast is shown.
+    expect(discovery?.state).toBe('ready');
+    expect(discovery?.classrooms).toEqual([]);
+    expect(mocks.toastError).not.toHaveBeenCalled();
+  });
 });

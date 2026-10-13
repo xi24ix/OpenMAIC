@@ -718,6 +718,28 @@ async function performStageDeletion(stageId: string): Promise<void> {
 }
 
 /**
+ * Whether a response is the access-code gate refusing the request.
+ *
+ * `middleware.ts` answers every `/api/*` request with
+ * `401 { errorCode: 'INVALID_REQUEST', error: 'Access code required' }` until
+ * the visitor enters `ACCESS_CODE`. That is an expected, transient pre-auth
+ * state — not a persistence outage: `AccessCodeGuard` remounts the page tree
+ * (keyed on the grant count) the moment the code is accepted, re-firing these
+ * listings with the `openmaic_access` cookie. The owner listings therefore
+ * treat it as "nothing visible yet" and answer an empty list, so a first-time
+ * visitor is never told "Persistence is unavailable" for a request the gate
+ * simply had not let through yet. A different 401 (a refused owner credential)
+ * keeps its own shape and still throws.
+ */
+async function isAccessCodeRequired(res: Response): Promise<boolean> {
+  if (res.status !== 401) return false;
+  const body = (await res.json().catch(() => null)) as
+    | { error?: unknown; errorCode?: unknown }
+    | null;
+  return body?.error === 'Access code required' || body?.errorCode === 'INVALID_REQUEST';
+}
+
+/**
  * List the owner's courses, newest first.
  *
  * The generic `GET /api/persistence/documents` listing is deliberately refused
@@ -730,6 +752,7 @@ async function performStageDeletion(stageId: string): Promise<void> {
 export async function listStages(): Promise<StageListItem[]> {
   try {
     const res = await fetch('/api/stages', { credentials: 'include' });
+    if (await isAccessCodeRequired(res)) return [];
     if (!res.ok) {
       throw new Error(`Failed to list owner stages: HTTP ${res.status}`);
     }
@@ -1150,6 +1173,7 @@ function toFolderRecord(folder: FolderRecord): FolderRecord {
  */
 export async function listFolders(): Promise<FolderRecord[]> {
   const res = await fetch('/api/folders', { credentials: 'include' });
+  if (await isAccessCodeRequired(res)) return [];
   if (!res.ok) {
     throw new Error(`Failed to list owner folders: HTTP ${res.status}`);
   }
