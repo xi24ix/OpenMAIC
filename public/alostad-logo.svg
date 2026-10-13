@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 96">
+  <!-- Alostad horizontal lockup. The in-app lockup is rendered by
+       components/brand/alostad-logo.tsx (which uses the page's Cairo webfont);
+       this file exists for <img> / direct-URL consumers, where the wordmark
+       falls back to a system Arabic face. -->
+  <g>
+    <circle cx="46" cy="16" r="11.5" fill="#2f3b96"/>
+    <path d="M46 41 C 62 47 80 41 91 26 C 96 52 82 82 44 89 Z" fill="#2f3b96" stroke="#2f3b96" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M46 45 C 33 51 15 47 5 36 C 1 61 17 84 46 89 Z" fill="#2f3b96" stroke="#2f3b96" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M39 51 L 63 62 L 39 73 Z" fill="#f4796b" stroke="#f4796b" stroke-width="7" stroke-linejoin="round"/>
+  </g>
+  <text x="106" y="72" font-size="62" font-weight="800" fill="#2f3b96" font-family="Cairo, Tahoma, 'Segoe UI', sans-serif">أستاذ</text>
+</svg>

@@ -11,11 +11,14 @@
  * Two locales are written here — `workbenchEn` is the shape every other locale
  * is checked against, `workbenchZh` is its Chinese twin — and the remaining ten
  * are JSON overlays in `workbench-locales/`, merged by `workbenchResourceFor`
- * with English (or, for `zh-TW`, Simplified) underneath. So an untranslated key
+ * with English (or, for `zh-TW`, Simplified) underneath. Only `ar-SA` and
+ * `en-US` are reachable at runtime (Alostad is Arabic-first); the rest remain
+ * on disk for fixture/test coverage and upstream parity. So an untranslated key
  * degrades to a readable sentence rather than to `workbench.tool.label.x`, and
  * `tests/workbench/workbench-i18n.test.ts` holds the ten to the shape.
  */
 import workbenchArSA from './workbench-locales/ar-SA.json' with { type: 'json' };
+import { defaultLocale } from './types';
 import workbenchDeDE from './workbench-locales/de-DE.json' with { type: 'json' };
 import workbenchEsMX from './workbench-locales/es-MX.json' with { type: 'json' };
 import workbenchFrFR from './workbench-locales/fr-FR.json' with { type: 'json' };
@@ -111,7 +114,7 @@ export const workbenchEn = {
       upload: 'Upload skill',
       uploadZip: 'Upload a zip archive',
       uploadFolder: 'Upload a folder',
-      officialDownload: 'OpenMAIC official skill',
+      officialDownload: 'Alostad official skill',
       officialDownloadDesc:
         'Agent-guided SOP: import this skill into another agent workspace to get Live Demo classroom generation, local deployment, key configuration, classroom generation, and secondary development.',
       errNotZip: 'Only zip archives can be uploaded',
@@ -417,7 +420,7 @@ export const workbenchZh = {
       upload: '上传 skill',
       uploadZip: '上传 zip 包',
       uploadFolder: '上传文件夹',
-      officialDownload: 'OpenMAIC官方skill',
+      officialDownload: 'Alostad官方skill',
       officialDownloadDesc:
         '智能体引导式 SOP：将该skill导入其他智能体工作台，即可实现Live Demo 课堂生成、本地部署、密钥配置、课堂生成与二次开发等内容。',
       errNotZip: '只能上传 zip 包',
@@ -675,13 +678,13 @@ function readPath(value: unknown, path: readonly string[]): unknown {
 type WorkbenchResource = Record<string, unknown>;
 
 /**
- * The other ten locales.
+ * The non-English workbench overlay (Arabic-first Alostad: ar-SA only).
  *
- * `workbenchEn` is the shape and `workbenchZh` is its Chinese twin; every other
- * locale is a JSON overlay on one of those two, so a key that a locale has not
- * translated yet resolves to English (or, for `zh-TW`, to Simplified) instead of
- * to the key. Same precedence as i18next applies to `live-locales/*.json`, which
- * is what keeps the hook-free translator below and the React `t` in agreement.
+ * `workbenchEn` is the shape; the Arabic JSON overlay sits on top of it, so a
+ * key not yet translated resolves to English instead of to the key. Same
+ * precedence as i18next applies to `live-locales/*.json`, which is what keeps
+ * the hook-free translator below and the React `t` in agreement. Retired
+ * overlay files stay on disk for upstream parity but are not imported.
  */
 const localeOverrides: Record<string, WorkbenchResource> = {
   'zh-TW': workbenchZhTW,
@@ -738,4 +741,4 @@ export function createWorkbenchTranslator(locale: string): WorkbenchTranslator {
   };
 }
 
-export const defaultWorkbenchTranslator = createWorkbenchTranslator('zh-CN');
+export const defaultWorkbenchTranslator = createWorkbenchTranslator(defaultLocale);

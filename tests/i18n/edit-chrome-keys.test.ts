@@ -3,17 +3,7 @@ import { join } from 'path';
 import { describe, expect, it } from 'vitest';
 import { workbenchResourceFor } from '@/lib/i18n/workbench';
 import arSA from '@/lib/i18n/locales/ar-SA.json';
-import deDE from '@/lib/i18n/locales/de-DE.json';
 import enUS from '@/lib/i18n/locales/en-US.json';
-import esMX from '@/lib/i18n/locales/es-MX.json';
-import frFR from '@/lib/i18n/locales/fr-FR.json';
-import jaJP from '@/lib/i18n/locales/ja-JP.json';
-import koKR from '@/lib/i18n/locales/ko-KR.json';
-import ptBR from '@/lib/i18n/locales/pt-BR.json';
-import ruRU from '@/lib/i18n/locales/ru-RU.json';
-import viVN from '@/lib/i18n/locales/vi-VN.json';
-import zhCN from '@/lib/i18n/locales/zh-CN.json';
-import zhTW from '@/lib/i18n/locales/zh-TW.json';
 
 /**
  * Guard for the editor-chrome locale contract.
@@ -28,7 +18,7 @@ import zhTW from '@/lib/i18n/locales/zh-TW.json';
  * resolves each against the SAME merged resource the runtime uses — the locale
  * JSON deep-merged with the hook-free `workbench.*` map from
  * `lib/i18n/workbench.ts` (mirroring `lib/i18n/config.ts`) — and asserts the
- * key resolves to a non-empty string in every one of the 12 locales.
+ * key resolves to a non-empty string in each of the 2 supported locales.
  *
  * Dynamic keys are NOT guessed. The two bounded dynamic prefixes are expanded
  * from explicit static tables below (the `SceneType` union and the FONTS
@@ -54,17 +44,7 @@ const FONT_LABEL_KEYS = ['edit.text.fontDefault'] as const;
 
 const LOCALE_RESOURCES: Record<string, unknown> = {
   'ar-SA': arSA,
-  'de-DE': deDE,
   'en-US': enUS,
-  'es-MX': esMX,
-  'fr-FR': frFR,
-  'ja-JP': jaJP,
-  'ko-KR': koKR,
-  'pt-BR': ptBR,
-  'ru-RU': ruRU,
-  'vi-VN': viVN,
-  'zh-CN': zhCN,
-  'zh-TW': zhTW,
 };
 
 const LOCALES = Object.keys(LOCALE_RESOURCES);

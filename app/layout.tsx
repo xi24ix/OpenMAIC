@@ -39,9 +39,9 @@ import '@fontsource-variable/inter';
 const THEME_INIT_SCRIPT = `try{var t=localStorage.getItem('theme');if(t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark')}catch(e){}`;
 
 export const metadata: Metadata = {
-  title: 'OpenMAIC',
+  title: 'Alostad الأستاذ',
   description:
-    'The open-source AI interactive classroom. Upload a PDF to instantly generate an immersive, multi-agent learning experience.',
+    'Alostad الأستاذ — the AI interactive classroom. منصة تعليمية بالذكاء الاصطناعي: upload a lesson and generate an immersive, multi-agent learning experience.',
 };
 
 export default function RootLayout({
@@ -50,7 +50,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    // `lang="ar" dir="rtl"` matches the Arabic-first default locale
+    // (`lib/i18n/types.ts`); `I18nProvider` keeps both attributes in step when
+    // the user switches to English. CSS keys the larger Arabic root size off
+    // `html:lang(ar)`.
+    <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>

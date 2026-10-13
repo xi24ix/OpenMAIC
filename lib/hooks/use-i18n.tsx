@@ -31,19 +31,40 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   const locale = (i18n.language || defaultLocale) as Locale;
 
-  // Detect language after hydration to avoid SSR mismatch.
-  // i18next handles fallback automatically: if the detected language
-  // has no matching JSON file, it falls back to fallbackLng.
+  // Honor an explicit earlier choice (after hydration, to avoid an SSR
+  // mismatch). Without a stored choice the platform stays on its Arabic
+  // default — we deliberately do NOT sniff `navigator.language` any more,
+  // since Arabic is the product's default and English is opt-in via the
+  // language switcher.
   useEffect(() => {
     try {
       const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
-      const raw = stored || navigator.language || defaultLocale;
-      const target = resolveLocale(raw);
+      if (!stored) return;
+      const target = resolveLocale(stored);
+      // A stored code from before a locale was retired (e.g. 'zh-CN') resolves
+      // to the default — persist the resolution so we stop re-resolving it.
+      if (target !== stored) localStorage.setItem(LOCALE_STORAGE_KEY, target);
       if (target !== i18n.language) i18n.changeLanguage(target);
     } catch {
       // localStorage unavailable, keep default
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep `<html lang>` truthful for CSS (`html:lang(ar)` sizing) and a11y.
+  // The server renders `lang="ar"` to match the default locale.
+  useEffect(() => {
+    if (document.documentElement.lang !== locale) {
+      document.documentElement.lang = locale;
+    }
+    // Arabic-first: the document direction follows the UI language (ar → rtl,
+    // en → ltr) so Arabic copy, form layouts and flex flow render correctly
+    // in the default locale and flip back when the user opts into English.
+    // The server renders `dir="rtl"` to match the default locale.
+    const dir = locale.toLowerCase().startsWith('ar') ? 'rtl' : 'ltr';
+    if (document.documentElement.dir !== dir) {
+      document.documentElement.dir = dir;
+    }
+  }, [locale]);
 
   const setLocale = (newLocale: Locale) => {
     i18n.changeLanguage(newLocale);

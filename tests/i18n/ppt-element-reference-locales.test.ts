@@ -1,45 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import arSA from '@/lib/i18n/locales/ar-SA.json';
-import deDE from '@/lib/i18n/locales/de-DE.json';
 import enUS from '@/lib/i18n/locales/en-US.json';
-import esMX from '@/lib/i18n/locales/es-MX.json';
-import frFR from '@/lib/i18n/locales/fr-FR.json';
-import jaJP from '@/lib/i18n/locales/ja-JP.json';
-import koKR from '@/lib/i18n/locales/ko-KR.json';
-import ptBR from '@/lib/i18n/locales/pt-BR.json';
-import ruRU from '@/lib/i18n/locales/ru-RU.json';
-import viVN from '@/lib/i18n/locales/vi-VN.json';
-import zhCN from '@/lib/i18n/locales/zh-CN.json';
-import zhTW from '@/lib/i18n/locales/zh-TW.json';
 
-const locales = { arSA, deDE, enUS, esMX, frFR, jaJP, koKR, ptBR, ruRU, viVN, zhCN, zhTW };
+const locales = { arSA, enUS };
 const coursewareInstructions: Record<keyof typeof locales, string> = {
   arSA: 'انقر على عنصر · Esc للخروج',
-  deDE: 'Element anklicken · Esc zum Beenden',
   enUS: 'Click an element · Esc to exit',
-  esMX: 'Haz clic en un elemento · Esc para salir',
-  frFR: 'Cliquez sur un élément · Échap pour quitter',
-  jaJP: '要素をクリック · Esc で終了',
-  koKR: '요소 클릭 · Esc로 종료',
-  ptBR: 'Clique em um elemento · Esc para sair',
-  ruRU: 'Нажмите на элемент · Esc для выхода',
-  viVN: 'Nhấp vào phần tử · Esc để thoát',
-  zhCN: '点击一个元素 · Esc 退出',
-  zhTW: '點擊一個元素 · Esc 退出',
 };
 const clearLabels: Record<keyof typeof locales, string> = {
   arSA: 'إزالة الإشارة',
-  deDE: 'Referenz entfernen',
   enUS: 'Remove reference',
-  esMX: 'Quitar referencia',
-  frFR: 'Retirer la référence',
-  jaJP: '参照を解除',
-  koKR: '참조 제거',
-  ptBR: 'Remover referência',
-  ruRU: 'Удалить ссылку',
-  viVN: 'Xóa tham chiếu',
-  zhCN: '取消引用',
-  zhTW: '取消引用',
 };
 const referenceKeys = [
   'button',

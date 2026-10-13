@@ -15,7 +15,7 @@ const en = createWorkbenchTranslator('en-US');
 
 // Upstream adaptation: the reference's `workbench locale presentation` block
 // drove `presentTool` from `components/workbench/chat/tool-presentation` (the
-// workbench UI slice, not ported here) — dropped. The twelve-locale contract,
+// workbench UI slice, not ported here) — dropped. The two-locale contract,
 // the built-in skill names and the hardcoded-copy sweep below are all kept,
 // and the two pure translator checks from that block survive in their own
 // describe below.
@@ -37,14 +37,10 @@ const interpolations = (value: string): string[] =>
   [...value.matchAll(/\{\{(\w+)\}\}/g)].map((match) => match[1]).sort();
 
 describe('workbench translator locales', () => {
-  it('translates the other ten locales rather than falling back to English', () => {
-    expect(createWorkbenchTranslator('fr-FR')('workbench.tool.label.webSearch')).toBe(
-      'Rechercher sur le web',
+  it('translates the Arabic overlay rather than falling back to English', () => {
+    expect(createWorkbenchTranslator('ar-SA')('workbench.tool.label.webSearch')).toBe(
+      'البحث على الويب',
     );
-    expect(createWorkbenchTranslator('de-DE')('workbench.tool.label.webSearch')).toBe(
-      'Im Web suchen',
-    );
-    expect(createWorkbenchTranslator('zh-TW')('workbench.tool.label.webSearch')).toBe('聯網搜尋');
   });
 
   it('keeps an unknown locale on the English map instead of on the key', () => {
@@ -55,16 +51,18 @@ describe('workbench translator locales', () => {
 });
 
 /**
- * The twelve-locale contract. `workbenchEn` is the shape; every locale must
- * resolve every one of its keys to a real sentence with the same interpolation
- * variables — a missing key would render as `workbench.tool.label.x` on a card,
- * and a dropped `{{order}}` would render a page number that is not there.
+ * The two-locale contract (Arabic-first Alostad: ar-SA + en-US). `workbenchEn`
+ * is the shape; every supported locale must resolve every one of its keys to
+ * a real sentence with the same interpolation variables — a missing key would
+ * render as `workbench.tool.label.x` on a card, and a dropped `{{order}}`
+ * would render a page number that is not there. Retired overlay files stay on
+ * disk for upstream parity but are not user-facing, so they are out of scope.
  */
 describe('workbench copy covers every supported locale', () => {
   const source = flatten(workbenchEn);
 
-  it('has twelve locales to check', () => {
-    expect(supportedLocales.length).toBe(12);
+  it('has two locales to check (Arabic-first Alostad: ar-SA + en-US)', () => {
+    expect(supportedLocales.map((locale) => locale.code)).toEqual(['ar-SA', 'en-US']);
     expect(source.size).toBeGreaterThanOrEqual(200);
   });
 
@@ -82,21 +80,17 @@ describe('workbench copy covers every supported locale', () => {
     }
   });
 
-  it('keeps every overlay tool key set exactly equal to the base', () => {
+  it('keeps the Arabic overlay tool key set exactly equal to the base', () => {
     // The "%s is complete" checks above assert on workbenchResourceFor(code),
-    // which merges the overlay INTO the base first. A key missing from one
+    // which merges the overlay INTO the base first. A key missing from the
     // overlay therefore silently resolves to the base sentence and nothing
-    // fails — the exact gap observed when zh-TW dropped a tool.label key and
-    // the suite stayed green. This check holds each overlay FILE itself to the
-    // base shape: no missing and no extra `tool.*` key, so a locale that was
-    // never translated (or a label key dropped in one locale) turns red.
+    // fails. This check holds the Arabic overlay FILE itself to the base
+    // shape: no missing and no extra `tool.*` key, so a label key dropped
+    // from ar-SA turns red. Retired overlay files are not user-facing and
+    // are out of scope.
     const overlaysDir = path.join(process.cwd(), 'lib/i18n/workbench-locales');
     const baseToolKeys = [...flatten(workbenchEn).keys()].filter((key) => key.startsWith('tool.'));
-    const files = fs
-      .readdirSync(overlaysDir)
-      .filter((file) => file.endsWith('.json'))
-      .sort();
-    expect(files.length).toBeGreaterThanOrEqual(10);
+    const files = ['ar-SA.json'];
     for (const file of files) {
       const overlay = JSON.parse(fs.readFileSync(path.join(overlaysDir, file), 'utf8')) as Record<
         string,
@@ -139,7 +133,9 @@ describe('workbench copy covers every supported locale', () => {
     const overlayLocales = supportedLocales
       .map((locale) => locale.code)
       .filter((code) => code !== 'zh-CN' && code !== 'en-US');
-    expect(overlayLocales).toHaveLength(10);
+    // Alostad ships ar-SA + en-US, so exactly one supported locale (ar-SA)
+    // still reads its raw overlay file here.
+    expect(overlayLocales).toHaveLength(1);
     for (const code of overlayLocales) {
       const overlay = JSON.parse(
         fs.readFileSync(

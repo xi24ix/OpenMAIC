@@ -38,6 +38,7 @@ import { type ReactNode, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import { useBrand, useIsDesktop } from '@/lib/brand/brand-context';
+import { AlostadLogo } from '@/components/brand/alostad-logo';
 import { arrivedByProSwap } from '@/lib/workbench/pro-swap';
 import { cn } from '@/lib/utils/cn';
 import { ProBadge } from '@/components/workbench/ProBadge';
@@ -82,7 +83,7 @@ export function WorkspaceHome({
           plain button, not a second ProBadge: two elements answering to
           `pro-mode-exit` would be one testid too many. */}
       <div className="flex h-12 shrink-0 items-center justify-between px-4 md:hidden">
-        <img src={brand.logoSrc} alt={brand.productName} className="h-5 w-auto" />
+        <AlostadLogo size="sm" />
         <button
           type="button"
           data-testid="pro-workspace-exit-compact"
@@ -137,11 +138,9 @@ export function WorkspaceHome({
                   </span>
                 </div>
               ) : (
-                <img
-                  src={brand.logoSrc}
-                  alt={brand.productName}
+                <AlostadLogo
+                  size="pro"
                   data-testid="pro-workspace-hero-logo"
-                  className="ws-hero-logo"
                 />
               )}
               {/* At the wordmark's cap height, where a trademark mark goes —

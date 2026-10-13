@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useI18n } from '@/lib/hooks/use-i18n';
+import { AlostadLogo } from '@/components/brand/alostad-logo';
 import { ArrowRight, ShieldCheck, LoaderCircle } from 'lucide-react';
 
 interface AccessCodeModalProps {
@@ -68,8 +69,8 @@ export function AccessCodeModal({ open, onSuccess }: AccessCodeModalProps) {
               style={{
                 backgroundImage: `
                   radial-gradient(ellipse 80% 60% at 20% 40%, var(--primary) 0%, transparent 60%),
-                  radial-gradient(ellipse 60% 80% at 80% 20%, oklch(0.6 0.15 280) 0%, transparent 50%),
-                  radial-gradient(ellipse 50% 50% at 60% 80%, oklch(0.5 0.12 300) 0%, transparent 50%)
+                  radial-gradient(ellipse 60% 80% at 80% 20%, var(--brand-coral) 0%, transparent 50%),
+                  radial-gradient(ellipse 50% 50% at 60% 80%, var(--brand-ink) 0%, transparent 50%)
                 `,
               }}
             />
@@ -118,7 +119,7 @@ export function AccessCodeModal({ open, onSuccess }: AccessCodeModalProps) {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.25, duration: 0.4 }}
               >
-                OpenMAIC
+                <AlostadLogo size="gate" className="justify-center" />
               </motion.p>
 
               {/* Form */}

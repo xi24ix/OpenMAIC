@@ -2,4 +2,5 @@ import { supportedLocales } from './locales';
 
 export type Locale = (typeof supportedLocales)[number]['code'];
 
-export const defaultLocale: Locale = 'zh-CN';
+/** Alostad ships Arabic-first; the switcher offers English as the alternative. */
+export const defaultLocale: Locale = 'ar-SA';

@@ -1,30 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import arSA from '@/lib/i18n/locales/ar-SA.json';
-import deDE from '@/lib/i18n/locales/de-DE.json';
 import enUS from '@/lib/i18n/locales/en-US.json';
-import esMX from '@/lib/i18n/locales/es-MX.json';
-import frFR from '@/lib/i18n/locales/fr-FR.json';
-import jaJP from '@/lib/i18n/locales/ja-JP.json';
-import koKR from '@/lib/i18n/locales/ko-KR.json';
-import ptBR from '@/lib/i18n/locales/pt-BR.json';
-import ruRU from '@/lib/i18n/locales/ru-RU.json';
-import viVN from '@/lib/i18n/locales/vi-VN.json';
-import zhCN from '@/lib/i18n/locales/zh-CN.json';
-import zhTW from '@/lib/i18n/locales/zh-TW.json';
 
 const locales = {
   'ar-SA': arSA,
-  'de-DE': deDE,
   'en-US': enUS,
-  'es-MX': esMX,
-  'fr-FR': frFR,
-  'ja-JP': jaJP,
-  'ko-KR': koKR,
-  'pt-BR': ptBR,
-  'ru-RU': ruRU,
-  'vi-VN': viVN,
-  'zh-CN': zhCN,
-  'zh-TW': zhTW,
 };
 
 // The copy the settings Skills section renders through `t('settings.skills.*')`.
@@ -60,7 +40,7 @@ const KEYS = [
 const get = (o: any, k: string) => k.split('.').reduce((a, p) => a?.[p], o);
 
 describe('skill settings locale coverage', () => {
-  it('every key exists, is non-empty, and does not echo the key, in all 12 locales', () => {
+  it('every key exists, is non-empty, and does not echo the key, in both locales', () => {
     for (const [code, data] of Object.entries(locales)) {
       for (const k of KEYS) {
         const v = get(data, k);

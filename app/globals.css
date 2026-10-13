@@ -4,6 +4,77 @@
 /* Workbench chat (agent workbench surface): scoped .wbchat tokens + prose skin. */
 @import '../components/workbench/chat/workbench-chat.css';
 
+/* ── Alostad brand type: Cairo ───────────────────────────────────────────
+   Self-hosted from public/fonts/cairo (fontsource woff2, OFL) — no CDN and
+   no lockfile change. Inter keeps every Latin glyph (it sits first in
+   --font-sans); Cairo catches the Arabic script Inter has no coverage for,
+   and carries the wordmark. Each face declares its subset's unicode-range
+   so a script-only page only ever downloads the subset it renders. */
+@font-face {
+  font-family: 'Cairo';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/cairo/cairo-arabic-400-normal.woff2') format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC4, U+10EFC-10EFF, U+1EE00-1EE9B, U+1EEA1-1EEBB, U+1EEF0-1EEF1;
+}
+@font-face {
+  font-family: 'Cairo';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/cairo/cairo-arabic-500-normal.woff2') format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC4, U+10EFC-10EFF, U+1EE00-1EE9B, U+1EEA1-1EEBB, U+1EEF0-1EEF1;
+}
+@font-face {
+  font-family: 'Cairo';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/cairo/cairo-arabic-600-normal.woff2') format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC4, U+10EFC-10EFF, U+1EE00-1EE9B, U+1EEA1-1EEBB, U+1EEF0-1EEF1;
+}
+@font-face {
+  font-family: 'Cairo';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/cairo/cairo-arabic-700-normal.woff2') format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC4, U+10EFC-10EFF, U+1EE00-1EE9B, U+1EEA1-1EEBB, U+1EEF0-1EEF1;
+}
+@font-face {
+  font-family: 'Cairo';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/fonts/cairo/cairo-arabic-800-normal.woff2') format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC4, U+10EFC-10EFF, U+1EE00-1EE9B, U+1EEA1-1EEBB, U+1EEF0-1EEF1;
+}
+@font-face {
+  font-family: 'Cairo';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('/fonts/cairo/cairo-arabic-900-normal.woff2') format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC4, U+10EFC-10EFF, U+1EE00-1EE9B, U+1EEA1-1EEBB, U+1EEF0-1EEF1;
+}
+@font-face {
+  font-family: 'Cairo';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/cairo/cairo-latin-400-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Cairo';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('/fonts/cairo/cairo-latin-900-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 /* Streamdown (AI sidebar markdown) styles itself with Tailwind utilities —
    Tailwind must scan its dist so those classes get generated. */
 @source '../node_modules/streamdown/dist/*.js';
@@ -64,15 +135,19 @@
   /* Inter is loaded from @fontsource in app/layout.tsx, which declares one
      @font-face per unicode subset. Previously this came from next/font wrapping
      a single latin-only file, which left Cyrillic and Vietnamese text to OS
-     fallback fonts. */
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+     fallback fonts. Cairo (declared above from public/fonts/cairo) carries the
+     Arabic script — Arabic-first Alostad's default UI language. */
+  --font-sans: 'Inter Variable', 'Cairo', ui-sans-serif, system-ui, sans-serif;
+  /* Alostad brand palette, lifted from the logo: navy figure, coral play. */
+  --brand-ink: #2f3b96;
+  --brand-coral: #f4796b;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: #722ed1;
+  --primary: #2f3b96;
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -101,13 +176,17 @@
 }
 
 .dark {
+  /* The logo's navy needs lifting on dark surfaces to stay legible; the
+     coral warms up one step. Both stay inside the logo's hue family. */
+  --brand-ink: #aab2f2;
+  --brand-coral: #f79384;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: #8b47ea;
+  --primary: #7d87e6;
   --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
@@ -139,6 +218,15 @@
     @apply border-border outline-ring/50;
   }
   html {
+    /* English (and the pre-hydration paint) stay at the browser default. */
+    font-size: 16px;
+    /* Arabic-first: with Cairo as the script face, a 16px root makes Arabic
+       copy read small — bump the whole rem-based scale ~12% while `<html>`
+       carries a Latin-Arabic language tag (`lang` is kept in step with the
+       locale by `I18nProvider`). */
+    &:lang(ar) {
+      font-size: 18px;
+    }
     /* Always render the vertical scrollbar so layout doesn't horizontally
        shift when content grows/shrinks across the viewport-height threshold
        (e.g. expanding/collapsing recent classrooms). scrollbar-gutter:

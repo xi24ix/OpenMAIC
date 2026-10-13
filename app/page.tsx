@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import { LanguageSwitcher } from '@/components/language-switcher';
+import { AlostadLogo } from '@/components/brand/alostad-logo';
 import { createLogger } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
 import { InputGroup, InputGroupInput, InputGroupButton } from '@/components/ui/input-group';
@@ -747,11 +748,11 @@ function HomePage() {
       {/* ═══ Background Decor ═══ */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
-          className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"
+          className="absolute top-0 left-1/4 w-96 h-96 bg-[#2f3b96]/12 rounded-full blur-3xl animate-pulse"
           style={{ animationDuration: '4s' }}
         />
         <div
-          className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"
+          className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#f4796b]/12 rounded-full blur-3xl animate-pulse"
           style={{ animationDuration: '6s' }}
         />
       </div>
@@ -765,11 +766,10 @@ function HomePage() {
       >
         {/* ── Logo ── */}
         <div className="relative" data-pro-morph="lockup">
-          <img
-            src="/logo-horizontal.png"
-            alt="OpenMAIC"
+          <AlostadLogo
+            size="hero"
             className={cn(
-              'h-12 md:h-16 mb-2 -ml-2 md:-ml-3',
+              'mb-2 -ml-2 md:-ml-3',
               heroEnter('fade-in zoom-in-90 duration-500 delay-100'),
             )}
           />
@@ -1313,7 +1313,7 @@ function HomePage() {
 
       {/* Footer — flows with content, at the very end */}
       <div className="mt-auto pt-12 pb-4 text-center text-xs text-muted-foreground/40">
-        OpenMAIC Open Source Project
+        Alostad الأستاذ
       </div>
     </div>
   );
