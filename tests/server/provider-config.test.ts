@@ -25,6 +25,7 @@ const ENV_PREFIXES_TO_CLEAR = [
   'XIAOMI',
   'MIMO',
   'TOKENDANCE',
+  'OPENCODE',
   'HY3',
   'OLLAMA',
   'BEDROCK',

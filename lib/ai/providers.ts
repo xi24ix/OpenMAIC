@@ -14,6 +14,7 @@
  * - https://platform.claude.com/docs/en/about-claude/models/overview
  * - https://ai.google.dev/gemini-api/docs/models
  * - https://api-docs.deepseek.com/quick_start/pricing
+ * - https://opencode.ai/docs/zen (OpenCode Console, OpenAI-compatible)
  * - https://platform.moonshot.cn/docs/pricing/chat
  * - https://platform.minimaxi.com/docs/guides/text-generation
  * - https://platform.minimaxi.com/docs/api-reference/text-anthropic-api
@@ -71,7 +72,12 @@ const log = createLogger('AIProviders');
 export type { ProviderId, ProviderConfig, ModelInfo, ModelConfig };
 
 /** Provider IDs whose logos are monochrome-dark and need `dark:invert` in dark mode */
-export const MONO_LOGO_PROVIDERS: ReadonlySet<string> = new Set(['openai', 'openrouter', 'ollama']);
+export const MONO_LOGO_PROVIDERS: ReadonlySet<string> = new Set([
+  'openai',
+  'openrouter',
+  'ollama',
+  'opencode',
+]);
 
 /**
  * Provider registry
@@ -1308,6 +1314,123 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
         name: 'DeepSeek V4 Flash',
         contextWindow: 1048576,
         outputWindow: 131072,
+        capabilities: { streaming: true, tools: true, vision: false },
+      },
+    ],
+  },
+
+  opencode: {
+    id: 'opencode',
+    name: 'OpenCode',
+    type: 'openai',
+    // OpenCode Console (https://opencode.ai/docs/zen) — an OpenAI-compatible
+    // gateway. Its /models list lives at a different path than the chat
+    // endpoint, so the probe endpoint cannot discover it.
+    defaultBaseUrl: 'https://opencode.ai/inference/openai/v1',
+    requiresApiKey: true,
+    supportsModelDiscovery: false,
+    icon: '/logos/opencode.svg',
+    models: [
+      // Free models: listed by Console, but the gateway officially answers
+      // them only from within the OpenCode client; other harnesses need a
+      // Console key (the paid entries below work from anywhere).
+      {
+        id: 'deepseek-v4.1-flash-free',
+        name: 'DeepSeek V4.1 Flash Free',
+        contextWindow: 1000000,
+        capabilities: { streaming: true, tools: true, vision: false },
+      },
+      {
+        id: 'glm-5.3-flash-free',
+        name: 'GLM-5.3-Flash Free',
+        contextWindow: 1000000,
+        outputWindow: 128000,
+        capabilities: { streaming: true, tools: true, vision: true },
+      },
+      {
+        id: 'mimo-v2.6-flash-free',
+        name: 'MiMo V2.6 Flash Free',
+        contextWindow: 1048576,
+        outputWindow: 131072,
+        capabilities: { streaming: true, tools: true, vision: true },
+      },
+      {
+        id: 'nemotron-3.5-super-vl-free',
+        name: 'Nemotron 3.5 Super VL Free',
+        capabilities: { streaming: true, tools: true, vision: true },
+      },
+      {
+        id: 'nemotron-3.5-lightning-free',
+        name: 'Nemotron 3.5 Lightning Free',
+        capabilities: { streaming: true, tools: true, vision: false },
+      },
+      {
+        id: 'longcat-2.5-preview-free',
+        name: 'LongCat 2.5 Preview Free',
+        capabilities: { streaming: true, tools: true, vision: false },
+      },
+      {
+        id: 'big-pickle',
+        name: 'Big Pickle',
+        capabilities: { streaming: true, tools: true, vision: false },
+      },
+      {
+        id: 'space-bunny-free',
+        name: 'Space Bunny Free',
+        capabilities: { streaming: true, tools: true, vision: false },
+      },
+      {
+        id: 'beam-free',
+        name: 'Beam Free',
+        capabilities: { streaming: true, tools: true, vision: false },
+      },
+      // Paid catalog (Console pay-as-you-go key): the same models the OpenCode
+      // Console endpoint serves to any client.
+      {
+        id: 'deepseek-v4.1-flash',
+        name: 'DeepSeek V4.1 Flash',
+        contextWindow: 1000000,
+        capabilities: { streaming: true, tools: true, vision: false },
+      },
+      {
+        id: 'deepseek-v4-pro',
+        name: 'DeepSeek V4 Pro',
+        contextWindow: 1048576,
+        outputWindow: 393216,
+        capabilities: { streaming: true, tools: true, vision: false },
+      },
+      {
+        id: 'glm-5.3-flash',
+        name: 'GLM-5.3-Flash',
+        contextWindow: 1000000,
+        outputWindow: 128000,
+        capabilities: { streaming: true, tools: true, vision: true },
+      },
+      {
+        id: 'glm-5.3',
+        name: 'GLM-5.3',
+        contextWindow: 1000000,
+        outputWindow: 128000,
+        capabilities: { streaming: true, tools: true, vision: false },
+      },
+      {
+        id: 'minimax-m3',
+        name: 'MiniMax M3',
+        contextWindow: 1000000,
+        outputWindow: 32768,
+        capabilities: { streaming: true, tools: true, vision: true },
+      },
+      {
+        id: 'kimi-k3',
+        name: 'Kimi K3',
+        contextWindow: 1048576,
+        outputWindow: 131072,
+        capabilities: { streaming: true, tools: true, vision: true },
+      },
+      {
+        id: 'qwen3.8-max',
+        name: 'Qwen3.8 Max',
+        contextWindow: 1000000,
         capabilities: { streaming: true, tools: true, vision: false },
       },
     ],

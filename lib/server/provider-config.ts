@@ -90,6 +90,7 @@ export const LLM_ENV_MAP: Record<string, string> = {
   XIAOMI: 'xiaomi',
   MIMO: 'xiaomi',
   TOKENDANCE: 'tokendance',
+  OPENCODE: 'opencode',
   OLLAMA: 'ollama',
   LEMONADE: 'lemonade',
   BEDROCK: 'bedrock',
