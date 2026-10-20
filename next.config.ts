@@ -16,12 +16,17 @@ const nextConfig: NextConfig = {
       // standard fonts and character maps from the installed package at
       // runtime. Neither is statically imported, so standalone tracing omits
       // them unless they are named here.
-      'node_modules/pdfjs-dist/**',
+      'node_modules/pdfjs-dist/legacy/build/*',
+      'node_modules/pdfjs-dist/standard_fonts/*',
+      'node_modules/pdfjs-dist/cmaps/*',
       // @napi-rs/canvas selects its platform binary with a computed require,
-      // which the tracer cannot follow.
-      'node_modules/@napi-rs/canvas/**',
-      'node_modules/@napi-rs/canvas-*/**',
-      'node_modules/.pnpm/@napi-rs+canvas*/**',
+      // which the tracer cannot follow. These patterns end in a file segment:
+      // a trailing `**` also matches package directories, which Turbopack then
+      // tries to read as files and fails with "Is a directory".
+      'node_modules/@napi-rs/canvas/*',
+      'node_modules/@napi-rs/canvas-*/*',
+      'node_modules/.pnpm/@napi-rs+canvas@*/node_modules/@napi-rs/canvas/*',
+      'node_modules/.pnpm/@napi-rs+canvas-*@*/node_modules/@napi-rs/canvas-*/*',
       // Loaded through a runtime-only `import('undici')` (see the LLM
       // dispatcher in lib/ai/providers.ts and the Google proxy transport), so
       // the output tracer never sees it and standalone builds ship without it.
