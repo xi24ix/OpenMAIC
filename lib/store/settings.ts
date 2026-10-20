@@ -29,7 +29,7 @@ import {
 import { keepUnimported } from '@/lib/legacy-browser-import/model-settings-unimported';
 
 /** Persisted-blob version for zustand's `persist` `migrate` ladder. */
-const SETTINGS_PERSIST_VERSION = 5;
+const SETTINGS_PERSIST_VERSION = 6;
 
 /**
  * Bound after the store exists; see `onWriteRefused` for why it is not inlined.
@@ -248,8 +248,8 @@ export const useSettingsStore = create<SettingsState>()(
       agentSelectionIsUserSet: false,
 
       // Layout preferences
-      sidebarCollapsed: true,
-      chatAreaCollapsed: true,
+      sidebarCollapsed: false,
+      chatAreaCollapsed: false,
       chatAreaWidth: 320,
       editRailCollapsed: false,
       editRailWidth: 220,
@@ -301,7 +301,13 @@ export const useSettingsStore = create<SettingsState>()(
       migrate: (persistedState: unknown, version: number) => {
         const state = { ...((persistedState as Record<string, unknown> | null) ?? {}) };
         // v4 → v5: model settings move to the server (RFC #1701).
-        return version < 5 ? migrateSettingsToV5(state, version) : pickPersisted(state);
+        const next =
+          version < 5 ? migrateSettingsToV5(state, version) : pickPersisted(state);
+        // v5 → v6: the classroom opens with the plan and chat panes visible;
+        // pre-Aurora blobs persisted both collapsed.
+        return version < 6
+          ? { ...next, sidebarCollapsed: false, chatAreaCollapsed: false }
+          : next;
       },
       // Only known preference fields reach the state; anything else a blob
       // carries (fields of earlier builds) is ignored. Model settings kept

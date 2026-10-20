@@ -626,13 +626,11 @@ export const PlaybackChromeRoot = forwardRef<PlaybackChromeRootHandle, PlaybackC
         // Escape is handled manually in our keydown handler instead
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (navigator as any).keyboard?.lock?.(['Escape']).catch(() => {});
-        setSidebarCollapsed(true);
-        setChatAreaCollapsed(true);
       } catch {
         // Firefox may deny fullscreen from certain keyboard events (e.g. F11)
         console.warn('[Presentation] Fullscreen request denied — browser policy');
       }
-    }, [setChatAreaCollapsed, setSidebarCollapsed]);
+    }, []);
 
     useEffect(() => {
       const onFullscreenChange = () => {
