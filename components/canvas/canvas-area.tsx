@@ -107,11 +107,11 @@ export function CanvasArea({
   );
 
   return (
-    <div className="w-full h-full flex flex-col bg-gray-50 dark:bg-gray-900 group/canvas">
+    <div className="aurora-canvas-area w-full h-full flex flex-col bg-gray-50 dark:bg-gray-900 group/canvas">
       {/* Slide area — takes remaining space */}
       <div
         className={cn(
-          'flex-1 min-h-0 relative overflow-hidden flex items-center justify-center p-2 transition-colors duration-500',
+          'aurora-canvas-stage flex-1 min-h-0 relative overflow-hidden flex items-center justify-center p-2 transition-colors duration-500',
           currentScene?.type === 'interactive'
             ? 'bg-blue-50/30 dark:bg-blue-900/10'
             : 'bg-gray-50/30 dark:bg-gray-900/30',
@@ -347,7 +347,7 @@ function StageViewport({
   if (!workbench) {
     return (
       <div
-        className={cn('aspect-[16/9] h-full max-h-full max-w-full', className)}
+        className={cn('aurora-stage-viewport aspect-[16/9] h-full max-h-full max-w-full', className)}
         onClick={onClick}
       >
         {children}

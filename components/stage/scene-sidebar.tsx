@@ -31,7 +31,7 @@ interface SceneSidebarProps {
   readonly isCourseComplete?: boolean;
 }
 
-const DEFAULT_WIDTH = 220;
+const DEFAULT_WIDTH = 250;
 const MIN_WIDTH = 170;
 const MAX_WIDTH = 400;
 
@@ -113,7 +113,7 @@ export function SceneSidebar({
         width: displayWidth,
         transition: isDraggingRef.current ? 'none' : 'width 0.3s ease',
       }}
-      className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-r border-gray-100 dark:border-gray-800 shadow-[2px_0_24px_rgba(0,0,0,0.02)] flex flex-col shrink-0 z-20 relative overflow-visible"
+      className="aurora-plan bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-r border-gray-100 dark:border-gray-800 shadow-[2px_0_24px_rgba(0,0,0,0.02)] flex flex-col shrink-0 z-20 relative overflow-visible"
     >
       {/* Drag handle */}
       {!collapsed && (
@@ -130,11 +130,12 @@ export function SceneSidebar({
         <div className="h-10 flex items-center justify-between shrink-0 relative mt-3 mb-1 px-3">
           <button
             onClick={() => router.push('/')}
-            className="flex items-center gap-2 cursor-pointer rounded-lg px-1.5 -mx-1.5 py-1 -my-1 hover:bg-gray-100/80 dark:hover:bg-gray-800/60 active:scale-[0.97] transition-all duration-150"
+            className="aurora-plan-brand flex items-center gap-2 cursor-pointer rounded-lg px-1.5 -mx-1.5 py-1 -my-1 hover:bg-gray-100/80 dark:hover:bg-gray-800/60 active:scale-[0.97] transition-all duration-150"
             title={t('generation.backToHome')}
           >
             <AlostadLogo size="md" />
           </button>
+          <span className="aurora-plan-title">{t('export.htmlPlayer.scenes')}</span>
           <button
             onClick={() => onCollapseChange(true)}
             className="w-7 h-7 shrink-0 rounded-lg flex items-center justify-center bg-gray-100/80 dark:bg-gray-800/80 text-gray-500 dark:text-gray-400 ring-1 ring-black/[0.04] dark:ring-white/[0.06] hover:bg-gray-200/90 dark:hover:bg-gray-700/90 hover:text-gray-700 dark:hover:text-gray-200 active:scale-90 transition-all duration-200"
@@ -168,7 +169,8 @@ export function SceneSidebar({
                   }
                 }}
                 className={cn(
-                  'group relative rounded-lg transition-all duration-200 cursor-pointer flex flex-col gap-1 p-1.5',
+                  'aurora-plan-item group relative rounded-lg transition-all duration-200 cursor-pointer flex flex-col gap-1 p-1.5',
+                  isActive && 'is-active',
                   isActive
                     ? 'bg-purple-50 dark:bg-purple-900/20 ring-1 ring-purple-200 dark:ring-purple-700'
                     : 'hover:bg-gray-50/80 dark:hover:bg-gray-800/50',

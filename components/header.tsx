@@ -6,6 +6,7 @@ import { useI18n } from '@/lib/hooks/use-i18n';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { StageMode } from '@/lib/types/stage';
 import { classroomExitLabelKey, exitClassroom } from '@/lib/workbench/classroom-exit';
+import { AlostadLogo } from '@/components/brand/alostad-logo';
 import { HeaderControls } from './stage/header-controls';
 
 interface HeaderProps {
@@ -49,8 +50,10 @@ export function Header({
 
   return (
     <>
-      <header className="h-20 px-8 flex items-center justify-between z-10 bg-transparent gap-4">
+      <header className="aurora-classroom-header h-20 px-8 flex items-center justify-between z-10 bg-transparent gap-4">
         <div className="flex items-center gap-3 min-w-0 flex-1">
+          <AlostadLogo size="md" className="aurora-header-brand" />
+          <span aria-hidden className="aurora-vdiv" />
           {hideBackControl
             ? null
             : (backControl ?? (
@@ -73,12 +76,12 @@ export function Header({
               briefly stack on top of the incoming EditChromeRoot's
               CommandBar title during the cross-fade. */}
           {mode !== 'edit' && (
-            <div className="flex flex-col min-w-0">
-              <span className="text-[10px] uppercase tracking-widest font-bold text-gray-400 dark:text-gray-500 mb-0.5">
+            <div className="aurora-classroom-copy flex flex-col min-w-0">
+              <span className="aurora-classroom-kicker text-[10px] uppercase tracking-widest font-bold text-gray-400 dark:text-gray-500 mb-0.5">
                 {t('stage.currentScene')}
               </span>
               <h1
-                className="text-xl font-bold text-gray-800 dark:text-gray-200 tracking-tight truncate"
+                className="aurora-classroom-title text-xl font-bold text-gray-800 dark:text-gray-200 tracking-tight truncate"
                 suppressHydrationWarning
               >
                 {currentSceneTitle || t('common.loading')}

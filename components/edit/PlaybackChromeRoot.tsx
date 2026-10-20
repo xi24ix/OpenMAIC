@@ -45,6 +45,7 @@ import type { AudioIndicatorState } from '@/components/roundtable/audio-indicato
 import type { Action, DiscussionAction, SpeechAction } from '@/lib/types/action';
 import { cn } from '@/lib/utils';
 import { ChatArea, type ChatAreaRef } from '@/components/chat/chat-area';
+import { MobileSceneReels } from '@/components/classroom/MobileSceneReels';
 import type { SessionCleanupPayload } from '@/components/chat/use-chat-sessions';
 import { agentsToParticipants, useAgentRegistry } from '@/lib/orchestration/registry/store';
 import type { AgentConfig } from '@/lib/orchestration/registry/types';
@@ -1673,65 +1674,54 @@ export const PlaybackChromeRoot = forwardRef<PlaybackChromeRootHandle, PlaybackC
         }
       : null;
 
-    // Scene viewer height — header is 80px when visible, roundtable is
-    // 192px in playback mode (autonomous hides it). Mode is guaranteed
-    // non-'edit' here since the parent Stage unmounts this component
-    // when entering Pro mode.
-    const sceneViewerHeight = (() => {
-      const headerHeight = isPresenting || hideHeader ? 0 : 80;
-      const roundtableHeight = mode === 'playback' && !isPresenting ? 192 : 0;
-      return `calc(100% - ${headerHeight + roundtableHeight}px)`;
-    })();
-
     return (
       <div
         ref={stageRef}
         className={cn(
-          'flex-1 flex overflow-hidden bg-gray-50 dark:bg-gray-900',
+          'aurora-classroom flex-1 flex flex-col overflow-hidden bg-gray-50 dark:bg-gray-900',
+          isPresenting && 'is-presenting',
           isPresenting && !controlsVisible && 'cursor-none',
         )}
       >
-        <SceneSidebar
-          collapsed={sidebarCollapsed}
-          onCollapseChange={setSidebarCollapsed}
-          onSceneSelect={gatedSceneSwitch}
-          onRetryOutline={onRetryOutline}
-          isCourseComplete={isCourseComplete}
-        />
+        {/* Header — full-width Aurora topbar. The Pro Switch fires
+          `onEnterProMode` (passed by the parent Stage) which awaits our
+          `teardown()` before the parent flips mode to 'edit'. */}
+        {!isPresenting && !hideHeader && (
+          <Header
+            currentSceneTitle={
+              currentScene?.title ||
+              (isCourseComplete && isPendingScene ? t('stage.courseComplete') : '')
+            }
+            mode={mode}
+            proModeActive={proModeActive}
+            canEdit={!!canEnterProMode}
+            onToggleEditMode={onEnterProMode}
+            backControl={headerBackControl}
+            hideBackControl={hideHeaderBackControl}
+            hideGlobalControls={hideHeaderGlobalControls}
+            hideCourseActions={hideHeaderCourseActions}
+          />
+        )}
 
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col overflow-hidden min-w-0 relative">
-          {/* Header — playback only. The Pro Switch fires `onEnterProMode`
-            (passed by the parent Stage) which awaits our `teardown()`
-            before the parent flips mode to 'edit'. */}
-          {!isPresenting && !hideHeader && (
-            <Header
-              currentSceneTitle={
-                currentScene?.title ||
-                (isCourseComplete && isPendingScene ? t('stage.courseComplete') : '')
-              }
-              mode={mode}
-              proModeActive={proModeActive}
-              canEdit={!!canEnterProMode}
-              onToggleEditMode={onEnterProMode}
-              backControl={headerBackControl}
-              hideBackControl={hideHeaderBackControl}
-              hideGlobalControls={hideHeaderGlobalControls}
-              hideCourseActions={hideHeaderCourseActions}
-            />
-          )}
+        <div className="aurora-stage-wrap flex-1 min-h-0 flex overflow-hidden">
+          <SceneSidebar
+            collapsed={sidebarCollapsed}
+            onCollapseChange={setSidebarCollapsed}
+            onSceneSelect={gatedSceneSwitch}
+            onRetryOutline={onRetryOutline}
+            isCourseComplete={isCourseComplete}
+          />
 
-          {/* Canvas Area — playback-only renderer. The parent Stage swaps
-            this whole PlaybackChromeRoot out when entering edit mode, so
-            no inline branching is needed here. */}
-          <div
-            className="overflow-hidden relative flex-1 min-h-0 isolate"
-            style={{
-              height: sceneViewerHeight,
-            }}
-            suppressHydrationWarning
-          >
-            <CanvasArea
+          {/* Main Content Area */}
+          <div className="aurora-stage-main flex-1 flex flex-col overflow-hidden min-w-0 relative">
+            {/* Canvas Area — playback-only renderer. The parent Stage swaps
+              this whole PlaybackChromeRoot out when entering edit mode, so
+              no inline branching is needed here. */}
+            <div
+              className="aurora-canvas overflow-hidden relative flex-1 min-h-0 isolate"
+              suppressHydrationWarning
+            >
+              <CanvasArea
               currentScene={currentScene}
               currentSceneIndex={currentSceneIndex}
               scenesCount={totalScenesCount}
@@ -1793,11 +1783,19 @@ export const PlaybackChromeRoot = forwardRef<PlaybackChromeRootHandle, PlaybackC
             />
           </div>
 
+            <MobileSceneReels
+              scenes={scenes}
+              currentSceneId={currentSceneId}
+              onSelect={(sceneId) => {
+                void gatedSceneSwitch(sceneId);
+              }}
+            />
+
           {/* Roundtable Area */}
           {mode === 'playback' && (
             <div
               className={cn(
-                'transition-opacity duration-300',
+                'aurora-roundtable transition-opacity duration-300',
                 !isPresenting && 'shrink-0',
                 isPresenting && 'absolute inset-x-0 bottom-0 z-20',
               )}
@@ -1977,12 +1975,13 @@ export const PlaybackChromeRoot = forwardRef<PlaybackChromeRootHandle, PlaybackC
           )}
         </div>
 
-        {/* Chat Area — playback / autonomous always renders it here; Pro
-          (edit) mode unmounts this whole PlaybackChromeRoot, so the
-          edit branch has no chat. */}
-        <div className="flex shrink-0">
-          <ChatArea
-            ref={chatAreaRef}
+          {/* Chat Area — playback / autonomous always renders it here; Pro
+            (edit) mode unmounts this whole PlaybackChromeRoot, so the
+            edit branch has no chat. */}
+          <div className="aurora-chat-wrap flex shrink-0">
+            <ChatArea
+              className="aurora-chat"
+              ref={chatAreaRef}
             width={chatAreaWidth}
             onWidthChange={setChatAreaWidth}
             collapsed={chatAreaCollapsed}
@@ -2049,6 +2048,7 @@ export const PlaybackChromeRoot = forwardRef<PlaybackChromeRootHandle, PlaybackC
             onSegmentSealed={discussionTTS.handleSegmentSealed}
             shouldHoldAfterReveal={discussionTTS.shouldHold}
           />
+          </div>
         </div>
 
         {/* Scene switch confirmation dialog */}

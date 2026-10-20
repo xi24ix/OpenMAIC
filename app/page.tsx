@@ -637,7 +637,7 @@ function HomePage() {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 flex flex-col items-center p-4 pt-16 md:p-8 md:pt-16 overflow-x-hidden">
+    <div className="aurora-home min-h-[100dvh] w-full flex flex-col items-center p-4 pt-16 md:p-8 md:pt-16 overflow-x-hidden">
       <input
         ref={fileInputRef}
         type="file"
@@ -654,15 +654,32 @@ function HomePage() {
           className="hidden"
         />
       )}
-      {/* ═══ Top-right pill (unchanged) ═══ */}
-      <div
+      {/* ═══ Aurora topbar ═══ */}
+      <header
         ref={toolbarRef}
-        className="fixed top-4 right-4 z-50 flex items-center gap-1 bg-white/60 dark:bg-gray-800/60 backdrop-blur-md px-2 py-1.5 rounded-full border border-gray-100/50 dark:border-gray-700/50 shadow-sm"
+        className="aurora-home-topbar fixed top-0 inset-x-0 z-50 flex items-center justify-between gap-4 px-4 md:px-8"
       >
+        <div className="aurora-brand-group flex items-center gap-2 min-w-0">
+          <button
+            type="button"
+            onClick={() => router.push('/')}
+            className="aurora-brand cursor-pointer"
+            aria-label="Alostad"
+          >
+            <AlostadLogo size="md" />
+          </button>
+          {workbenchEntryEnabled ? (
+            <div data-pro-morph="badge">
+              <ProBadge active={false} onToggle={enterWorkbench} />
+            </div>
+          ) : null}
+        </div>
+
+        <div className="aurora-utilities flex items-center gap-1">
         {/* Language Selector */}
         <LanguageSwitcher onOpen={() => setThemeOpen(false)} />
 
-        <div className="w-[1px] h-4 bg-gray-200 dark:bg-gray-700" />
+        <div className="aurora-div w-[1px] h-4" />
 
         {/* Theme Selector */}
         <div className="relative">
@@ -735,7 +752,8 @@ function HomePage() {
             <Settings className="w-4 h-4 group-hover:rotate-90 transition-transform duration-500" />
           </button>
         </div>
-      </div>
+        </div>
+      </header>
       <SettingsDialog
         open={settingsOpen}
         onOpenChange={(open) => {
@@ -760,45 +778,25 @@ function HomePage() {
       {/* ═══ Hero section: title + input (centered, wider) ═══ */}
       <div
         className={cn(
-          'relative z-20 w-full max-w-[800px] flex flex-col items-center mt-[10vh]',
+          'aurora-hero relative z-20 w-full max-w-[1240px] flex flex-col items-center',
           heroEnter('fade-in slide-in-from-bottom-5 duration-600'),
         )}
       >
-        {/* ── Logo ── */}
-        <div className="relative" data-pro-morph="lockup">
-          <AlostadLogo
-            size="hero"
-            className={cn(
-              'mb-2 -ml-2 md:-ml-3',
-              heroEnter('fade-in zoom-in-90 duration-500 delay-100'),
-            )}
-          />
-          {workbenchEntryEnabled ? (
-            <div
-              className="absolute left-full top-0 ml-1.5 mt-[10px] md:ml-2 md:mt-[14px]"
-              data-pro-morph="badge"
-            >
-              <ProBadge active={false} onToggle={enterWorkbench} />
-            </div>
-          ) : null}
-        </div>
+        <span className="aurora-kicker">
+          <span className="aurora-kicker-dot" />
+          ALOSTAD CLASSROOM
+        </span>
 
-        {/* ── Slogan ── */}
-        <p
-          className={cn(
-            'text-sm text-muted-foreground/60 mb-8',
-            heroEnter('fade-in duration-300 delay-250'),
-          )}
-        >
-          {t('home.slogan')}
-        </p>
+        <h1 className="aurora-hero-title">{t('home.slogan')}</h1>
 
         {/* ── Unified input area ── */}
-        <div className={cn('w-full', heroEnter('fade-in zoom-in-97 duration-300 delay-350'))}>
-          <div
-            data-pro-morph="composer"
-            className="w-full rounded-2xl border border-border/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-black/[0.03] dark:shadow-black/20 transition-shadow focus-within:shadow-2xl focus-within:shadow-violet-500/[0.06]"
-          >
+        <div
+          className={cn(
+            'w-full flex justify-center',
+            heroEnter('fade-in zoom-in-97 duration-300 delay-350'),
+          )}
+        >
+          <div data-pro-morph="composer" className="aurora-composer w-full max-w-[820px]">
             {/* ── Greeting + Profile + Agents ── */}
             <div className="relative z-20 flex items-start justify-between">
               <GreetingBar />
@@ -956,7 +954,7 @@ function HomePage() {
           action surface across root, folder, and empty. Until the library and
           folder reads resolve, the section shows a skeleton of its own layout
           (server-rendered, so it is on screen before the page's scripts run). */}
-      <div className="relative z-10 mt-10 w-full max-w-6xl flex flex-col items-center">
+      <div className="aurora-library relative z-10 mt-10 w-full max-w-6xl flex flex-col items-center">
         {/* Trigger — divider-line with centered text. Fixed height keeps the
               bar geometrically stable when the New-folder action or the folder
               path appears/disappears (entering vs leaving a folder). */}
@@ -1194,7 +1192,7 @@ function HomePage() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -8 }}
                       transition={{ duration: 0.2 }}
-                      className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-5 gap-y-8"
+                      className="aurora-shelf grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-5 gap-y-8"
                     >
                       {/* Root + non-search: render folder tiles first. */}
                       {!isSearching &&
@@ -1312,7 +1310,7 @@ function HomePage() {
       />
 
       {/* Footer — flows with content, at the very end */}
-      <div className="mt-auto pt-12 pb-4 text-center text-xs text-muted-foreground/40">
+      <div className="aurora-footer mt-auto pt-12 pb-4 text-center text-xs text-muted-foreground/40">
         Alostad الأستاذ
       </div>
     </div>
@@ -1701,7 +1699,7 @@ function ClassroomCard({
 
   return (
     <div
-      className="group cursor-pointer"
+      className="aurora-lesson group cursor-pointer"
       onClick={confirmingDelete ? undefined : onClick}
       draggable={!confirmingDelete && !editing && !pendingCourse}
       onDragStart={(e) => {
@@ -1717,7 +1715,7 @@ function ClassroomCard({
       {/* Thumbnail — large radius, no border, subtle bg */}
       <div
         ref={thumbRef}
-        className="relative w-full aspect-[16/9] rounded-2xl bg-slate-100 dark:bg-slate-800/80 overflow-hidden transition-transform duration-200 group-hover:scale-[1.02]"
+        className="aurora-cover relative w-full aspect-[16/9] rounded-2xl bg-slate-100 dark:bg-slate-800/80 overflow-hidden transition-transform duration-200 group-hover:scale-[1.02]"
       >
         {slide && thumbWidth > 0 ? (
           <SlideThumbnail
@@ -1836,11 +1834,11 @@ function ClassroomCard({
       </div>
 
       {/* Info — outside the thumbnail */}
-      <div className="mt-2.5 px-1 flex items-center gap-2">
+      <div className="aurora-lesson-meta mt-2.5 px-1 flex items-center gap-2">
         {runStatus ? (
           <CourseRunStatusLabel status={runStatus} />
         ) : (
-          <span className="shrink-0 inline-flex items-center rounded-full bg-violet-100 dark:bg-violet-900/30 px-2 py-0.5 text-[11px] font-medium text-violet-600 dark:text-violet-400">
+          <span className="aurora-lesson-badge shrink-0 inline-flex items-center rounded-full bg-violet-100 dark:bg-violet-900/30 px-2 py-0.5 text-[11px] font-medium text-violet-600 dark:text-violet-400">
             {classroom.sceneCount} {t('classroom.slides')} · {formatDate(classroom.updatedAt)}
           </span>
         )}
@@ -1864,7 +1862,7 @@ function ClassroomCard({
           <Tooltip>
             <TooltipTrigger asChild>
               <p
-                className="font-medium text-[15px] truncate text-foreground/90 min-w-0 cursor-text"
+                className="aurora-lesson-title font-medium text-[15px] truncate text-foreground/90 min-w-0 cursor-text"
                 onDoubleClick={pendingCourse ? undefined : startRename}
               >
                 {classroom.name}

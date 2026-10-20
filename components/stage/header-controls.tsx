@@ -182,7 +182,7 @@ export function HeaderControls({
   // the cluster pixel-stable; both hosts pad to `px-8`, so the right edge
   // anchors identically too.
   return (
-    <div className="flex items-center gap-4">
+    <div className="aurora-controls flex items-center gap-4">
       <div
         className={cn(
           'shrink-0 flex items-center gap-1 backdrop-blur-md shadow-sm rounded-full',
@@ -264,7 +264,7 @@ export function HeaderControls({
       {onToggleEditMode && (
         <label
           className={cn(
-            'shrink-0 inline-flex items-center gap-2.5 rounded-full border shadow-sm transition-colors duration-200',
+            'aurora-pro-switch shrink-0 inline-flex items-center gap-2.5 rounded-full border shadow-sm transition-colors duration-200',
             'bg-white/60 dark:bg-gray-800/60 backdrop-blur-md',
             compact ? 'h-8 px-2.5' : 'h-9 px-3',
             proChecked
@@ -315,7 +315,7 @@ export function HeaderControls({
             disabled={!canExport || anyExporting}
             title={anyExporting ? t('export.exporting') : exportLabel}
             className={cn(
-              'shrink-0 p-2 rounded-full transition-all',
+              'aurora-export shrink-0 p-2 rounded-full transition-all',
               canExport && !anyExporting
                 ? 'text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200 hover:shadow-sm'
                 : 'text-gray-300 dark:text-gray-600 cursor-not-allowed opacity-50',

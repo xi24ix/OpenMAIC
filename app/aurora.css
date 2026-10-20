@@ -1,0 +1,628 @@
+.aurora-home,
+.aurora-classroom {
+  --aurora-bg: #f1f2fd;
+  --aurora-panel: rgba(255, 255, 255, 0.72);
+  --aurora-panel-2: rgba(255, 255, 255, 0.48);
+  --aurora-hover: rgba(27, 33, 64, 0.06);
+  --aurora-ink: #1b2140;
+  --aurora-ink-soft: #4a5273;
+  --aurora-ink-faint: #7f88a6;
+  --aurora-line: rgba(27, 33, 64, 0.1);
+  --aurora-line-strong: rgba(27, 33, 64, 0.16);
+  --aurora-violet: #5b4be6;
+  --aurora-indigo: #4f5bff;
+  --aurora-coral: #e46455;
+  --aurora-mint: #1f9d7a;
+  --aurora-gold: #b7841f;
+  --aurora-sky: #2f7fbf;
+  --aurora-glow-violet: rgba(124, 108, 255, 0.17);
+  --aurora-glow-coral: rgba(228, 100, 85, 0.12);
+  --aurora-shadow: 0 24px 60px -32px rgba(43, 51, 107, 0.38);
+  --aurora-shadow-soft: 0 16px 40px -30px rgba(43, 51, 107, 0.3);
+  color: var(--aurora-ink);
+}
+
+.dark .aurora-home,
+.dark .aurora-classroom {
+  --aurora-bg: #080b18;
+  --aurora-panel: rgba(255, 255, 255, 0.055);
+  --aurora-panel-2: rgba(255, 255, 255, 0.035);
+  --aurora-hover: rgba(255, 255, 255, 0.07);
+  --aurora-ink: #f2f3ff;
+  --aurora-ink-soft: #b8c0dc;
+  --aurora-ink-faint: #7e88ab;
+  --aurora-line: rgba(255, 255, 255, 0.09);
+  --aurora-line-strong: rgba(255, 255, 255, 0.16);
+  --aurora-violet: #7c6cff;
+  --aurora-indigo: #4f5bff;
+  --aurora-coral: #ff8172;
+  --aurora-mint: #6fe3c1;
+  --aurora-gold: #ffd37a;
+  --aurora-sky: #7cc8ff;
+  --aurora-glow-violet: rgba(124, 108, 255, 0.2);
+  --aurora-glow-coral: rgba(255, 129, 114, 0.1);
+  --aurora-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.65);
+  --aurora-shadow-soft: 0 18px 44px -28px rgba(0, 0, 0, 0.55);
+}
+
+.aurora-home {
+  position: relative;
+  background:
+    radial-gradient(900px 620px at 78% -12%, var(--aurora-glow-violet), transparent 62%),
+    radial-gradient(760px 520px at 8% 2%, var(--aurora-glow-coral), transparent 64%),
+    var(--aurora-bg);
+}
+
+.aurora-home-topbar {
+  height: 66px;
+  background: color-mix(in oklab, var(--aurora-bg) 72%, transparent);
+  border-bottom: 1px solid var(--aurora-line);
+  backdrop-filter: blur(20px) saturate(1.25);
+}
+
+.aurora-brand {
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.aurora-utilities {
+  padding: 5px;
+  border: 1px solid var(--aurora-line);
+  border-radius: 999px;
+  background: var(--aurora-panel);
+  box-shadow: var(--aurora-shadow-soft);
+  backdrop-filter: blur(18px) saturate(1.2);
+}
+
+.aurora-utilities button {
+  color: var(--aurora-ink-soft);
+  border-radius: 999px;
+}
+
+.aurora-utilities button:hover {
+  color: var(--aurora-ink);
+  background: var(--aurora-hover);
+}
+
+.aurora-div {
+  background: var(--aurora-line-strong);
+}
+
+.aurora-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 6vh;
+  padding: 9px 14px;
+  border: 1px solid var(--aurora-line);
+  border-radius: 999px;
+  background: var(--aurora-panel);
+  box-shadow: var(--aurora-shadow-soft);
+  color: var(--aurora-ink-faint);
+  font-family: 'Inter Variable', 'Cairo', sans-serif;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.aurora-kicker-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--aurora-coral);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--aurora-coral) 18%, transparent);
+}
+
+.aurora-hero-title {
+  max-width: 960px;
+  margin: 18px 0 34px;
+  text-align: center;
+  color: var(--aurora-ink);
+  font-size: clamp(30px, 4.6vw, 58px);
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+  background: linear-gradient(
+    180deg,
+    var(--aurora-ink),
+    color-mix(in oklab, var(--aurora-ink) 76%, var(--aurora-violet))
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.aurora-composer {
+  overflow: hidden;
+  border: 1px solid var(--aurora-line);
+  border-radius: 28px;
+  background: var(--aurora-panel);
+  box-shadow: var(--aurora-shadow);
+  backdrop-filter: blur(24px) saturate(1.25);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.aurora-composer:focus-within {
+  border-color: color-mix(in oklab, var(--aurora-violet) 52%, transparent);
+  box-shadow:
+    0 0 0 4px color-mix(in oklab, var(--aurora-violet) 13%, transparent),
+    var(--aurora-shadow);
+}
+
+.aurora-composer textarea {
+  min-height: 150px;
+  color: var(--aurora-ink);
+  font-size: 14.5px;
+}
+
+.aurora-composer textarea::placeholder {
+  color: var(--aurora-ink-faint);
+}
+
+.aurora-library {
+  max-width: 1240px;
+  margin-top: 56px;
+}
+
+.aurora-library .h-px {
+  background: var(--aurora-line);
+}
+
+.aurora-shelf {
+  gap: 22px 18px;
+}
+
+.aurora-lesson {
+  border-radius: 20px;
+}
+
+.aurora-cover {
+  border: 1px solid var(--aurora-line);
+  border-radius: 20px;
+  box-shadow: var(--aurora-shadow-soft);
+}
+
+.aurora-lesson:hover .aurora-cover {
+  border-color: color-mix(in oklab, var(--aurora-violet) 38%, var(--aurora-line));
+  box-shadow: var(--aurora-shadow);
+}
+
+.aurora-lesson-badge {
+  background: color-mix(in oklab, var(--aurora-violet) 13%, transparent);
+  color: var(--aurora-violet);
+}
+
+.aurora-lesson-title {
+  color: var(--aurora-ink);
+  font-weight: 600;
+}
+
+.aurora-lesson-meta {
+  color: var(--aurora-ink-faint);
+}
+
+.aurora-footer {
+  color: var(--aurora-ink-faint);
+}
+
+.aurora-classroom {
+  position: relative;
+  background:
+    radial-gradient(1000px 640px at 82% -10%, var(--aurora-glow-violet), transparent 62%),
+    radial-gradient(760px 520px at 6% 0%, var(--aurora-glow-coral), transparent 66%),
+    var(--aurora-bg);
+}
+
+.aurora-classroom-header {
+  height: 74px;
+  padding-inline: 20px;
+  border-bottom: 1px solid var(--aurora-line);
+  background: color-mix(in oklab, var(--aurora-bg) 70%, transparent);
+  backdrop-filter: blur(22px) saturate(1.25);
+}
+
+.aurora-classroom-header .aurora-header-brand {
+  display: inline-flex;
+}
+
+.aurora-vdiv {
+  width: 1px;
+  height: 30px;
+  background: var(--aurora-line-strong);
+}
+
+.aurora-classroom-kicker {
+  color: var(--aurora-ink-faint);
+  font-family: 'Inter Variable', 'Cairo', sans-serif;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.aurora-classroom-title {
+  color: var(--aurora-ink);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.aurora-classroom-header .aurora-controls > div:first-child {
+  border-color: var(--aurora-line);
+  background: var(--aurora-panel);
+  box-shadow: var(--aurora-shadow-soft);
+}
+
+.aurora-classroom-header .aurora-controls button {
+  color: var(--aurora-ink-soft);
+}
+
+.aurora-classroom-header .aurora-controls button:hover {
+  color: var(--aurora-ink);
+  background: var(--aurora-hover);
+}
+
+.aurora-pro-switch {
+  border-color: var(--aurora-line);
+  background: var(--aurora-panel);
+}
+
+.aurora-stage-wrap {
+  padding: 12px;
+  gap: 12px;
+}
+
+.aurora-plan {
+  border: 1px solid var(--aurora-line);
+  border-radius: 20px;
+  background: var(--aurora-panel-2);
+  box-shadow: var(--aurora-shadow-soft);
+  backdrop-filter: blur(22px) saturate(1.2);
+}
+
+.aurora-classroom-header ~ .aurora-stage-wrap .aurora-plan-brand {
+  display: none;
+}
+
+.aurora-plan-title {
+  display: none;
+  color: var(--aurora-ink);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.aurora-classroom-header ~ .aurora-stage-wrap .aurora-plan-title {
+  display: inline;
+}
+
+.aurora-plan-item {
+  border-radius: 12px;
+}
+
+.aurora-plan-item.is-active {
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--aurora-coral) 12%, transparent),
+    color-mix(in oklab, var(--aurora-violet) 16%, transparent)
+  );
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--aurora-violet) 45%, transparent);
+}
+
+.aurora-stage-main {
+  gap: 12px;
+}
+
+.aurora-canvas {
+  border: 1px solid var(--aurora-line);
+  border-radius: 20px;
+  background: var(--aurora-panel-2);
+  box-shadow: var(--aurora-shadow-soft);
+  backdrop-filter: blur(20px) saturate(1.15);
+}
+
+.aurora-canvas-area {
+  background: transparent;
+}
+
+.aurora-canvas-stage {
+  padding: 18px;
+}
+
+.aurora-stage-viewport {
+  overflow: hidden;
+  border-radius: 16px;
+  box-shadow: 0 20px 44px -30px rgba(10, 14, 35, 0.55);
+}
+
+.aurora-chat {
+  border: 1px solid var(--aurora-line);
+  border-radius: 20px;
+  background: var(--aurora-panel-2);
+  box-shadow: var(--aurora-shadow-soft);
+}
+
+.aurora-chat-wrap {
+  min-width: 0;
+}
+
+.aurora-roundtable > div {
+  overflow: hidden;
+  border: 1px solid var(--aurora-line);
+  border-radius: 20px;
+  background: var(--aurora-panel);
+  box-shadow: var(--aurora-shadow-soft);
+  backdrop-filter: blur(22px) saturate(1.2);
+}
+
+.aurora-reels {
+  display: none;
+}
+
+.aurora-classroom.is-presenting .aurora-stage-wrap {
+  padding: 0;
+  gap: 0;
+}
+
+.aurora-classroom.is-presenting .aurora-plan,
+.aurora-classroom.is-presenting .aurora-chat-wrap {
+  display: none;
+}
+
+.aurora-classroom.is-presenting .aurora-canvas {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.aurora-classroom.is-presenting .aurora-canvas-stage {
+  padding: 0;
+}
+
+.aurora-classroom.is-presenting .aurora-stage-viewport {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+@media (max-width: 1100px) {
+  .aurora-home {
+    padding-inline: 14px;
+  }
+
+  .aurora-home-topbar {
+    height: 60px;
+    padding-inline: 14px;
+  }
+
+  .aurora-home-topbar .aurora-brand-group > :last-child:not(.aurora-brand) {
+    display: none;
+  }
+
+  .aurora-kicker {
+    margin-top: 4vh;
+    font-size: 9.5px;
+  }
+
+  .aurora-hero-title {
+    margin-bottom: 26px;
+    font-size: clamp(28px, 8vw, 42px);
+  }
+
+  .aurora-library {
+    margin-top: 40px;
+  }
+
+  .aurora-shelf {
+    gap: 18px 14px;
+  }
+
+  .aurora-classroom-header {
+    height: 62px;
+    padding-inline: 12px;
+  }
+
+  .aurora-classroom-header .aurora-header-brand,
+  .aurora-classroom-header .aurora-vdiv,
+  .aurora-classroom-header .aurora-pro-switch,
+  .aurora-classroom-header .aurora-export {
+    display: none;
+  }
+
+  .aurora-classroom-title {
+    font-size: 14px;
+  }
+
+  .aurora-stage-wrap {
+    padding: 0 10px 10px;
+    gap: 0;
+  }
+
+  .aurora-plan,
+  .aurora-chat-wrap,
+  .aurora-canvas {
+    display: none;
+  }
+
+  .aurora-stage-main {
+    gap: 10px;
+  }
+
+  .aurora-reels {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+    gap: 14px;
+    overflow-y: auto;
+    padding: 4px 2px 8px;
+    scroll-snap-type: y mandatory;
+    scrollbar-width: none;
+    overscroll-behavior: contain;
+  }
+
+  .aurora-reels::-webkit-scrollbar {
+    display: none;
+  }
+
+  .aurora-reel {
+    flex: 0 0 auto;
+    padding: 12px;
+    border: 1px solid var(--aurora-line);
+    border-radius: 20px;
+    background: var(--aurora-panel);
+    box-shadow: var(--aurora-shadow-soft);
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    transition:
+      border-color 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .aurora-reel.is-active {
+    border-color: color-mix(in oklab, var(--aurora-violet) 55%, transparent);
+    box-shadow:
+      0 0 0 3px color-mix(in oklab, var(--aurora-violet) 10%, transparent),
+      var(--aurora-shadow);
+  }
+
+  .aurora-reel-bars {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+
+  .aurora-reel-bars i {
+    flex: 1;
+    height: 3px;
+    border-radius: 99px;
+    background: var(--aurora-line-strong);
+  }
+
+  .aurora-reel-bars i.on {
+    background: linear-gradient(90deg, var(--aurora-coral), var(--aurora-violet));
+  }
+
+  .aurora-reel-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    color: var(--aurora-ink-faint);
+    font-size: 10.5px;
+  }
+
+  .aurora-reel-count {
+    color: var(--aurora-ink);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .aurora-reel-count em {
+    font-style: normal;
+    opacity: 0.45;
+  }
+
+  .aurora-reel-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 7px;
+    border: 1px solid var(--aurora-line);
+    border-radius: 999px;
+    background: var(--aurora-panel-2);
+    color: var(--aurora-ink-soft);
+    font-weight: 600;
+  }
+
+  .aurora-reel-live {
+    margin-inline-start: auto;
+    color: var(--aurora-violet);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .aurora-reel-slide {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border: 1px solid var(--aurora-line);
+    border-radius: 14px;
+    background: color-mix(in oklab, var(--aurora-bg) 55%, #ffffff);
+  }
+
+  .dark .aurora-reel-slide {
+    background: color-mix(in oklab, var(--aurora-bg) 55%, #000000);
+  }
+
+  .aurora-reel-placeholder {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    color: var(--aurora-ink-faint);
+    background: linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--aurora-violet) 18%, transparent),
+      color-mix(in oklab, var(--aurora-coral) 12%, transparent)
+    );
+  }
+
+  .aurora-reel-placeholder.is-interactive {
+    background: linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--aurora-mint) 18%, transparent),
+      color-mix(in oklab, var(--aurora-sky) 14%, transparent)
+    );
+  }
+
+  .aurora-reel-title {
+    margin-top: 10px;
+    overflow: hidden;
+    color: var(--aurora-ink);
+    font-size: 13px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .aurora-roundtable > div {
+    height: 172px;
+  }
+
+  .aurora-classroom.is-presenting .aurora-stage-wrap {
+    padding: 0;
+  }
+
+  .aurora-classroom.is-presenting .aurora-canvas {
+    display: flex;
+    flex: 1;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .aurora-classroom.is-presenting .aurora-reels {
+    display: none;
+  }
+
+  .aurora-classroom.is-presenting .aurora-canvas-stage {
+    padding: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-reels {
+    scroll-behavior: auto;
+  }
+}

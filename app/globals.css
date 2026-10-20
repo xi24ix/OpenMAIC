@@ -3,6 +3,9 @@
 @import 'shadcn/tailwind.css';
 /* Workbench chat (agent workbench surface): scoped .wbchat tokens + prose skin. */
 @import '../components/workbench/chat/workbench-chat.css';
+/* Aurora skin — home + classroom. Imported after Tailwind so its unlayered
+   rules win over utility classes (no !important needed). */
+@import './aurora.css';
 
 /* ── Alostad brand type: Cairo ───────────────────────────────────────────
    Self-hosted from public/fonts/cairo (fontsource woff2, OFL) — no CDN and
@@ -141,6 +144,9 @@
   /* Alostad brand palette, lifted from the logo: navy figure, coral play. */
   --brand-ink: #2f3b96;
   --brand-coral: #f4796b;
+  --logo-ink: #1b2140;
+  --logo-accent: #e46455;
+  --logo-paper: #ffffff;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -180,6 +186,9 @@
      coral warms up one step. Both stay inside the logo's hue family. */
   --brand-ink: #aab2f2;
   --brand-coral: #f79384;
+  --logo-ink: #f2f3ff;
+  --logo-accent: #ff8172;
+  --logo-paper: #11162b;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
