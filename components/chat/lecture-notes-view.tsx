@@ -112,6 +112,7 @@ export function LectureNotesView({
           <div
             key={note.sceneId}
             data-scene-id={note.sceneId}
+            data-current={isCurrent ? '' : undefined}
             className={cn(
               'relative mb-3 last:mb-0 rounded-lg px-3 py-2.5 transition-colors duration-200',
               isCurrent

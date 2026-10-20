@@ -155,6 +155,9 @@ export const ChatArea = forwardRef<ChatAreaRef, ChatAreaProps>(
 
     // Derive lecture notes directly from scenes — updates reactively as scenes stream in.
     const lectureNotes = useMemo(() => buildLectureNotes(scenes), [scenes]);
+    const currentNote =
+      lectureNotes.find((note) => note.sceneId === currentSceneId) ?? lectureNotes[0];
+    const currentSummary = currentNote?.items.find((item) => item.kind === 'speech')?.text;
 
     // Filter out lecture sessions for the Chat tab
     const chatSessions = useMemo(() => sessions.filter((s) => s.type !== 'lecture'), [sessions]);
@@ -286,13 +289,34 @@ export const ChatArea = forwardRef<ChatAreaRef, ChatAreaProps>(
         )}
 
         <div className={cn('flex flex-col w-full h-full overflow-hidden', collapsed && 'hidden')}>
+          <div className="aurora-chat-head">
+            <span className="aurora-chat-avatar">م</span>
+            <div className="aurora-chat-identity">
+              <b>{t('roundtable.teacher')}</b>
+              <span>{currentNote?.sceneTitle ?? t('stage.currentScene')}</span>
+            </div>
+            <span className="aurora-chat-live" title={t('roundtable.thinking')} aria-hidden>
+              <i />
+            </span>
+          </div>
+
+          {currentSummary && (
+            <div className="aurora-chat-summary">
+              <div className="aurora-chat-summary-head">
+                <BookOpen className="h-3 w-3" />
+                {t('chat.tabs.lecture')}
+              </div>
+              <p>{currentSummary}</p>
+            </div>
+          )}
+
           <Tabs
             value={activeTab}
             onValueChange={(v) => setActiveTab(v as 'lecture' | 'chat')}
-            className="flex flex-col h-full gap-0"
+            className="flex min-h-0 flex-1 flex-col gap-0"
           >
             {/* Tab header row */}
-            <div className="h-10 flex items-center gap-1 shrink-0 mt-3 mb-1 px-3">
+            <div className="aurora-chat-tabs h-10 flex items-center gap-1 shrink-0 mt-3 mb-1 px-3">
               <TabsList variant="line" className="h-full flex-1 w-0">
                 <TabsTrigger value="lecture" className="text-xs gap-1 flex-1">
                   <BookOpen className="w-3.5 h-3.5" />

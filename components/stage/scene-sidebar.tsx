@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   PanelLeftClose,
   PieChart,
@@ -14,7 +13,6 @@ import {
   Trophy,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { AlostadLogo } from '@/components/brand/alostad-logo';
 import { SlideThumbnail } from '@/components/slide-renderer/SlideThumbnail';
 import { ThumbnailInteractive } from '@/components/slide-renderer/components/ThumbnailInteractive';
 import { useStageStore, useCanvasStore } from '@/lib/store';
@@ -31,7 +29,7 @@ interface SceneSidebarProps {
   readonly isCourseComplete?: boolean;
 }
 
-const DEFAULT_WIDTH = 250;
+const DEFAULT_WIDTH = 280;
 const MIN_WIDTH = 170;
 const MAX_WIDTH = 400;
 
@@ -43,13 +41,13 @@ export function SceneSidebar({
   isCourseComplete,
 }: SceneSidebarProps) {
   const { t } = useI18n();
-  const router = useRouter();
   const { scenes, currentSceneId, setCurrentSceneId, generatingOutlines, generationStatus } =
     useStageStore();
   const failedOutlines = useStageStore.use.failedOutlines();
   const generationInterrupted = useStageStore.use.generationInterrupted();
   const viewportSize = useCanvasStore.use.viewportSize();
   const viewportRatio = useCanvasStore.use.viewportRatio();
+  const currentIndex = scenes.findIndex((scene) => scene.id === currentSceneId);
 
   const [retryingOutlineId, setRetryingOutlineId] = useState<string | null>(null);
 
@@ -126,22 +124,29 @@ export function SceneSidebar({
       )}
 
       <div className={cn('flex flex-col w-full h-full overflow-hidden', collapsed && 'hidden')}>
-        {/* Logo Header */}
-        <div className="h-10 flex items-center justify-between shrink-0 relative mt-3 mb-1 px-3">
-          <button
-            onClick={() => router.push('/')}
-            className="aurora-plan-brand flex items-center gap-2 cursor-pointer rounded-lg px-1.5 -mx-1.5 py-1 -my-1 hover:bg-gray-100/80 dark:hover:bg-gray-800/60 active:scale-[0.97] transition-all duration-150"
-            title={t('generation.backToHome')}
-          >
-            <AlostadLogo size="md" />
-          </button>
-          <span className="aurora-plan-title">{t('export.htmlPlayer.scenes')}</span>
-          <button
-            onClick={() => onCollapseChange(true)}
-            className="w-7 h-7 shrink-0 rounded-lg flex items-center justify-center bg-gray-100/80 dark:bg-gray-800/80 text-gray-500 dark:text-gray-400 ring-1 ring-black/[0.04] dark:ring-white/[0.06] hover:bg-gray-200/90 dark:hover:bg-gray-700/90 hover:text-gray-700 dark:hover:text-gray-200 active:scale-90 transition-all duration-200"
-          >
-            <PanelLeftClose className="w-4 h-4" />
-          </button>
+        {/* Lesson plan header */}
+        <div className="aurora-plan-head">
+          <div className="aurora-plan-head-row">
+            <span className="aurora-plan-title">{t('generation.outlineEditorTitle')}</span>
+            <span className="aurora-plan-meta">
+              {scenes.length} · {t('export.htmlPlayer.scenes')}
+            </span>
+            <button
+              onClick={() => onCollapseChange(true)}
+              className="aurora-plan-collapse"
+              aria-label={t('edit.nav.collapse')}
+            >
+              <PanelLeftClose className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="aurora-plan-progress" aria-hidden>
+            {scenes.map((scene, index) => (
+              <i
+                key={scene.id}
+                className={index <= currentIndex || isCourseComplete ? 'on' : undefined}
+              />
+            ))}
+          </div>
         </div>
 
         {/* Scenes List */}
@@ -177,11 +182,11 @@ export function SceneSidebar({
                 )}
               >
                 {/* Scene Header */}
-                <div className="flex justify-between items-center px-2 pt-0.5">
+                <div className="aurora-plan-item-head flex justify-between items-center px-2 pt-0.5">
                   <div className="flex items-center gap-2 max-w-full">
                     <span
                       className={cn(
-                        'text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center shrink-0',
+                        'aurora-plan-num text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center shrink-0',
                         isActive
                           ? 'bg-purple-600 dark:bg-purple-500 text-white shadow-sm shadow-purple-500/30'
                           : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400',
@@ -192,7 +197,7 @@ export function SceneSidebar({
                     <span
                       data-testid="scene-title"
                       className={cn(
-                        'text-xs font-bold truncate transition-colors',
+                        'aurora-plan-name text-xs font-bold truncate transition-colors',
                         isActive
                           ? 'text-purple-700 dark:text-purple-300'
                           : 'text-gray-600 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-100',
@@ -204,7 +209,7 @@ export function SceneSidebar({
                 </div>
 
                 {/* Thumbnail */}
-                <div className="relative aspect-video w-full rounded overflow-hidden bg-gray-100 dark:bg-gray-800 ring-1 ring-black/5 dark:ring-white/5">
+                <div className="aurora-plan-thumb relative aspect-video w-full rounded overflow-hidden bg-gray-100 dark:bg-gray-800 ring-1 ring-black/5 dark:ring-white/5">
                   <div className="absolute inset-0 flex items-center justify-center">
                     {isSlide && slideContent ? (
                       <LazySlideThumbnail
@@ -363,7 +368,8 @@ export function SceneSidebar({
                     }
                   }}
                   className={cn(
-                    'group relative rounded-lg flex flex-col gap-1 p-1.5 transition-all duration-200',
+                    'aurora-plan-item group relative rounded-lg flex flex-col gap-1 p-1.5 transition-all duration-200',
+                    isActive && !isFailed && 'is-active',
                     isFailed
                       ? 'opacity-100 cursor-default'
                       : 'cursor-pointer hover:bg-gray-50/80 dark:hover:bg-gray-800/50',
@@ -374,11 +380,11 @@ export function SceneSidebar({
                   )}
                 >
                   {/* Scene Header */}
-                  <div className="flex justify-between items-center px-2 pt-0.5">
+                  <div className="aurora-plan-item-head flex justify-between items-center px-2 pt-0.5">
                     <div className="flex items-center gap-2 max-w-full">
                       <span
                         className={cn(
-                          'text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center shrink-0',
+                          'aurora-plan-num text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center shrink-0',
                           isActive && !isFailed
                             ? 'bg-purple-600 dark:bg-purple-500 text-white shadow-sm shadow-purple-500/30'
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500',
@@ -388,7 +394,7 @@ export function SceneSidebar({
                       </span>
                       <span
                         className={cn(
-                          'text-xs font-bold truncate transition-colors',
+                          'aurora-plan-name text-xs font-bold truncate transition-colors',
                           isActive && !isFailed
                             ? 'text-purple-700 dark:text-purple-300'
                             : isFailed
@@ -404,7 +410,7 @@ export function SceneSidebar({
                   {/* Skeleton Thumbnail */}
                   <div
                     className={cn(
-                      'relative aspect-video w-full rounded overflow-hidden ring-1',
+                      'aurora-plan-thumb relative aspect-video w-full rounded overflow-hidden ring-1',
                       isFailed
                         ? 'bg-red-50/30 dark:bg-red-950/10 ring-red-100 dark:ring-red-900/20'
                         : 'bg-gray-100 dark:bg-gray-800 ring-black/5 dark:ring-white/5',
@@ -482,17 +488,18 @@ export function SceneSidebar({
                     }
                   }}
                   className={cn(
-                    'group relative rounded-lg flex flex-col gap-1 p-1.5 transition-all duration-200 cursor-pointer hover:bg-amber-50/60 dark:hover:bg-amber-900/10',
+                    'aurora-plan-item group relative rounded-lg flex flex-col gap-1 p-1.5 transition-all duration-200 cursor-pointer hover:bg-amber-50/60 dark:hover:bg-amber-900/10',
+                    isActive && 'is-active',
                     !isActive && 'opacity-80',
                     isActive &&
                       'bg-amber-50 dark:bg-amber-900/20 ring-1 ring-amber-200 dark:ring-amber-700 opacity-100',
                   )}
                 >
-                  <div className="flex justify-between items-center px-2 pt-0.5">
+                  <div className="aurora-plan-item-head flex justify-between items-center px-2 pt-0.5">
                     <div className="flex items-center gap-2 max-w-full">
                       <span
                         className={cn(
-                          'text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center shrink-0',
+                          'aurora-plan-num text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center shrink-0',
                           isActive
                             ? 'bg-amber-500 dark:bg-amber-400 text-white shadow-sm shadow-amber-500/30'
                             : 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400',
@@ -502,7 +509,7 @@ export function SceneSidebar({
                       </span>
                       <span
                         className={cn(
-                          'text-xs font-bold truncate transition-colors',
+                          'aurora-plan-name text-xs font-bold truncate transition-colors',
                           isActive
                             ? 'text-amber-700 dark:text-amber-300'
                             : 'text-amber-600 dark:text-amber-400',
@@ -514,7 +521,7 @@ export function SceneSidebar({
                   </div>
                   <div
                     className={cn(
-                      'relative aspect-video w-full rounded overflow-hidden ring-1 flex items-center justify-center transition-all',
+                      'aurora-plan-thumb relative aspect-video w-full rounded overflow-hidden ring-1 flex items-center justify-center transition-all',
                       'bg-amber-50/80 dark:bg-amber-950/20',
                       isActive
                         ? 'ring-amber-300 dark:ring-amber-700'

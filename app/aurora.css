@@ -392,6 +392,596 @@
   box-shadow: none;
 }
 
+/* ── Aurora classroom depth ─────────────────────────────────────────────
+   The first classroom pass only tinted the shell. These rules skin the
+   actual surfaces: compact topbar, glass lesson rail, teacher panel,
+   stage well, and the floating teaching dock. */
+
+.aurora-classroom {
+  background:
+    radial-gradient(
+      1000px 680px at 82% -12%,
+      color-mix(in oklab, var(--aurora-violet) 30%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      760px 540px at 4% 8%,
+      color-mix(in oklab, var(--aurora-coral) 14%, transparent),
+      transparent 62%
+    ),
+    radial-gradient(
+      620px 460px at 42% 108%,
+      color-mix(in oklab, var(--aurora-mint) 9%, transparent),
+      transparent 66%
+    ),
+    var(--aurora-bg);
+}
+
+.aurora-classroom-header {
+  height: 62px;
+  padding-inline: 20px;
+  border-bottom: 1px solid var(--aurora-line);
+  background: color-mix(in oklab, var(--aurora-bg) 62%, transparent);
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--aurora-ink) 4%, transparent);
+  backdrop-filter: blur(24px) saturate(1.3);
+}
+
+.aurora-classroom-header .aurora-header-brand {
+  height: 26px;
+  gap: 8px;
+}
+
+.aurora-classroom-header .aurora-classroom-kicker {
+  margin-bottom: 1px;
+  font-size: 8px;
+  letter-spacing: 0.18em;
+}
+
+.aurora-classroom-header .aurora-classroom-title {
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.aurora-back {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--aurora-line);
+  border-radius: 10px;
+  background: var(--aurora-panel-2);
+  color: var(--aurora-ink-soft);
+}
+
+.aurora-back:hover {
+  background: var(--aurora-hover);
+  color: var(--aurora-ink);
+}
+
+.aurora-classroom-header .aurora-controls {
+  gap: 8px;
+}
+
+.aurora-classroom-header .aurora-controls > div:first-child {
+  padding: 4px;
+  border: 1px solid var(--aurora-line);
+  border-radius: 999px;
+  background: var(--aurora-panel);
+  box-shadow: 0 12px 32px -24px rgba(0, 0, 0, 0.6);
+}
+
+.aurora-classroom-header .aurora-pro-switch {
+  height: 32px;
+  padding-inline: 10px;
+  border: 1px solid var(--aurora-line);
+  background: var(--aurora-panel);
+  box-shadow: none;
+}
+
+.aurora-stage-wrap {
+  padding: 14px 18px 16px;
+  gap: 14px;
+}
+
+.aurora-plan {
+  overflow: hidden;
+  border: 1px solid var(--aurora-line);
+  border-radius: 22px;
+  background: linear-gradient(
+    165deg,
+    color-mix(in oklab, var(--aurora-panel) 88%, transparent),
+    var(--aurora-panel-2)
+  );
+  box-shadow:
+    0 30px 70px -36px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 color-mix(in oklab, var(--aurora-ink) 6%, transparent);
+  backdrop-filter: blur(24px) saturate(1.25);
+}
+
+.aurora-plan-head {
+  padding: 13px 14px 11px;
+  border-bottom: 1px solid var(--aurora-line);
+}
+
+.aurora-plan-head-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.aurora-stage-wrap .aurora-plan-head .aurora-plan-title {
+  display: block;
+  color: var(--aurora-ink);
+  font-size: 12.5px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.aurora-plan-meta {
+  color: var(--aurora-ink-faint);
+  font-size: 8.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.aurora-plan-collapse {
+  margin-inline-start: auto;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--aurora-line);
+  border-radius: 7px;
+  background: var(--aurora-panel-2);
+  color: var(--aurora-ink-faint);
+  transition:
+    color 160ms ease,
+    background 160ms ease;
+}
+
+.aurora-plan-collapse:hover {
+  background: var(--aurora-hover);
+  color: var(--aurora-ink);
+}
+
+.aurora-plan-progress {
+  display: flex;
+  gap: 4px;
+  margin-top: 9px;
+}
+
+.aurora-plan-progress i {
+  flex: 1;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--aurora-line);
+}
+
+.aurora-plan-progress i.on {
+  background: linear-gradient(90deg, var(--aurora-violet), var(--aurora-coral));
+  box-shadow: 0 0 10px color-mix(in oklab, var(--aurora-violet) 45%, transparent);
+}
+
+.aurora-plan [data-testid='scene-list'] {
+  gap: 3px;
+  padding: 7px;
+}
+
+.aurora-plan [data-testid='scene-list'] > * + * {
+  margin-top: 0;
+}
+
+.aurora-stage-wrap .aurora-plan-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.aurora-stage-wrap .aurora-plan-item:hover {
+  background: var(--aurora-hover);
+}
+
+.aurora-stage-wrap .aurora-plan-item.is-active {
+  grid-template-columns: minmax(0, 1fr);
+  border-color: color-mix(in oklab, var(--aurora-violet) 42%, transparent);
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--aurora-violet) 22%, transparent),
+    color-mix(in oklab, var(--aurora-violet) 3%, transparent)
+  );
+  box-shadow: inset 0 0 24px color-mix(in oklab, var(--aurora-violet) 12%, transparent);
+}
+
+.aurora-stage-wrap .aurora-plan-item.is-active > .aurora-plan-thumb {
+  display: none;
+}
+
+.aurora-stage-wrap .aurora-plan-item-head {
+  min-width: 0;
+  padding: 0;
+}
+
+.aurora-stage-wrap .aurora-plan-item-head > div {
+  min-width: 0;
+  gap: 8px;
+}
+
+.aurora-plan-num {
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 7px !important;
+  border: 1px solid var(--aurora-line);
+  background: var(--aurora-panel-2) !important;
+  color: var(--aurora-ink-soft) !important;
+  font-size: 9px;
+  font-weight: 900;
+  box-shadow: none !important;
+}
+
+.aurora-plan-item.is-active .aurora-plan-num {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--aurora-violet), var(--aurora-coral)) !important;
+  color: #fff !important;
+}
+
+.aurora-plan-name {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--aurora-ink-soft) !important;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: normal !important;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.aurora-plan-item.is-active .aurora-plan-name {
+  color: var(--aurora-ink) !important;
+}
+
+.aurora-plan-thumb {
+  width: 44px;
+  height: 30px;
+  aspect-ratio: auto !important;
+  border: 1px solid var(--aurora-line);
+  border-radius: 7px !important;
+  background:
+    radial-gradient(
+      circle at 70% 25%,
+      color-mix(in oklab, var(--aurora-violet) 46%, transparent),
+      transparent 62%
+    ),
+    linear-gradient(135deg, #17203c, #241a35) !important;
+}
+
+.aurora-plan-thumb > div {
+  opacity: 0.9;
+}
+
+:root:not(.dark) .aurora-plan-thumb {
+  background:
+    radial-gradient(
+      circle at 70% 25%,
+      color-mix(in oklab, var(--aurora-violet) 28%, transparent),
+      transparent 62%
+    ),
+    linear-gradient(135deg, #e6e9fb, #f1e7f4) !important;
+}
+
+.aurora-canvas {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--aurora-line);
+  border-radius: 22px;
+  background:
+    radial-gradient(
+      80% 62% at 50% -8%,
+      color-mix(in oklab, var(--aurora-violet) 22%, transparent),
+      transparent 64%
+    ),
+    radial-gradient(
+      46% 46% at 10% 106%,
+      color-mix(in oklab, var(--aurora-mint) 10%, transparent),
+      transparent 62%
+    ),
+    linear-gradient(
+      160deg,
+      color-mix(in oklab, var(--aurora-panel) 60%, transparent),
+      var(--aurora-panel-2)
+    );
+  box-shadow:
+    0 34px 80px -38px rgba(0, 0, 0, 0.72),
+    inset 0 1px 0 color-mix(in oklab, var(--aurora-ink) 7%, transparent);
+}
+
+.aurora-canvas::before {
+  content: '';
+  position: absolute;
+  inset: 14px;
+  border: 1px dashed color-mix(in oklab, var(--aurora-ink) 8%, transparent);
+  border-radius: 16px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.aurora-canvas::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+    color-mix(in oklab, var(--aurora-ink) 60%, transparent) 0.6px,
+    transparent 0.7px
+  );
+  background-size: 34px 34px;
+  opacity: 0.12;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.aurora-canvas-area {
+  position: relative;
+  z-index: 1;
+  background: transparent !important;
+}
+
+.aurora-canvas-stage {
+  padding: 28px 32px 164px;
+  background: transparent !important;
+}
+
+.aurora-stage-viewport {
+  border: 1px solid color-mix(in oklab, var(--aurora-ink) 14%, transparent);
+  border-radius: 18px;
+  box-shadow:
+    0 34px 80px -34px rgba(0, 0, 0, 0.62),
+    0 0 0 8px color-mix(in oklab, var(--aurora-ink) 3%, transparent);
+}
+
+.aurora-chat {
+  overflow: hidden;
+  border: 1px solid var(--aurora-line);
+  border-radius: 22px;
+  background: linear-gradient(
+    165deg,
+    color-mix(in oklab, var(--aurora-panel) 86%, transparent),
+    var(--aurora-panel-2)
+  );
+  box-shadow:
+    0 30px 70px -36px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 color-mix(in oklab, var(--aurora-ink) 6%, transparent);
+  backdrop-filter: blur(24px) saturate(1.25);
+}
+
+.aurora-chat-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--aurora-line);
+}
+
+.aurora-chat-avatar {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--aurora-violet), var(--aurora-coral));
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  box-shadow: 0 0 22px color-mix(in oklab, var(--aurora-violet) 38%, transparent);
+}
+
+.aurora-chat-identity {
+  min-width: 0;
+}
+
+.aurora-chat-identity b {
+  display: block;
+  color: var(--aurora-ink);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.aurora-chat-identity span {
+  display: block;
+  margin-top: 2px;
+  overflow: hidden;
+  color: var(--aurora-ink-faint);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aurora-chat-live {
+  margin-inline-start: auto;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in oklab, var(--aurora-mint) 26%, transparent);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--aurora-mint) 10%, transparent);
+}
+
+.aurora-chat-live i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--aurora-mint);
+  box-shadow: 0 0 8px var(--aurora-mint);
+}
+
+.aurora-chat-summary {
+  margin: 10px 12px 0;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in oklab, var(--aurora-violet) 26%, transparent);
+  border-radius: 14px;
+  background: linear-gradient(
+    150deg,
+    color-mix(in oklab, var(--aurora-violet) 16%, transparent),
+    color-mix(in oklab, var(--aurora-violet) 3%, transparent)
+  );
+}
+
+.aurora-chat-summary-head {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: color-mix(in oklab, var(--aurora-violet) 58%, var(--aurora-ink));
+  font-size: 8.5px;
+  font-weight: 900;
+}
+
+.aurora-chat-summary p {
+  display: -webkit-box;
+  margin-top: 5px;
+  overflow: hidden;
+  color: var(--aurora-ink-soft);
+  font-size: 9.5px;
+  font-weight: 600;
+  line-height: 1.6;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.aurora-chat-tabs {
+  margin: 10px 12px 6px;
+  padding: 0;
+}
+
+.aurora-chat [role='tablist'] {
+  height: 32px;
+  padding: 3px;
+  border: 1px solid var(--aurora-line);
+  border-radius: 999px;
+  background: var(--aurora-panel-2);
+}
+
+.aurora-chat [role='tab'] {
+  height: 24px;
+  border-radius: 999px;
+  color: var(--aurora-ink-faint);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.aurora-chat [role='tab'][data-state='active'] {
+  background: color-mix(in oklab, var(--aurora-violet) 22%, transparent);
+  color: var(--aurora-ink);
+  box-shadow: none;
+}
+
+.aurora-chat [role='tab'][data-state='active']::after {
+  display: none;
+}
+
+.aurora-chat [data-scene-id] {
+  margin-bottom: 8px;
+  padding: 10px 11px;
+  border: 1px solid var(--aurora-line);
+  border-radius: 14px;
+  background: var(--aurora-panel-2);
+}
+
+.aurora-chat [data-scene-id][data-current] {
+  border-color: color-mix(in oklab, var(--aurora-violet) 34%, transparent);
+  background: linear-gradient(
+    150deg,
+    color-mix(in oklab, var(--aurora-violet) 15%, transparent),
+    color-mix(in oklab, var(--aurora-violet) 2%, transparent)
+  );
+}
+
+.aurora-chat [data-scene-id] h4 {
+  padding-left: 0;
+  color: var(--aurora-ink);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.aurora-chat [data-scene-id] button {
+  padding: 1px 0;
+  color: var(--aurora-ink-soft);
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+.aurora-chat [data-scene-id] button:hover {
+  background: transparent;
+  color: var(--aurora-ink);
+}
+
+.aurora-chat [data-scene-id] .mb-1\\.5 {
+  margin-bottom: 6px;
+}
+
+.aurora-chat [data-scene-id] span {
+  font-size: 9px;
+}
+
+.aurora-roundtable > div {
+  border: 1px solid var(--aurora-line);
+  border-radius: 22px;
+  background: linear-gradient(
+    160deg,
+    color-mix(in oklab, var(--aurora-panel) 92%, transparent),
+    var(--aurora-panel-2)
+  );
+  box-shadow:
+    0 26px 64px -28px rgba(0, 0, 0, 0.72),
+    inset 0 1px 0 color-mix(in oklab, var(--aurora-ink) 7%, transparent);
+  backdrop-filter: blur(26px) saturate(1.25);
+}
+
+@media (min-width: 1101px) {
+  .aurora-stage-main {
+    position: relative;
+  }
+
+  .aurora-stage-main > .aurora-roundtable {
+    position: absolute;
+    inset-inline: 16px;
+    bottom: 14px;
+    z-index: 40;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    pointer-events: none;
+  }
+
+  .aurora-stage-main > .aurora-roundtable > div {
+    height: 148px;
+    pointer-events: auto;
+    overflow: hidden;
+    border-color: color-mix(in oklab, var(--aurora-ink) 12%, transparent);
+    background: color-mix(in oklab, var(--aurora-bg) 78%, transparent);
+  }
+
+  .aurora-stage-main > .aurora-roundtable > div > div:first-child {
+    border-bottom: 1px solid var(--aurora-line);
+  }
+
+  .aurora-roundtable [data-testid='roundtable-non-presentation-card'] {
+    border: 1px solid var(--aurora-line);
+    border-radius: 16px;
+    background: var(--aurora-panel-2);
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+}
+
 @media (max-width: 640px) {
   .aurora-composer .relative.w-96 {
     width: auto;
