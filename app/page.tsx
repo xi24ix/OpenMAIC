@@ -38,6 +38,7 @@ import { Textarea as UITextarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { SettingsDialog } from '@/components/settings';
 import { GenerationToolbar } from '@/components/generation/generation-toolbar';
+import { SkillPicker, type GenerationSkill } from '@/components/generation/skill-picker';
 import { AgentBar } from '@/components/agent/agent-bar';
 import { useTheme } from '@/lib/hooks/use-theme';
 import {
@@ -187,6 +188,7 @@ function HomePage() {
     if (workbenchEntryEnabled) router.prefetch('/workspace');
   }, [router, workbenchEntryEnabled]);
   const [form, setForm] = useState<FormState>(initialFormState);
+  const [selectedSkills, setSelectedSkills] = useState<GenerationSkill[]>([]);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsSection, setSettingsSection] = useState<
     import('@/lib/types/settings').SettingsSection | undefined
@@ -588,6 +590,7 @@ function HomePage() {
       const run = await startClassicRun({
         requirement: form.requirement,
         materialIds,
+        skillIds: selectedSkills.map((skill) => skill.id),
         interactive: form.vocationalTestMode ? true : form.interactiveMode,
         taskEngine: form.vocationalTestMode,
         capabilities,
@@ -676,82 +679,82 @@ function HomePage() {
         </div>
 
         <div className="aurora-utilities flex items-center gap-1">
-        {/* Language Selector */}
-        <LanguageSwitcher onOpen={() => setThemeOpen(false)} />
+          {/* Language Selector */}
+          <LanguageSwitcher onOpen={() => setThemeOpen(false)} />
 
-        <div className="aurora-div w-[1px] h-4" />
+          <div className="aurora-div w-[1px] h-4" />
 
-        {/* Theme Selector */}
-        <div className="relative">
-          <button
-            onClick={() => {
-              setThemeOpen(!themeOpen);
-            }}
-            className="p-2 rounded-full text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200 hover:shadow-sm transition-all"
-          >
-            {theme === 'light' && <Sun className="w-4 h-4" />}
-            {theme === 'dark' && <Moon className="w-4 h-4" />}
-            {theme === 'system' && <Monitor className="w-4 h-4" />}
-          </button>
-          {themeOpen && (
-            <div className="absolute top-full mt-2 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden z-50 min-w-[140px]">
-              <button
-                onClick={() => {
-                  setTheme('light');
-                  setThemeOpen(false);
-                }}
-                className={cn(
-                  'w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2',
-                  theme === 'light' &&
-                    'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
-                )}
-              >
-                <Sun className="w-4 h-4" />
-                {t('settings.themeOptions.light')}
-              </button>
-              <button
-                onClick={() => {
-                  setTheme('dark');
-                  setThemeOpen(false);
-                }}
-                className={cn(
-                  'w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2',
-                  theme === 'dark' &&
-                    'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
-                )}
-              >
-                <Moon className="w-4 h-4" />
-                {t('settings.themeOptions.dark')}
-              </button>
-              <button
-                onClick={() => {
-                  setTheme('system');
-                  setThemeOpen(false);
-                }}
-                className={cn(
-                  'w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2',
-                  theme === 'system' &&
-                    'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
-                )}
-              >
-                <Monitor className="w-4 h-4" />
-                {t('settings.themeOptions.system')}
-              </button>
-            </div>
-          )}
-        </div>
+          {/* Theme Selector */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                setThemeOpen(!themeOpen);
+              }}
+              className="p-2 rounded-full text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200 hover:shadow-sm transition-all"
+            >
+              {theme === 'light' && <Sun className="w-4 h-4" />}
+              {theme === 'dark' && <Moon className="w-4 h-4" />}
+              {theme === 'system' && <Monitor className="w-4 h-4" />}
+            </button>
+            {themeOpen && (
+              <div className="absolute top-full mt-2 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden z-50 min-w-[140px]">
+                <button
+                  onClick={() => {
+                    setTheme('light');
+                    setThemeOpen(false);
+                  }}
+                  className={cn(
+                    'w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2',
+                    theme === 'light' &&
+                      'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
+                  )}
+                >
+                  <Sun className="w-4 h-4" />
+                  {t('settings.themeOptions.light')}
+                </button>
+                <button
+                  onClick={() => {
+                    setTheme('dark');
+                    setThemeOpen(false);
+                  }}
+                  className={cn(
+                    'w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2',
+                    theme === 'dark' &&
+                      'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
+                  )}
+                >
+                  <Moon className="w-4 h-4" />
+                  {t('settings.themeOptions.dark')}
+                </button>
+                <button
+                  onClick={() => {
+                    setTheme('system');
+                    setThemeOpen(false);
+                  }}
+                  className={cn(
+                    'w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2',
+                    theme === 'system' &&
+                      'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
+                  )}
+                >
+                  <Monitor className="w-4 h-4" />
+                  {t('settings.themeOptions.system')}
+                </button>
+              </div>
+            )}
+          </div>
 
-        <div className="w-[1px] h-4 bg-gray-200 dark:bg-gray-700" />
+          <div className="w-[1px] h-4 bg-gray-200 dark:bg-gray-700" />
 
-        {/* Settings Button */}
-        <div className="relative">
-          <button
-            onClick={() => setSettingsOpen(true)}
-            className="p-2 rounded-full text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200 hover:shadow-sm transition-all group"
-          >
-            <Settings className="w-4 h-4 group-hover:rotate-90 transition-transform duration-500" />
-          </button>
-        </div>
+          {/* Settings Button */}
+          <div className="relative">
+            <button
+              onClick={() => setSettingsOpen(true)}
+              className="p-2 rounded-full text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200 hover:shadow-sm transition-all group"
+            >
+              <Settings className="w-4 h-4 group-hover:rotate-90 transition-transform duration-500" />
+            </button>
+          </div>
         </div>
       </header>
       <SettingsDialog
@@ -816,6 +819,33 @@ function HomePage() {
               rows={4}
             />
 
+            {selectedSkills.length > 0 && (
+              <div className="flex flex-wrap gap-1 px-4 pb-2">
+                {selectedSkills.map((skill) => (
+                  <span
+                    key={skill.id}
+                    className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/8 px-2 py-0.5 text-[10px] text-primary"
+                  >
+                    <Sparkles className="size-3" />
+                    {skill.title ?? skill.name}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedSkills((current) =>
+                          current.filter((entry) => entry.id !== skill.id),
+                        )
+                      }
+                      disabled={preparingGenerate}
+                      className="rounded-full p-0.5 hover:bg-primary/15 disabled:opacity-40"
+                      aria-label={t('toolbar.removeSkill', { name: skill.title ?? skill.name })}
+                    >
+                      <X className="size-2.5" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
             {/* Toolbar row */}
             <div className="aurora-composer-actions px-3 pb-3 flex items-end gap-2">
               <div className="aurora-composer-tools-wrap flex-1 min-w-0">
@@ -826,6 +856,9 @@ function HomePage() {
                   onCourseMaterialRetry={(id) => {
                     if (!preparingGenerate) courseMaterials.retry(id);
                   }}
+                  onCourseMaterialPages={(id, pages) => {
+                    if (!preparingGenerate) courseMaterials.selectPages(id, pages);
+                  }}
                   onPdfError={setError}
                   materialsLocked={preparingGenerate}
                   onSettingsOpen={(section) => {
@@ -834,6 +867,12 @@ function HomePage() {
                   }}
                 />
               </div>
+
+              <SkillPicker
+                value={selectedSkills}
+                onChange={setSelectedSkills}
+                disabled={preparingGenerate}
+              />
 
               {/* Interactive mode toggle */}
               <Tooltip>

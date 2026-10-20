@@ -21,6 +21,7 @@ export const MAX_COMMAND_BODY_BYTES = 1024 * 1024;
 const MAX_REQUIREMENT_CHARS = 20_000;
 const MAX_PROFILE_FIELD_CHARS = 2_000;
 const MAX_PRESET_AGENTS = 20;
+const MAX_SKILLS = 5;
 const AGENT_ID_PATTERN = /^[A-Za-z0-9_.:-]{1,128}$/;
 const PROVIDER_ID_PATTERN = /^[A-Za-z0-9_.:-]{1,64}$/;
 const MAX_VOICE_ID_CHARS = 256;
@@ -121,6 +122,19 @@ export function parseRunInput(raw: unknown): Parsed<GenerationRunInput> {
     if (materialIds.length > MAX_CLASSROOM_MATERIALS) return { ok: false, message: invalid };
   }
 
+  let skillIds: string[] = [];
+  if (body.skillIds !== undefined) {
+    const invalid = `skillIds must be an array of at most ${MAX_SKILLS} skill ids`;
+    if (
+      !Array.isArray(body.skillIds) ||
+      body.skillIds.length > MAX_SKILLS ||
+      body.skillIds.some((id) => typeof id !== 'string' || !AGENT_ID_PATTERN.test(id))
+    ) {
+      return { ok: false, message: invalid };
+    }
+    skillIds = [...new Set(body.skillIds as string[])];
+  }
+
   const interactive = optionalBoolean(body.interactive, 'interactive');
   if (!interactive.ok) return interactive;
   const taskEngine = optionalBoolean(body.taskEngine, 'taskEngine');
@@ -206,6 +220,7 @@ export function parseRunInput(raw: unknown): Parsed<GenerationRunInput> {
     value: {
       requirement,
       materialIds,
+      skillIds,
       interactive: interactive.value,
       taskEngine: taskEngine.value,
       agents,

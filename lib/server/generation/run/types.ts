@@ -80,6 +80,8 @@ export interface GenerationRunInput {
   requirement: string;
   /** Owner-library uploads (`POST /api/materials`), in order. */
   materialIds: string[];
+  /** Built-in course-design skills to plan the outline under, by id or name. */
+  skillIds?: string[];
   interactive: boolean;
   taskEngine: boolean;
   agents: GenerationRunAgents;

@@ -55,6 +55,7 @@ import {
 } from '@/lib/generation-run-client/use-course-materials';
 import { ModelPicker } from '@/components/settings/model-picker';
 import { useLLMPickerGroups } from '@/components/settings/use-llm-picker-groups';
+import { PdfPagePicker } from '@/components/generation/pdf-page-picker';
 
 // ─── Constants ───────────────────────────────────────────────
 const MAX_COURSE_MATERIAL_SIZE_MB = 50;
@@ -91,6 +92,8 @@ export interface GenerationToolbarProps {
   onCourseMaterialRemove: (id: string) => void;
   /** Upload or extract a failed material again. */
   onCourseMaterialRetry?: (id: string) => void;
+  /** Extract a deferred PDF for the pages the learner chose. */
+  onCourseMaterialPages?: (id: string, pages: number[]) => void;
   onPdfError: (error: string | null) => void;
   /**
    * When set, the course-material add/remove/Retry affordances and the
@@ -112,6 +115,7 @@ export function GenerationToolbar({
   onCourseMaterialsAdd,
   onCourseMaterialRemove,
   onCourseMaterialRetry,
+  onCourseMaterialPages,
   onPdfError,
   materialsLocked = false,
   onSettingsOpen,
@@ -442,6 +446,7 @@ export function GenerationToolbar({
                           locked={materialsLocked}
                           onRemove={() => onCourseMaterialRemove(file.id)}
                           onRetry={() => onCourseMaterialRetry?.(file.id)}
+                          onSelectPages={(pages) => onCourseMaterialPages?.(file.id, pages)}
                         />
                       ))}
                   </div>
@@ -523,13 +528,16 @@ export function CourseMaterialChip({
   locked,
   onRemove,
   onRetry,
+  onSelectPages,
 }: {
   material: CourseMaterialEntry;
   locked: boolean;
   onRemove: () => void;
   onRetry: () => void;
+  onSelectPages?: (pages: number[]) => void;
 }) {
   const { t } = useI18n();
+  const [pagesOpen, setPagesOpen] = useState(false);
   const media = material.mediaKind === 'media';
   const failed = material.status === 'failed';
   const percent = Math.round(material.progress * 100);
@@ -586,6 +594,12 @@ export function CourseMaterialChip({
               {material.status === 'uploading' && (
                 <span className="tabular-nums">{t('toolbar.materialUploading', { percent })}</span>
               )}
+              {material.status === 'select-pages' && (
+                <>
+                  <FileText className="size-3 shrink-0" />
+                  <span>{t('toolbar.materialSelectPages')}</span>
+                </>
+              )}
               {material.status === 'extracting' && (
                 <>
                   <Loader2 className="size-2.5 shrink-0 animate-spin" />
@@ -629,6 +643,34 @@ export function CourseMaterialChip({
           <X className="size-3.5" />
         </button>
       </div>
+      {material.status === 'select-pages' && material.materialId && (
+        <>
+          <button
+            type="button"
+            onClick={() => setPagesOpen(true)}
+            disabled={locked}
+            className={cn(
+              'mt-1 ms-8 rounded-md border border-primary/30 bg-primary/8 px-2 py-1 text-[10px] font-medium text-primary transition-colors',
+              'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary',
+              locked ? 'cursor-not-allowed opacity-40' : 'hover:bg-primary/15',
+            )}
+          >
+            {t('toolbar.selectPdfPages')}
+          </button>
+          {pagesOpen && (
+            <PdfPagePicker
+              materialId={material.materialId}
+              name={material.name}
+              open
+              onOpenChange={setPagesOpen}
+              onConfirm={(pages) => {
+                setPagesOpen(false);
+                onSelectPages?.(pages);
+              }}
+            />
+          )}
+        </>
+      )}
       {notices.map((notice) => (
         <p
           key={notice}

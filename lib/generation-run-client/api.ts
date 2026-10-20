@@ -202,6 +202,10 @@ export interface MaterialExtractionView {
   textChars?: number;
   pageCount?: number;
   imageCount?: number;
+  /** The PDF pages this extraction covers (1-based, ascending). */
+  selectedPages?: number[];
+  /** The PDF's total pages when the selection was made. */
+  sourcePageCount?: number;
   /** What a course leaves out of this material on its own. */
   truncated?: { textChars?: number; images?: { total: number; max: number } };
 }
@@ -219,12 +223,21 @@ export interface OwnerMaterialView {
 /**
  * Upload one material to the owner's library, reporting the share of its
  * bytes sent (an XMLHttpRequest: fetch reports no upload progress). The
- * server starts extracting it at once. Rejects with a {@link RunApiError} the
- * learner can read, or an `AbortError` when `signal` aborts it.
+ * server starts extracting it at once unless `extract` is false (a PDF waits
+ * for its pages to be chosen). Rejects with a {@link RunApiError} the learner
+ * can read, or an `AbortError` when `signal` aborts it.
  */
 export function uploadMaterial(
   file: File,
-  { onProgress, signal }: { onProgress?: (sent: number) => void; signal?: AbortSignal } = {},
+  {
+    onProgress,
+    signal,
+    extract = true,
+  }: {
+    onProgress?: (sent: number) => void;
+    signal?: AbortSignal;
+    extract?: boolean;
+  } = {},
 ): Promise<OwnerMaterialView> {
   return new Promise((resolve, reject) => {
     const failed = (status: number, body: { errorCode?: unknown; maxBytes?: unknown } | null) => {
@@ -249,7 +262,7 @@ export function uploadMaterial(
       return;
     }
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/api/materials');
+    xhr.open('POST', extract ? '/api/materials' : '/api/materials?extract=false');
     xhr.setRequestHeader('content-type', materialMime(file));
     xhr.setRequestHeader('x-material-filename', encodeURIComponent(file.name));
     xhr.upload.onprogress = (event) => {
@@ -290,14 +303,22 @@ export async function fetchOwnerMaterial(materialId: string): Promise<OwnerMater
   return ((await response.json()) as { material: OwnerMaterialView }).material;
 }
 
-/** Extract an upload whose extraction failed again; the material, now extracting. */
-export async function retryMaterialExtraction(materialId: string): Promise<OwnerMaterialView> {
+/** Start or restart an upload's extraction, optionally for chosen PDF pages. */
+export async function startMaterialExtraction(
+  materialId: string,
+  pages?: readonly number[],
+): Promise<OwnerMaterialView> {
   const body = await postJson<{ material: OwnerMaterialView }>(
     `/api/materials/${encodeURIComponent(materialId)}/extraction`,
-    {},
+    pages ? { pages } : {},
     'upload.materialUploadFailed',
   );
   return body.material;
+}
+
+/** Extract an upload whose extraction failed again; the material, now extracting. */
+export function retryMaterialExtraction(materialId: string): Promise<OwnerMaterialView> {
+  return startMaterialExtraction(materialId);
 }
 
 /**

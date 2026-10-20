@@ -12,6 +12,16 @@ const nextConfig: NextConfig = {
       'lib/server/agent-runtime/import-pptx-worker.mjs',
       'skills/openmaic/**',
       'skills/agent-runtime/**',
+      // The PDF page picker renders thumbnails with pdf.js, which loads its
+      // standard fonts and character maps from the installed package at
+      // runtime. Neither is statically imported, so standalone tracing omits
+      // them unless they are named here.
+      'node_modules/pdfjs-dist/**',
+      // @napi-rs/canvas selects its platform binary with a computed require,
+      // which the tracer cannot follow.
+      'node_modules/@napi-rs/canvas/**',
+      'node_modules/@napi-rs/canvas-*/**',
+      'node_modules/.pnpm/@napi-rs+canvas*/**',
       // Loaded through a runtime-only `import('undici')` (see the LLM
       // dispatcher in lib/ai/providers.ts and the Google proxy transport), so
       // the output tracer never sees it and standalone builds ship without it.
@@ -42,6 +52,13 @@ const nextConfig: NextConfig = {
     '@earendil-works/pi-ai',
     '@earendil-works/pi-agent-core',
     '@openmaic/generation',
+    // Loaded natively so its worker and Node canvas paths are not rewritten by
+    // the bundler; the page-thumbnail route supplies the native canvas.
+    'pdfjs-dist',
+    // Native addon loaded through a computed require; Turbopack cannot place
+    // its .node binding in an ESM chunk. Externalizing keeps the require as a
+    // real Node resolution at runtime.
+    '@napi-rs/canvas',
     // Optional peers of @openmaic/storage, reached through deliberately
     // untraced dynamic imports. Externalizing keeps them out of the bundle,
     // and the static anchor in lib/persistence/asset-byte-store.ts gets them
@@ -52,6 +69,11 @@ const nextConfig: NextConfig = {
   ],
   experimental: {
     proxyClientMaxBodySize: '200mb',
+    // Turbopack's build cache cannot open its persistence database on the
+    // exFAT development volume ("invalid digit found in string"), so builds
+    // fail before compilation. This volume never preserves .next/cache anyway;
+    // container builds start from a clean layer, so the cache is dead weight.
+    turbopackFileSystemCacheForBuild: false,
   },
   async headers() {
     const extraAncestors = process.env.ALLOWED_FRAME_ANCESTORS?.trim();

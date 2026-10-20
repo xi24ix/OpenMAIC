@@ -63,6 +63,8 @@ import {
 import { backgroundWorkspaceId } from '@/lib/server/model-config/runtime';
 import type { ParsedPdfContent } from '@/lib/types/pdf';
 
+import { isEveryPdfPage, slicePdfPages } from './pdf-pages';
+
 import {
   deleteMaterialObjects,
   getMaterialByteStore,
@@ -157,7 +159,11 @@ function canonical(value: unknown): unknown {
  * same identity (the owner may have switched services to get a better
  * extraction). Credentials are left out: they do not change the result.
  */
-export function extractionIdentityKey(mimeType: string, services: ExtractionServices): string {
+export function extractionIdentityKey(
+  mimeType: string,
+  services: ExtractionServices,
+  selectedPages?: readonly number[],
+): string {
   const document = services.document;
   return JSON.stringify([
     mimeType.toLowerCase(),
@@ -174,6 +180,7 @@ export function extractionIdentityKey(mimeType: string, services: ExtractionServ
     services.asr
       ? [services.asr.providerId, services.asr.modelId ?? null, services.asr.baseUrl ?? null]
       : null,
+    selectedPages ? [...selectedPages] : null,
   ]);
 }
 
@@ -259,7 +266,11 @@ export async function extractOwnerMaterial(
   const fileName = material.originalName ?? material.id;
   const mimeType = normalizeDocumentMimeType({ mimeType: material.mime, fileName });
   const services = await (dependencies.services ?? ownerExtractionServices)(material.ownerId);
-  const identityKey = extractionIdentityKey(mimeType, services);
+  const selectedPages =
+    mimeType === 'application/pdf' && material.extraction?.selectedPages?.length
+      ? material.extraction.selectedPages
+      : undefined;
+  const identityKey = extractionIdentityKey(mimeType, services, selectedPages);
   const resultKey = materialExtractionResultKey(material.ossKey, attempt);
   const store = async (bytes: Buffer) => {
     const maxBytes = maxExtractionResultBytes();
@@ -297,15 +308,25 @@ export async function extractOwnerMaterial(
   );
   timer.unref?.();
   const callSignal = AbortSignal.any([signal, timeout.signal]);
+  let buffer = await byteStore.get(material.ossKey);
+  let fileSize = material.bytes;
+  if (
+    selectedPages &&
+    (material.extraction?.sourcePageCount === undefined ||
+      !isEveryPdfPage(selectedPages, material.extraction.sourcePageCount))
+  ) {
+    buffer = Buffer.from(await slicePdfPages(buffer, selectedPages));
+    fileSize = buffer.byteLength;
+  }
   let parsed: ParsedPdfContent;
   try {
     parsed = await (dependencies.analyze ?? analyzeMaterial)(
       {
         source: {
           fileName,
-          fileSize: material.bytes,
+          fileSize,
           mimeType,
-          buffer: await byteStore.get(material.ossKey),
+          buffer,
         },
         services,
         request: {},
@@ -345,6 +366,10 @@ export async function extractOwnerMaterial(
     textChars: result.text.length,
     ...(result.pageCount !== undefined ? { pageCount: result.pageCount } : {}),
     imageCount: result.images.length,
+    ...(selectedPages ? { selectedPages } : {}),
+    ...(material.extraction?.sourcePageCount !== undefined
+      ? { sourcePageCount: material.extraction.sourcePageCount }
+      : {}),
     ...(Object.keys(truncated).length > 0 ? { truncated } : {}),
     ...(parsed.metadata?.parser ? { extractor: String(parsed.metadata.parser) } : {}),
     identityKey,

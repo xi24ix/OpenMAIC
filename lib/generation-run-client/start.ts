@@ -68,6 +68,8 @@ export async function startClassicRun(input: {
   requirement: string;
   /** The composer's ready materials (uploaded and extracted), in bundle order. */
   materialIds: readonly string[];
+  /** Course-design skills the learner attached to this run. */
+  skillIds?: readonly string[];
   interactive: boolean;
   taskEngine: boolean;
   capabilities: ModelCapabilities;
@@ -89,6 +91,7 @@ export async function startClassicRun(input: {
   return startGenerationRun({
     requirement: input.requirement,
     materialIds,
+    skillIds: [...(input.skillIds ?? [])],
     interactive: input.interactive,
     taskEngine: input.taskEngine,
     agents,

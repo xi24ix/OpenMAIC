@@ -76,6 +76,10 @@ export interface OwnerMaterialExtraction {
   textChars?: number;
   pageCount?: number;
   imageCount?: number;
+  /** The PDF pages this extraction covers (1-based, ascending), when selected. */
+  selectedPages?: number[];
+  /** The PDF's total pages at selection time. */
+  sourcePageCount?: number;
   truncated?: OwnerMaterialTruncation;
   /** The extractor that produced the result. */
   extractor?: string;
@@ -622,11 +626,23 @@ export async function startOwnerMaterialExtractions(
   ownerId: string,
   materialIds: readonly string[],
   from: readonly ('idle' | 'failed')[],
+  selection?: { pages: number[]; sourcePageCount: number },
 ): Promise<string[]> {
   if (materialIds.length === 0 || from.length === 0) return [];
   const result = await queryable.query<{ id: string }>(
     `UPDATE owner_material
-        SET extraction = jsonb_build_object('status', 'extracting', 'updatedAt', $3::double precision),
+        SET extraction = jsonb_build_object('status', 'extracting', 'updatedAt', $3::double precision)
+              || CASE
+                   WHEN $5::jsonb IS NOT NULL THEN $5::jsonb
+                   WHEN extraction ? 'selectedPages' THEN
+                     jsonb_build_object('selectedPages', extraction->'selectedPages')
+                     || CASE
+                          WHEN extraction ? 'sourcePageCount'
+                            THEN jsonb_build_object('sourcePageCount', extraction->'sourcePageCount')
+                          ELSE '{}'::jsonb
+                        END
+                   ELSE '{}'::jsonb
+                 END,
             extraction_worker = NULL,
             extraction_heartbeat_at = NULL
       WHERE id = ANY($1::text[])
@@ -635,7 +651,18 @@ export async function startOwnerMaterialExtractions(
         AND COALESCE(extraction->>'status', 'idle') = ANY($2::text[])
         AND owner_id = $4
       RETURNING id`,
-    [[...materialIds], [...from], Date.now(), ownerId],
+    [
+      [...materialIds],
+      [...from],
+      Date.now(),
+      ownerId,
+      selection
+        ? JSON.stringify({
+            selectedPages: selection.pages,
+            sourcePageCount: selection.sourcePageCount,
+          })
+        : null,
+    ],
   );
   return result.rows.map((row) => row.id);
 }
@@ -797,7 +824,19 @@ export async function settleOwnerMaterialExtraction(
   const write = async (tx: Queryable) => {
     const result = await tx.query(
       `UPDATE owner_material
-          SET extraction = $3::jsonb, extraction_worker = NULL, extraction_heartbeat_at = NULL
+          SET extraction = $3::jsonb
+              || CASE
+                   WHEN NOT ($3::jsonb ? 'selectedPages') AND extraction ? 'selectedPages' THEN
+                     jsonb_build_object('selectedPages', extraction->'selectedPages')
+                     || CASE
+                          WHEN extraction ? 'sourcePageCount'
+                            THEN jsonb_build_object('sourcePageCount', extraction->'sourcePageCount')
+                          ELSE '{}'::jsonb
+                        END
+                   ELSE '{}'::jsonb
+                 END,
+              extraction_worker = NULL,
+              extraction_heartbeat_at = NULL
         WHERE id = $1
           AND extraction_worker = $2
           AND extraction->>'status' = 'extracting'

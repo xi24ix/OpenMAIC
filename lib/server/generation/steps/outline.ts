@@ -305,6 +305,8 @@ export interface OutlineInput {
   pdfImages?: PdfImage[];
   imageMapping?: ImageMapping;
   researchContext?: string;
+  /** Course-design skill guidance, appended to the teacher context. */
+  skillContext?: string;
   agents?: AgentInfo[];
   /** The scene-outlines-stream stage's model. */
   model: StepLanguageModel;
@@ -463,8 +465,11 @@ async function prepareOutline(
   const mediaGenerationEnabled = imageGenerationEnabled || videoGenerationEnabled;
   const hasSourceImages = (pdfImages?.length ?? 0) > 0;
 
-  // Build teacher context from agents (if available)
-  const teacherContext = formatTeacherPersonaForPrompt(agents);
+  // Build teacher context from agents (if available) and any selected
+  // course-design skills.
+  const teacherContext = [formatTeacherPersonaForPrompt(agents), input.skillContext?.trim()]
+    .filter(Boolean)
+    .join('\n\n');
 
   // Check if Interactive Mode or server-enabled Task Engine mode is enabled.
   const interactiveMode = requirements.interactiveMode ?? false;

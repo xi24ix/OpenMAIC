@@ -267,6 +267,31 @@ async function listBuiltinSkills(): Promise<LoadedSkill[]> {
   return builtinCache;
 }
 
+/**
+ * The built-in skills that describe how to teach a single classroom, rather
+ * than how to edit its files. The classic composer offers these to shape an
+ * outline; the runtime-only editing skills stay out of that prompt.
+ */
+export const OUTLINE_SKILL_IDS: ReadonlySet<string> = new Set([
+  'deep-interactive',
+  'deep-research',
+  'fact-check',
+  'feynman-learning',
+  'k12-core-literacy-planning',
+  'learning-to-learn',
+  'lecture-style',
+  'social-emotional-learning',
+  'understanding-by-design',
+  'vocational',
+  'workshop-style',
+  'zone-of-proximal-development',
+]);
+
+/** Whether a skill may be attached to a classic generation run. */
+export function isOutlineSkill(skill: Pick<LoadedSkill, 'id' | 'source'>): boolean {
+  return skill.source === 'builtin' && OUTLINE_SKILL_IDS.has(skill.id);
+}
+
 /** Builtins plus the current owner's user-authored skills. */
 export async function listSkills(ownerId?: string): Promise<LoadedSkill[]> {
   const builtins = await listBuiltinSkills();
@@ -776,7 +801,10 @@ export function renderConstraints(c: OutlineConstraints): string {
 }
 
 /** What goes into the outline generator's `teacherContext` slot. */
-export function skillOutlineContext(skill: LoadedSkill): string {
+export function skillOutlineContext(
+  skill: LoadedSkill,
+  { includeConstraints = true }: { includeConstraints?: boolean } = {},
+): string {
   const authority =
     skill.source === 'user'
       ? [
@@ -790,7 +818,7 @@ export function skillOutlineContext(skill: LoadedSkill): string {
           'scene types, and how scenes are named and sequenced all come from the skill.',
         ];
   const parts = ['## Active Course-Design Skill', '', ...authority, '', skill.content.trim()];
-  if (skill.constraints) {
+  if (includeConstraints && skill.constraints) {
     parts.push(
       '',
       '### Hard structural constraints',

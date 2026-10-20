@@ -31,13 +31,14 @@ import {
   materialMime,
   retryMaterialExtraction,
   RunApiError,
+  startMaterialExtraction,
   uploadMaterial,
   type MaterialExtractionView,
   type MaterialPolicy,
   type OwnerMaterialView,
 } from './api';
 
-export type CourseMaterialStatus = 'uploading' | 'extracting' | 'ready' | 'failed';
+export type CourseMaterialStatus = 'uploading' | 'select-pages' | 'extracting' | 'ready' | 'failed';
 
 /** A translatable message: a key with its values, or the server's own text. */
 export interface CourseMaterialMessage {
@@ -58,6 +59,8 @@ export interface CourseMaterialEntry extends SelectedCourseMaterial {
   mediaKind: 'document' | 'media';
   /** The extraction as the server last reported it. */
   extraction?: MaterialExtractionView;
+  /** The PDF pages the learner chose, before the server reports them back. */
+  selectedPages?: number[];
   /** Why it failed, and where: a failed upload is uploaded again on Retry. */
   failure?: CourseMaterialMessage & { stage: 'upload' | 'extraction' };
 }
@@ -95,7 +98,9 @@ function fromServer(entry: CourseMaterialEntry, view: OwnerMaterialView): Course
       ? 'ready'
       : extraction?.status === 'failed'
         ? 'failed'
-        : 'extracting';
+        : (extraction?.status ?? 'idle') === 'idle' && view.mime === 'application/pdf'
+          ? 'select-pages'
+          : 'extracting';
   return {
     ...entry,
     status,
@@ -200,6 +205,8 @@ export interface CourseMaterials {
   remove(id: string): void;
   /** Upload or extract a failed one again. */
   retry(id: string): void;
+  /** Start a deferred PDF's extraction for the chosen pages. */
+  selectPages(id: string, pages: readonly number[]): void;
   /** Whether every attached material is ready (true when there are none). */
   allReady: boolean;
   /** Hand the ready materials to a run (it releases them); their server ids, in order. */
@@ -238,8 +245,11 @@ export function useCourseMaterials(): CourseMaterials {
       if (!file) continue;
       const abort = new AbortController();
       uploads.current.set(id, abort);
+      // PDFs wait for the page picker; everything else extracts at once.
+      const extract = materialMime(file) !== 'application/pdf';
       void uploadMaterial(file, {
         signal: abort.signal,
+        extract,
         onProgress: (sent) => update(id, (entry) => ({ ...entry, progress: sent })),
       })
         .then((view) => {
@@ -340,18 +350,15 @@ export function useCourseMaterials(): CourseMaterials {
     );
   }, []);
 
-  const retry = useCallback(
-    (id: string) => {
+  const startExtraction = useCallback(
+    (id: string, pages?: readonly number[]) => {
       const entry = latest.current.find((item) => item.id === id);
-      if (!entry || entry.status !== 'failed') return;
-      if (entry.failure?.stage === 'upload' || !entry.materialId) {
-        update(id, (item) => ({ ...item, status: 'uploading', progress: 0, failure: undefined }));
-        queue.current.push(id);
-        pump();
-        return;
-      }
+      if (!entry?.materialId) return;
       update(id, (item) => ({ ...item, status: 'extracting', failure: undefined }));
-      void retryMaterialExtraction(entry.materialId)
+      const request = pages
+        ? startMaterialExtraction(entry.materialId, pages)
+        : retryMaterialExtraction(entry.materialId);
+      void request
         .then((view) => update(id, (item) => fromServer(item, view)))
         .catch((error: unknown) => {
           // Already restarted (another tab, a run's Retry): the poll follows it.
@@ -363,7 +370,22 @@ export function useCourseMaterials(): CourseMaterials {
           }));
         });
     },
-    [pump, update],
+    [update],
+  );
+
+  const retry = useCallback(
+    (id: string) => {
+      const entry = latest.current.find((item) => item.id === id);
+      if (!entry || entry.status !== 'failed') return;
+      if (entry.failure?.stage === 'upload' || !entry.materialId) {
+        update(id, (item) => ({ ...item, status: 'uploading', progress: 0, failure: undefined }));
+        queue.current.push(id);
+        pump();
+        return;
+      }
+      startExtraction(id, entry.selectedPages ?? entry.extraction?.selectedPages);
+    },
+    [pump, startExtraction, update],
   );
 
   // Extracting materials are polled until they settle.
@@ -487,6 +509,10 @@ export function useCourseMaterials(): CourseMaterials {
     add,
     remove,
     retry,
+    selectPages: (id, pages) => {
+      update(id, (item) => ({ ...item, selectedPages: [...pages] }));
+      startExtraction(id, pages);
+    },
     allReady,
     handOff,
     takeBack,

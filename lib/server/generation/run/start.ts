@@ -8,6 +8,7 @@ import { ModelAuthorizationError } from '@/lib/server/model-config/model-authori
 import { MODEL_SLOTS, type SlotId } from '@/lib/config/model-slots';
 import type { ApiErrorCode } from '@/lib/server/api-response';
 import { resolveAgentsForOwner, UnknownAgentsError } from '@/lib/server/agents/registry';
+import { findSkill, isOutlineSkill } from '@/lib/server/agent-runtime/skills';
 import {
   ClassroomMaterialsRejectedError,
   resolveClassroomMaterials,
@@ -31,6 +32,13 @@ import {
 } from './store';
 import type { GenerationRunInput } from './types';
 
+export class UnknownSkillsError extends Error {
+  constructor(readonly refs: string[]) {
+    super(`Unknown skills: ${refs.join(', ')}`);
+    this.name = 'UnknownSkillsError';
+  }
+}
+
 export const GENERATION_MODEL_SLOTS: readonly SlotId[] = [
   ...MODEL_SLOTS.filter((slot) => slot.id.startsWith('course.')).map((slot) => slot.id as SlotId),
   'image',
@@ -52,7 +60,11 @@ export interface StartRefusal {
 export function startRefusal(error: unknown): StartRefusal | null {
   if (error instanceof ModelAuthorizationError)
     return { code: error.code, status: error.httpStatus, message: error.message };
-  if (error instanceof ClassroomMaterialsRejectedError || error instanceof UnknownAgentsError) {
+  if (
+    error instanceof ClassroomMaterialsRejectedError ||
+    error instanceof UnknownAgentsError ||
+    error instanceof UnknownSkillsError
+  ) {
     return { code: 'INVALID_REQUEST', status: 400, message: error.message };
   }
   // A document or speech service this workspace may not use.
@@ -101,6 +113,15 @@ export async function startGenerationRun(
   const agentIds =
     input.agents.mode === 'preset' ? input.agents.agentIds : (input.agents.presetAgentIds ?? []);
   if (agentIds.length > 0) await resolveAgentsForOwner(ownerId, agentIds);
+  const skillIds = input.skillIds ?? [];
+  if (skillIds.length > 0) {
+    const resolved = await Promise.all(skillIds.map((ref) => findSkill(ref, ownerId)));
+    const unknown = skillIds.filter((_, index) => {
+      const skill = resolved[index];
+      return !skill || !isOutlineSkill(skill);
+    });
+    if (unknown.length > 0) throw new UnknownSkillsError(unknown);
+  }
 
   const config = generationRunConfig();
   const run = await createGenerationRun(ownerId, input, {

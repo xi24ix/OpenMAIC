@@ -53,6 +53,7 @@ import { validateAppScene } from '@/lib/document-store/validators';
 import { sceneCarriesMediaReference } from '@/lib/media/generated-media-references';
 import { buildVideoManifestFromOutlines } from '@/lib/media/video-manifest';
 import { createLogger } from '@/lib/logger';
+import { findSkill, isOutlineSkill, skillOutlineContext } from '@/lib/server/agent-runtime/skills';
 import { BUILT_IN_AGENTS } from '@/lib/orchestration/registry/built-in';
 import type { AgentConfig } from '@/lib/orchestration/registry/types';
 import { generateClassroomId } from '@/lib/server/classroom-persistence';
@@ -810,6 +811,14 @@ async function executeClaimedRun(
           break;
       }
     };
+    const skills = (
+      await Promise.all((input.skillIds ?? []).map((ref) => findSkill(ref, owner)))
+    ).flatMap((skill) => (skill && isOutlineSkill(skill) ? [skill] : []));
+    const skillContext = skills.length
+      ? skills
+          .map((skill) => skillOutlineContext(skill, { includeConstraints: false }))
+          .join('\n\n')
+      : undefined;
     let result: OutlineResult;
     try {
       result = await withDeadline(stepId, STEP_DEADLINES_MS.outline, signal, (callSignal) =>
@@ -820,6 +829,7 @@ async function executeClaimedRun(
             ...(pdfText ? { pdfText } : {}),
             ...materialImages(),
             ...(research?.context ? { researchContext: research.context } : {}),
+            ...(skillContext ? { skillContext } : {}),
           },
           { log, signal: callSignal, emit },
         ),
