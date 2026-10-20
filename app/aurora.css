@@ -392,6 +392,22 @@
   box-shadow: none;
 }
 
+@media (max-width: 640px) {
+  .aurora-composer .relative.w-96 {
+    width: auto;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .aurora-composer-actions {
+    flex-wrap: wrap;
+  }
+
+  .aurora-composer-tools {
+    flex-basis: 100%;
+  }
+}
+
 @media (max-width: 1100px) {
   .aurora-home {
     padding-inline: 14px;

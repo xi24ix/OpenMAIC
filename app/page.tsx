@@ -817,7 +817,7 @@ function HomePage() {
             />
 
             {/* Toolbar row */}
-            <div className="px-3 pb-3 flex items-end gap-2">
+            <div className="aurora-composer-actions px-3 pb-3 flex items-end gap-2">
               <div className="flex-1 min-w-0">
                 <GenerationToolbar
                   courseMaterials={courseMaterials.materials}
