@@ -702,7 +702,12 @@ If you are looking for a version with richer functionality, stronger interactivi
 Describe what you want to learn or attach reference materials. PDF, Word,
 PowerPoint, spreadsheet, text, image, audio, and video inputs can enter the
 material pipeline; configured extractors turn supported sources into content
-for generation. OpenMAIC's classic two-stage pipeline handles the rest:
+for generation. A PDF can be trimmed before extraction: the composer shows its
+pages as thumbnails and extracts only the pages you choose. The toolbar's
+**Skill** picker can attach up to five built-in course-design skills (deep
+interactive, deep research, fact-check, Feynman, lecture, workshop, vocational,
+and others) to steer the outline. OpenMAIC's classic two-stage pipeline handles
+the rest:
 
 | Stage | What Happens |
 |-------|-------------|

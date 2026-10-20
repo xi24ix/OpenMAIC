@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- PDF page selection in the classic composer. A PDF is uploaded with `POST /api/materials?extract=false`, `GET /api/materials/<id>/pages` reports `{ pageCount }`, and `GET /api/materials/<id>/pages?page=N` returns that page as a PNG thumbnail. `POST /api/materials/<id>/extraction` with `{ "pages": [1, 3, 8] }` or `{ "pages": "all" }` validates the selection against the document, stores it on the extraction, slices the PDF to those pages, and then runs the extractor. Extraction reads report `selectedPages` and `sourcePageCount`; existing materials need no migration.
+- Course-design skills in the classic composer. `GET /api/generation/skills` lists the built-in skills that shape a classroom (the twelve outline skills), and a generation run accepts up to five `skillIds`, resolved for the owner and passed to the outline step. Unknown or non-outline skill ids are refused before the run starts.
+
 ## [1.2.0-rc.2] - 2026-10-11
 
 ### Security
