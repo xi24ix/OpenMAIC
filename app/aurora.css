@@ -3,6 +3,9 @@
   --aurora-bg: #f1f2fd;
   --aurora-panel: rgba(255, 255, 255, 0.72);
   --aurora-panel-2: rgba(255, 255, 255, 0.48);
+  /* Solid surfaces for floating overlays (phone drawers, control tray) —
+     translucency over a white slide makes the text unreadable. */
+  --aurora-drawer-solid: #ffffff;
   --aurora-hover: rgba(27, 33, 64, 0.06);
   --aurora-ink: #1b2140;
   --aurora-ink-soft: #4a5273;
@@ -27,6 +30,8 @@
   --aurora-bg: #080b18;
   --aurora-panel: rgba(255, 255, 255, 0.055);
   --aurora-panel-2: rgba(255, 255, 255, 0.035);
+  /* Solid deep-navy surface so drawer text stays readable over the slide. */
+  --aurora-drawer-solid: #111631;
   --aurora-hover: rgba(255, 255, 255, 0.07);
   --aurora-ink: #f2f3ff;
   --aurora-ink-soft: #b8c0dc;
@@ -1072,11 +1077,11 @@
   }
 
   .aurora-canvas-stage {
-    padding: 8px 10px 12px;
+    padding: 4px 6px 8px;
   }
 
   .aurora-classroom:not(.is-presenting) .aurora-roundtable > div {
-    height: 148px;
+    height: 132px;
     border-radius: 18px;
   }
 
@@ -1089,14 +1094,34 @@
   }
 
   /* Plan / chat as overlay drawers; data-collapsed keeps them fully
-     out of the layout when their toggle marks them collapsed. */
+     out of the layout when their toggle marks them collapsed. The drawer
+     surface is solid so a white slide can never wash out the text. */
   .aurora-stage-wrap > .aurora-plan,
   .aurora-chat-wrap > .aurora-chat {
     position: fixed;
-    inset-block: 70px 168px;
+    inset-block: 70px 150px;
     z-index: 60;
     width: min(78vw, 320px) !important;
+    background: var(--aurora-drawer-solid);
+    backdrop-filter: none;
     box-shadow: 0 18px 50px -18px rgba(10, 14, 35, 0.45);
+  }
+
+  /* Roomier touch targets for the dock controls bar. */
+  .aurora-controls-bar {
+    height: 44px;
+    padding-inline: 6px;
+    gap: 4px;
+  }
+
+  .aurora-controls-bar [data-bar-zone] button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .aurora-controls-bar [data-bar-zone] button svg {
+    width: 19px;
+    height: 19px;
   }
 
   .aurora-stage-wrap > .aurora-plan {
@@ -1120,13 +1145,21 @@
   }
 
   @media (max-height: 520px) {
+    /* Landscape phone: dock collapses to the controls bar only — every
+       pixel of height goes back to the scene. The roundtable columns are
+       decorative there and buried in the tray on phones anyway. */
     .aurora-classroom:not(.is-presenting) .aurora-roundtable > div {
-      height: 118px;
+      height: 56px;
+      border-radius: 16px;
+    }
+
+    .aurora-classroom:not(.is-presenting) .aurora-roundtable > div > div.flex-1 {
+      display: none;
     }
 
     .aurora-stage-wrap > .aurora-plan,
     .aurora-chat-wrap > .aurora-chat {
-      inset-block: 66px 138px;
+      inset-block: 66px 64px;
     }
   }
 

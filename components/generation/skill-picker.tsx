@@ -100,7 +100,12 @@ export function SkillPicker({
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" side="top" className="w-80 overflow-hidden p-0">
+      <PopoverContent
+        align="start"
+        side="top"
+        collisionPadding={12}
+        className="w-80 max-w-[calc(100vw-24px)] overflow-hidden p-0"
+      >
         <div className="border-b border-border/60 px-3 py-2">
           <p className="text-xs font-medium">{t('toolbar.skillPickerTitle')}</p>
           <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">

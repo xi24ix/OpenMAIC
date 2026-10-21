@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useSyncExternalStore } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
+  ChevronDown,
   Play,
   Pause,
   PencilLine,
@@ -131,6 +133,26 @@ export function CanvasToolbar({
   const canGoNext = currentSceneIndex < scenesCount - 1;
   const showPlayPause = !isLiveSession;
 
+  // Phone layout (aurora.css ≤1100px): a compact playback row with the
+  // remaining controls behind an expandable tray.
+  const isPhone = useSyncExternalStore(
+    (notify) => {
+      const media = window.matchMedia('(max-width: 1100px)');
+      media.addEventListener('change', notify);
+      return () => media.removeEventListener('change', notify);
+    },
+    () => window.matchMedia('(max-width: 1100px)').matches,
+    () => false,
+  );
+  const [trayOpen, setTrayOpen] = useState(false);
+  useEffect(() => {
+    const apply = () => {
+      if (!window.matchMedia('(max-width: 1100px)').matches) setTrayOpen(false);
+    };
+    window.matchMedia('(max-width: 1100px)').addEventListener('change', apply);
+    return () => window.matchMedia('(max-width: 1100px)').removeEventListener('change', apply);
+  }, []);
+
   const whiteboardElementCount = useStageStore(
     (s) => s.stage?.whiteboard?.[0]?.elements?.length || 0,
   );
@@ -157,9 +179,15 @@ export function CanvasToolbar({
   const presentationLabel = isPresenting ? t('stage.exitFullscreen') : t('stage.fullscreen');
 
   return (
-    <div className={cn('flex items-center gap-2', className)}>
+    <div
+      className={cn(
+        'aurora-controls-bar relative flex items-center gap-2',
+        isPhone && trayOpen && 'z-[45]',
+        className,
+      )}
+    >
       {/* ── Left: sidebar toggle + page indicator ── */}
-      <div className="flex items-center gap-1 shrink-0 pl-1">
+      <div data-bar-zone="left" className="flex items-center gap-1 shrink-0 pl-1">
         {onToggleSidebar && (
           <button
             onClick={onToggleSidebar}
@@ -182,10 +210,10 @@ export function CanvasToolbar({
         </span>
       </div>
 
-      <CtrlDivider />
+      {!isPhone && <CtrlDivider />}
 
       {/* ── Center: unified playback controls ── */}
-      <div className="flex-1 flex items-center justify-center min-w-0">
+      <div data-bar-zone="center" className="flex-1 flex items-center justify-center min-w-0">
         <div
           className={cn(
             'inline-flex items-center gap-0.5 px-1 h-7',
@@ -194,8 +222,8 @@ export function CanvasToolbar({
               : 'bg-gray-100/60 dark:bg-gray-800/60 rounded-lg',
           )}
         >
-          {/* Volume with vertical popover slider */}
-          {onToggleMute && (
+          {/* Volume with vertical popover slider (desktop; tray on phone) */}
+          {onToggleMute && !isPhone && (
             <div
               ref={volumeContainerRef}
               className="relative flex items-center"
@@ -262,7 +290,7 @@ export function CanvasToolbar({
           )}
 
           {/* Speed */}
-          {onCycleSpeed && (
+          {onCycleSpeed && !isPhone && (
             <TooltipProvider delayDuration={0}>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -289,7 +317,7 @@ export function CanvasToolbar({
             </TooltipProvider>
           )}
 
-          <CtrlDivider />
+          {!isPhone && <CtrlDivider />}
 
           {/* Prev scene */}
           {scenesCount > 1 && (
@@ -378,10 +406,10 @@ export function CanvasToolbar({
             </button>
           )}
 
-          <CtrlDivider />
+          {!isPhone && <CtrlDivider />}
 
           {/* Auto-play */}
-          {onToggleAutoPlay && (
+          {onToggleAutoPlay && !isPhone && (
             <TooltipProvider delayDuration={0}>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -407,27 +435,28 @@ export function CanvasToolbar({
           )}
 
           {/* Whiteboard */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onWhiteboardClose();
-            }}
-            className={cn(
-              ctrlBtn,
-              'w-6 h-6',
-              whiteboardOpen
-                ? 'text-violet-600 dark:text-violet-400'
-                : 'text-gray-500 dark:text-gray-400',
-            )}
-            title={whiteboardOpen ? t('whiteboard.minimize') : t('whiteboard.open')}
-          >
-            <PencilLine className="w-3.5 h-3.5" />
-            {!whiteboardOpen && whiteboardElementCount > 0 && (
-              <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-violet-500 dark:bg-violet-400 rounded-full" />
-            )}
-          </button>
-
-          {showElementReference && (
+          {!isPhone && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onWhiteboardClose();
+              }}
+              className={cn(
+                ctrlBtn,
+                'w-6 h-6',
+                whiteboardOpen
+                  ? 'text-violet-600 dark:text-violet-400'
+                  : 'text-gray-500 dark:text-gray-400',
+              )}
+              title={whiteboardOpen ? t('whiteboard.minimize') : t('whiteboard.open')}
+            >
+              <PencilLine className="w-3.5 h-3.5" />
+              {!whiteboardOpen && whiteboardElementCount > 0 && (
+                <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-violet-500 dark:bg-violet-400 rounded-full" />
+              )}
+            </button>
+          )}
+          {showElementReference && !isPhone && (
             <button
               type="button"
               onClick={(event) => {
@@ -457,9 +486,9 @@ export function CanvasToolbar({
       </div>
 
       {/* ── Right: fullscreen + chat toggle ── */}
-      <div className="flex items-center justify-end gap-px shrink-0 pr-1">
-        <CtrlDivider />
-        {onTogglePresentation && (
+      <div data-bar-zone="right" className="flex items-center justify-end gap-px shrink-0 pr-1">
+        {!isPhone && <CtrlDivider />}
+        {onTogglePresentation && !isPhone && (
           <button
             onClick={onTogglePresentation}
             className={cn(
@@ -479,6 +508,22 @@ export function CanvasToolbar({
             )}
           </button>
         )}
+        {isPhone && (
+          <button
+            onClick={() => setTrayOpen((open) => !open)}
+            className={cn(
+              ctrlBtn,
+              'w-6 h-6',
+              trayOpen
+                ? 'text-violet-600 dark:text-violet-400'
+                : 'text-gray-500 dark:text-gray-400',
+            )}
+            aria-label={trayOpen ? 'Hide more controls' : 'More controls'}
+            aria-expanded={trayOpen}
+          >
+            {trayOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+          </button>
+        )}
         {onToggleChat && (
           <button
             onClick={onToggleChat}
@@ -495,6 +540,149 @@ export function CanvasToolbar({
           </button>
         )}
       </div>
+
+      {/* ── Phone tray: the controls moved off the compact row ── */}
+      {isPhone && trayOpen && (onToggleMute || onTogglePresentation) && (
+        <div
+          className="absolute inset-x-1 top-full z-[45] mt-2.5 rounded-2xl p-2 flex flex-col gap-1.5 shadow-[0_14px_40px_-12px_rgba(10,14,35,0.55)]"
+          style={{
+            background: 'var(--aurora-drawer-solid, #101631)',
+            border: '1px solid var(--aurora-line-strong, rgba(255,255,255,0.16))',
+          }}
+        >
+          <div
+            className="grid gap-1"
+            style={{
+              gridTemplateColumns: showElementReference ? 'repeat(5, minmax(0,1fr))' : undefined,
+              gridTemplateAreas: showElementReference ? undefined : 'none',
+            }}
+          >
+            {onToggleMute && (
+              <button
+                onClick={onToggleMute}
+                disabled={!ttsEnabled}
+                className={cn(
+                  'h-11 w-11 mx-auto rounded-xl flex items-center justify-center transition-colors',
+                  !ttsEnabled
+                    ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                    : ttsMuted
+                      ? 'text-red-500 dark:text-red-400'
+                      : 'text-gray-500 dark:text-gray-300',
+                )}
+                aria-label={ttsMuted ? 'Unmute' : 'Mute'}
+              >
+                <VolumeIcon muted={!!ttsMuted} volume={ttsVolume} disabled={!ttsEnabled} />
+              </button>
+            )}
+            {onCycleSpeed && (
+              <button
+                onClick={onCycleSpeed}
+                className={cn(
+                  'h-11 min-w-11 px-2 mx-auto rounded-xl flex items-center justify-center',
+                  'text-[12px] font-semibold tabular-nums transition-colors',
+                  playbackSpeed !== 1
+                    ? 'text-violet-600 dark:text-violet-400'
+                    : 'text-gray-500 dark:text-gray-300',
+                )}
+                aria-label="Playback speed"
+              >
+                {playbackSpeed === 1.5 ? '1.5x' : `${playbackSpeed}x`}
+              </button>
+            )}
+            {onToggleAutoPlay && (
+              <button
+                onClick={onToggleAutoPlay}
+                className={cn(
+                  'h-11 w-11 mx-auto rounded-xl flex items-center justify-center transition-colors',
+                  autoPlayLecture
+                    ? 'text-violet-600 dark:text-violet-400'
+                    : 'text-gray-500 dark:text-gray-300',
+                )}
+                aria-label={
+                  autoPlayLecture ? t('roundtable.autoPlayOff') : t('roundtable.autoPlay')
+                }
+              >
+                <Repeat className="w-5 h-5" />
+              </button>
+            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onWhiteboardClose();
+              }}
+              className={cn(
+                'relative h-11 w-11 mx-auto rounded-xl flex items-center justify-center transition-colors',
+                whiteboardOpen
+                  ? 'text-violet-600 dark:text-violet-400'
+                  : 'text-gray-500 dark:text-gray-300',
+              )}
+              aria-label={whiteboardOpen ? t('whiteboard.minimize') : t('whiteboard.open')}
+            >
+              <PencilLine className="w-5 h-5" />
+              {!whiteboardOpen && whiteboardElementCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-violet-500 rounded-full" />
+              )}
+            </button>
+            {showElementReference && (
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onToggleElementPick?.();
+                }}
+                disabled={!canPickSlideElement}
+                className={cn(
+                  'h-11 w-11 mx-auto rounded-xl flex items-center justify-center transition-colors',
+                  elementPickActive
+                    ? 'bg-violet-500/15 text-violet-700 dark:text-violet-300'
+                    : 'text-gray-500 dark:text-gray-300',
+                  !canPickSlideElement && 'cursor-not-allowed opacity-35',
+                )}
+                aria-label={t('chat.elementReference.button')}
+                aria-pressed={elementPickActive}
+              >
+                <Quote className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+          {onToggleMute && (
+            <div className="flex items-center gap-2.5 px-2 pt-1 border-t border-gray-200/60 dark:border-gray-700/40">
+              <span className="text-[11px] font-medium tabular-nums text-gray-400 dark:text-gray-500 shrink-0 w-7">
+                {Math.round(effectiveVolume * 100)}
+              </span>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.05}
+                value={effectiveVolume}
+                onChange={(e) => {
+                  const v = parseFloat(e.target.value);
+                  onVolumeChange?.(v);
+                  if (v > 0 && ttsMuted) onToggleMute?.();
+                }}
+                className="flex-1 h-8 cursor-pointer accent-violet-500"
+                aria-label="Volume"
+              />
+            </div>
+          )}
+          {onTogglePresentation && (
+            <button
+              onClick={onTogglePresentation}
+              className={cn(
+                'h-10 rounded-xl flex items-center justify-center gap-2 text-xs font-medium transition-colors',
+                isPresenting
+                  ? 'text-violet-600 dark:text-violet-400 bg-violet-500/10'
+                  : 'text-gray-500 dark:text-gray-300',
+              )}
+              aria-label={presentationLabel}
+            >
+              {isPresenting ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              {presentationLabel}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
