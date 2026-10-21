@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect, useSyncExternalStore } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
   ChevronLeft,
@@ -23,6 +23,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useStageStore } from '@/lib/store';
 import { useI18n } from '@/lib/hooks/use-i18n';
+import { usePhoneLayout } from '@/lib/hooks/use-phone-layout';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useSoftCloseCountdown } from '@/components/chat/use-soft-close-countdown';
 
@@ -136,15 +137,7 @@ export function CanvasToolbar({
 
   // Phone layout (aurora.css ≤1100px): a compact playback row with the
   // remaining controls behind an expandable tray.
-  const isPhone = useSyncExternalStore(
-    (notify) => {
-      const media = window.matchMedia('(max-width: 1100px)');
-      media.addEventListener('change', notify);
-      return () => media.removeEventListener('change', notify);
-    },
-    () => window.matchMedia('(max-width: 1100px)').matches,
-    () => false,
-  );
+  const isPhone = usePhoneLayout();
   const [trayOpen, setTrayOpen] = useState(false);
   useEffect(() => {
     const apply = () => {

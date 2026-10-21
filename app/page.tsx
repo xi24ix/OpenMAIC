@@ -803,7 +803,7 @@ function HomePage() {
             {/* ── Greeting + Profile + Agents ── */}
             <div className="relative z-20 flex items-start justify-between">
               <GreetingBar />
-              <div className="pr-3 pt-3.5 shrink-0">
+              <div className="pr-3 pt-3.5 shrink-0 max-[1100px]:hidden">
                 <AgentBar />
               </div>
             </div>

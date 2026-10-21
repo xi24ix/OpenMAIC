@@ -2,7 +2,7 @@
 
 import { useCallback, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Play } from 'lucide-react';
+import { Play, Maximize2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SceneRenderer } from '@/components/stage/scene-renderer';
 import { SceneProvider } from '@/lib/contexts/scene-context';
@@ -11,6 +11,7 @@ import { CanvasToolbar } from '@/components/canvas/canvas-toolbar';
 import type { CanvasToolbarProps } from '@/components/canvas/canvas-toolbar';
 import type { Scene, StageMode } from '@/lib/types/stage';
 import { useI18n } from '@/lib/hooks/use-i18n';
+import { usePhoneLayout } from '@/lib/hooks/use-phone-layout';
 import { ClassroomCompletePageConnected } from '@/components/scene-renderers/classroom-complete';
 import { ContainBox } from '@/components/edit/ContainBox';
 import { useInWorkbenchPanel } from '@/lib/workbench/panel-context';
@@ -73,6 +74,7 @@ export function CanvasArea({
   onCancelElementPick,
 }: CanvasAreaProps) {
   const { t } = useI18n();
+  const isPhone = usePhoneLayout();
   const inWorkbenchPanel = useInWorkbenchPanel();
   const showControls = mode === 'playback' && !whiteboardOpen;
   const showPlayHint =
@@ -290,6 +292,26 @@ export function CanvasArea({
         </StageViewport>
       </div>
 
+      {/* Phone player: fullscreen below the slide card — the dock has no
+          room for it once the roundtable strip is hidden. */}
+      {hideToolbar && isPhone && !isPresenting && onTogglePresentation && (
+        <div className="flex justify-center pb-1.5">
+          <button
+            onClick={onTogglePresentation}
+            className={cn(
+              'flex items-center gap-1.5 h-9 px-4 rounded-full',
+              'border border-gray-200/50 dark:border-gray-700/40',
+              'bg-white/70 dark:bg-gray-900/60 backdrop-blur text-[12px] font-medium',
+              'text-gray-600 dark:text-gray-300 transition-colors',
+            )}
+            aria-label={t('stage.fullscreen')}
+          >
+            <Maximize2 className="size-4" />
+            {t('stage.fullscreen')}
+          </button>
+        </div>
+      )}
+
       {/* ── Canvas Toolbar — in document flow, only when not merged into roundtable ── */}
       {!hideToolbar && (
         <CanvasToolbar
@@ -347,7 +369,10 @@ function StageViewport({
   if (!workbench) {
     return (
       <div
-        className={cn('aurora-stage-viewport aspect-[16/9] h-full max-h-full max-w-full', className)}
+        className={cn(
+          'aurora-stage-viewport aspect-[16/9] h-full max-h-full max-w-full',
+          className,
+        )}
         onClick={onClick}
       >
         {children}

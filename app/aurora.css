@@ -1080,17 +1080,16 @@
     padding: 4px 6px 8px;
   }
 
+  /* Phone dock = the controls bar only, in both orientations: the
+     decorative roundtable strip is what read as "overcrowded" on
+     phones, and hiding it returns every pixel to the scene. */
   .aurora-classroom:not(.is-presenting) .aurora-roundtable > div {
-    height: 132px;
-    border-radius: 18px;
+    height: 56px;
+    border-radius: 16px;
   }
 
-  .aurora-roundtable [class*='w-[90px]'] {
-    width: 54px;
-  }
-
-  .aurora-roundtable [class*='w-[140px]'] {
-    width: 96px;
+  .aurora-classroom:not(.is-presenting) .aurora-roundtable > div > div.flex-1 {
+    display: none;
   }
 
   /* Plan / chat as overlay drawers; data-collapsed keeps them fully
@@ -1099,7 +1098,7 @@
   .aurora-stage-wrap > .aurora-plan,
   .aurora-chat-wrap > .aurora-chat {
     position: fixed;
-    inset-block: 70px 150px;
+    inset-block: 70px 64px;
     z-index: 60;
     width: min(78vw, 320px) !important;
     background: var(--aurora-drawer-solid);
@@ -1129,7 +1128,7 @@
   .aurora-controls-bar-tray {
     position: fixed;
     inset-block-start: auto;
-    bottom: 142px;
+    bottom: 64px;
     inset-inline: 8px;
   }
 
@@ -1154,25 +1153,9 @@
   }
 
   @media (max-height: 520px) {
-    /* Landscape phone: dock collapses to the controls bar only — every
-       pixel of height goes back to the scene. The roundtable columns are
-       decorative there and buried in the tray on phones anyway. */
-    .aurora-classroom:not(.is-presenting) .aurora-roundtable > div {
-      height: 56px;
-      border-radius: 16px;
-    }
-
-    .aurora-classroom:not(.is-presenting) .aurora-roundtable > div > div.flex-1 {
-      display: none;
-    }
-
     .aurora-stage-wrap > .aurora-plan,
     .aurora-chat-wrap > .aurora-chat {
       inset-block: 66px 64px;
-    }
-
-    .aurora-controls-bar-tray {
-      bottom: 64px;
     }
   }
 
@@ -1191,5 +1174,14 @@
 
   .aurora-classroom.is-presenting .aurora-canvas-stage {
     padding: 0;
+  }
+
+  /* Touch devices can't hover: bury the home card tiles' hover-revealed
+     delete / rename buttons so a tap opens the lesson instead of
+     raising a floating button the next tap then triggers. */
+  @media (hover: none) {
+    .aurora-home [class*='group-hover:opacity-100'] {
+      display: none;
+    }
   }
 }
