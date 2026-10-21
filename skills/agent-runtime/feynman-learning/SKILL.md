@@ -1,7 +1,7 @@
 ---
 name: feynman-learning
-title: "费曼学习法"
-description: "Turn any concept, lesson, slide deck, or source material into a Feynman learning cycle in which learners explain first, expose the smallest gap, rebuild the explanation through Socratic prompts, strip jargon, stress-test analogies, and transfer the idea to a new context. Use when the user asks for teach-back, learning by explaining, or a Feynman-style classroom. Do not use when the Feynman technique itself is merely the lesson topic or when study strategy should remain a parallel goal."
+title: "طريقة فاينمان"
+description: "تحويل أي مفهوم أو درس أو مجموعة شرائح أو مادة مصادِرة إلى دورة تعلّم بأسلوب فاينمان: يشرح المتعلّم أولًا فتنكشف أصغر فجوة، ثم يُعاد بناء الشرح عبر أسئلة سقراطية، وتُبسَط المصطلحات، وتُختبر التشبيهات ضغطًا، فتُنقل الفكرة إلى سياق جديد. استخدمها عندما يطلب المستخدم الشرح كي يتعلّم أو فصلًا بطريقة فاينمان. لا تُستخدم إذا كانت تقنية فاينمان نفسها موضوع الدرس أو إذا كان تعلّم كيفية التعلّم هدفًا موازيًا."
 ---
 
 # 费曼学习法

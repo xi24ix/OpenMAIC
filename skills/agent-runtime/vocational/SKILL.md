@@ -1,7 +1,7 @@
 ---
 name: vocational
-title: "职业实训"
-description: Vocational / technical training courses. Plans the course as a hands-on work task with an operation flow, tool and equipment state, safety boundaries and GO/STOP judgements, instead of a concept lecture. Use when the requirement names a real occupational task, a piece of equipment, a clinical or industrial procedure, or a certification skill.
+title: "التدريب المهني"
+description: "دورات تدريب مهني أو تقني: تُبنى المهام العملية كإجراء تشغيل حقيقي بمسار خطوات، وحالة عدّة وأدوات، وحدود سلامة، وأحكام نداء أو توقّف، بدل محاضرة مفاهيمية. استخدمها عندما يذكر الطلب مهمة مهنية واقعية، أو جهازًا أو عدّة، أو إجراءً سريريًا أو صناعيًا، أو مهارة تُؤخَذ بشهادة."
 ---
 
 # Vocational task-engine course design

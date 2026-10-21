@@ -1,7 +1,7 @@
 ---
 name: learning-to-learn
-title: "学会学习（Learning to Learn）"
-description: "Infuse learning strategies and metacognition into a concept-centered OpenMAIC classroom as a parallel goal. Use when the user wants students to learn how to learn while studying a subject: retrieval practice, self-explanation, prediction before feedback, monitoring understanding, deliberate review, or productive failure. Do not use when learning science or study skills should be the standalone subject of the lesson."
+title: "تعلّم كيف تتعلّم"
+description: "غرس استراتيجيات التعلّم ومقاربة ما وراء التعلم في فصل قائم على المفاهيم كهدف موازٍ. استخدمها عندما يريد المستخدم أن يتعلم الطلبة كيف يتعلّمون وهم يدرسون مادتهم: استرجاع الأثر، والشرح الذاتي، والتوقّع قبل التغذية الراجعة، ومراقبة الفهم، والمراجعة المتعمّدة، أو الفشل ثم البناء. لا تُستخدم إذا كان علم التعلّم أو مهارات الدراسة هي موضوع الدرس القائم بذاته."
 ---
 
 # 学会学习（Learning to Learn）

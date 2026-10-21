@@ -91,14 +91,14 @@ export const workbenchEn = {
   /**
    * The installed skills, as the product names them.
    *
-   * A built-in skill's `title:` frontmatter is its Chinese display name, and the
+   * A built-in skill's `title:` frontmatter is its Arabic display name, and the
    * registry ships it to every locale — so the display name lives HERE, keyed by
    * the skill's own directory name (its `/handle`, the English contract that
    * never translates). The frontmatter stays the fallback: a user Skill has no
    * key, and neither does a built-in one whose copy has not landed yet.
    * `tests/workbench/workbench-i18n.test.ts` reconciles the skills directory
    * against this map, so a new built-in skill without a title here fails that
-   * test rather than shipping one Chinese row in an English menu.
+   * test rather than shipping one untranslated row in an English menu.
    *
    * `description` is NOT here on purpose: it is the model's selection contract
    * (the agent reads it to choose a skill), not product copy.

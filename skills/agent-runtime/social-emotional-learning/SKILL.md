@@ -1,7 +1,7 @@
 ---
 name: social-emotional-learning
-title: "社会情感学习（SEL）"
-description: "Infuse social-emotional learning (SEL) into a concept-centered OpenMAIC classroom as a parallel learning goal. Use when the user asks to add emotional awareness, self-management, empathy, collaboration, relationship skills, resilience, or responsible decision-making to a subject lesson. Do not use when SEL itself should be the standalone content of a counseling, advisory, psychology, or homeroom lesson."
+title: "التعلّم الاجتماعي العاطفي"
+description: "غرس التعلّم الاجتماعي الوجداني (SEL) في فصل قائم على المفاهيم كهدف تعلّم موازٍ. استخدمها عندما يطلب المستخدم إضافة الوعي العاطفي أو ضبط الذات أو التعاطف أو التعاون أو مهارات العلاقات أو المرونة أو اتخاذ القرار المسؤول إلى درس مادة علمية. لا تُستخدم إذا كان التعلّم الاجتماعي العاطفي نفسه هو موضوع درس إرشادي أو نفسي قائم بذاته."
 ---
 
 # 社会情感学习（SEL）

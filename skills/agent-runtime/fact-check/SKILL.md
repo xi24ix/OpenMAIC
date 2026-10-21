@@ -1,7 +1,7 @@
 ---
 name: fact-check
-title: "事实核查"
-description: "Improve factual reliability while creating or reviewing a course or supplied content. Use when the user asks to fact-check, verify accuracy, reduce hallucinations, make a reliable course, or mentions 事实性错误、知识性错误、专业知识准确性、可靠性. During creation, checks the completed pages before delivery; on existing content, returns a short evidence-backed report and lets the user choose what to fix. Not for grammar, style, or layout. Combine with deep-research when current evidence is the course's main subject."
+title: "فحص الحقائق"
+description: "رفع الموثوقية الواقعية أثناء إنشاء دورة أو مراجعتها أو فحص محتوى مُزوَّد بالفعل. استخدمها عندما يطلب المستخدم تدقيق الحقائق أو التحقق من الدقة أو تقليل الهلوسة أو دورةً موثوقة. أثناء الإنشاء تُفحَص الصفحات المكتملة قبل التسليم؛ وعلى محتوى قائم يعود تقرير قصير مدعوم بالأدلة ويُترك للمستخدم اختيار ما يُصلَح. ليست للأخطاء اللغوية أو الأسلوب أو التنسيق. تُدمَج مع البحث المعمّق (deep-research) عندما تكون الأدلة الحديثة موضوع الدورة الأساسي."
 ---
 
 # Fact check

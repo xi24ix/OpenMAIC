@@ -1,7 +1,7 @@
 ---
 name: lecture-style
-title: "大师讲授"
-description: Masterclass lecturing — one continuous explanation carried by slides, with dense pages, long narration that builds an argument across several real cases, and checkpoints that are rare and deliberate. Use when the ask is a lecture, a masterclass, a systematic walkthrough of a subject, 「大师课」「系统讲解」「讲透」, or any topic whose payoff is understanding rather than practice; also use when the user names this style. Not for hands-on training (that is `workshop-style`) and not for a course whose point is manipulating a mechanism (that is `deep-interactive`).
+title: "محاضرة الإتقان"
+description: "إلقاء متواصل تحمله الشرائح: صفحات كثيفة، وسرديّة طويلة تبني حجّة عبر حالات حقيقية متعددة، ونقاط تحقّق قليلة ومقصودة. استخدمها عندما يكون الطلب محاضرة أو شرحًا منهجيًا يفصّل موضوعًا، أو أي موضوع مكسبه الفهم لا التطبيق، وعندما يسمّي المستخدم هذا الأسلوب بصراحة. ليست للتدريب العملي (workshop-style) ولا لدورة موضوعها التلاعب بآلية (deep-interactive)."
 ---
 
 # Masterclass lecture design

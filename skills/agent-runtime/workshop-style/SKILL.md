@@ -1,7 +1,7 @@
 ---
 name: workshop-style
-title: "互动工作坊"
-description: Hands-on workshop — the learner works through the course instead of watching it, with an exercise or a check every couple of pages, short slides that only set up the next task, guiding narration that asks more than it tells, and a closing page where the pieces come together in one small project. Use when the ask is a workshop, a bootcamp session, 「动手」「实操」「练中学」「边做边学」, or a skill the learner is meant to leave holding; also use when the user names this style. Not for a systematic explanatory course (that is `lecture-style`) and not for occupational procedure training with tools and safety gates (that is `vocational`).
+title: "ورشة تطبيقية"
+description: "ورشة عملية يعمل المتعلّم في الدورة بدل مشاهدتها: تمرين أو فحص كل صفحتين تقريبًا، وشرائح قصيرة لا تجهّز إلا للمهمة التالية، وسرديّة موجّهة تسأل أكثر مما تخبر، وصفحة ختامية تتجمّع فيها القطع في مشروع صغير. استخدمها عندما يكون الطلب ورشة أو جلسة معسكر تدريبي أو مهارة يُفترض أن يخرج بها المتعلّم، وعندما يسمّي المستخدم هذا الأسلوب بصراحة. ليست لدورة شرح منهجي (lecture-style) ولا لتدريب إجراء مهني بعدّة وبوابات سلامة (vocational)."
 ---
 
 # Workshop design

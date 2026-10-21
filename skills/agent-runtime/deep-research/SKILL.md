@@ -1,7 +1,7 @@
 ---
 name: deep-research
-title: "深度调研"
-description: Courses whose content rests on current, external or real-world facts that must be verified against live sources before being taught — recent events, market or policy data, product and version specifics, scientific developments, named cases. Researches the topic first, keeps a claim-to-source ledger, and grounds the outline and every page in what was actually fetched. Use when the request depends on up-to-date or externally checkable facts; not for timeless textbook topics that stand on established knowledge alone.
+title: "البحث المعمّق"
+description: "دورات يستند محتواها إلى وقائع حديثة أو خارجية يجب التحقق منها من مصادر حيّة قبل تدريسها — أحداث جارية، أو بيانات سوق أو سياسات، أو تفاصيل منتجات وإصدارات، أو تطوّرات علمية، أو حالات مُسمّاة. البحث في الموضوع أولًا، مع سجلّ يربط كلّ مطالبة بمصدرها، وتأسيس المخطط وكل صفحة على ما وُجد فعلًا. استخدمها عندما يعتمد الطلب على وقائع محدَّثة أو قابلة للتحقق من خارجها؛ وليس لموضوعات الكتب الدراسية القائمة على معرفة مستقرّة."
 ---
 
 # Deep Research course design

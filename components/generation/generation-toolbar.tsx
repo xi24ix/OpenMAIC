@@ -31,15 +31,15 @@ import type { SettingsSection } from '@/lib/types/settings';
 import { PDF_PROVIDERS } from '@/lib/pdf/constants';
 import type { PDFProviderId } from '@/lib/pdf/types';
 import { toast } from 'sonner';
-import { findSlot, type ModelSettingsChange } from '@/lib/model-settings/client';
+import { findSlot } from '@/lib/model-settings/client';
 import {
   courseGenerationUsable,
   effectiveTarget,
   modelCapabilities,
 } from '@/lib/model-settings/capabilities';
-import { assignmentRefs, modelChange, modelRef, providerLabel } from '@/lib/model-settings/edit';
-import { serviceEntries, slotThinking, thinkingChange } from '@/lib/model-settings/services';
-import { canChangeDefaultModel, settingsSections, slotEditable } from '@/lib/model-settings/shape';
+import { modelChange } from '@/lib/model-settings/edit';
+import { serviceEntries } from '@/lib/model-settings/services';
+import { settingsSections, slotEditable } from '@/lib/model-settings/shape';
 import { useModelSettingsView } from '@/lib/model-settings/use-model-settings';
 import { modelSettingsClient } from '@/lib/model-settings/client';
 import {
@@ -53,8 +53,6 @@ import {
   type CourseMaterialEntry,
   type CourseMaterialMessage,
 } from '@/lib/generation-run-client/use-course-materials';
-import { ModelPicker } from '@/components/settings/model-picker';
-import { useLLMPickerGroups } from '@/components/settings/use-llm-picker-groups';
 import { PdfPagePicker } from '@/components/generation/pdf-page-picker';
 
 // ─── Constants ───────────────────────────────────────────────
@@ -124,17 +122,12 @@ export function GenerationToolbar({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  // The workspace's model settings (the server's view): the llm root is the
-  // course model, the document slot the extractor.
+  // The workspace's model settings (the server's view): the document slot is
+  // the extractor. The course model itself is owned by workspace settings —
+  // the prompt box no longer offers a model pill; it only surfaces the
+  // no-model setup CTA (#580).
   const view = useModelSettingsView();
   const llmSlot = view ? findSlot(view, 'llm') : undefined;
-  const llm = effectiveTarget(view, 'llm');
-  const providerId = llm?.providerId ?? '';
-  const modelId = llm?.modelId ?? '';
-  const llmPickerGroups = useLLMPickerGroups(view);
-  const currentProviderName = view && providerId ? providerLabel(view, providerId) : providerId;
-  // A shortcut for the default model: not rendered at all where it cannot change it.
-  const llmEditable = !!view && canChangeDefaultModel(view);
   // Where the settings can still set up a language model, if anywhere.
   const sections = view ? settingsSections(view) : null;
   const setupSection: SettingsSection | undefined = !sections
@@ -144,13 +137,6 @@ export function GenerationToolbar({
       : slotEditable(llmSlot)
         ? 'course-models'
         : undefined;
-  const applyChange = async (change: ModelSettingsChange | undefined) => {
-    if (!change) return;
-    const result = await modelSettingsClient.apply(change);
-    if (!result.ok) toast.error(t('toolbar.modelChangeFailed', { message: result.message }));
-  };
-  const selectModel = (pid: string, mid: string) =>
-    llmSlot && applyChange(modelChange(llmSlot, modelRef(pid, mid)));
 
   // The extractor is the document slot: the workspace's document services
   // (and the built-in ones, which need no key) are offered.
@@ -263,30 +249,10 @@ export function GenerationToolbar({
 
   return (
     <div className="flex items-center gap-1 flex-wrap">
-      {/* ── Course model: pill (picker popover), or Set-up CTA (#580) ── */}
-      {llmEditable ? (
-        // Editable: the picker, with nothing selected while `llm` resolves to
-        // nothing (no default model); picking a model sets the llm slot, which
-        // every slot that follows it (the course stages, the classroom, the
-        // agents) then uses.
-        <ModelPicker
-          note={t('toolbar.defaultModelNote')}
-          groups={llmPickerGroups}
-          value={providerId && modelId ? { providerId, modelId } : null}
-          onSelect={(pid, mid) => void selectModel(pid, mid)}
-          thinkingConfig={slotThinking(llmSlot)}
-          onThinkingChange={
-            llmSlot && assignmentRefs(llmSlot.assignment).model
-              ? (config) => void applyChange(thinkingChange(llmSlot, config))
-              : undefined
-          }
-          placeholder={t('toolbar.pickModel')}
-          ariaLabel={llm ? `${currentProviderName} / ${modelId}` : t('toolbar.pickModel')}
-          className="h-8 w-auto max-w-[260px] gap-1.5 rounded-full px-2.5 text-xs"
-          t={t}
-        />
-      ) : (
-        view &&
+      {/* ── Set-up CTA when no usable LLM provider exists (#580: the homepage
+        must never dead-end). The model itself is chosen in workspace
+        settings, not in the prompt box. ── */}
+      {view &&
         !courseGenerationUsable(modelCapabilities(view)) &&
         onSettingsOpen &&
         setupSection && (
@@ -306,8 +272,7 @@ export function GenerationToolbar({
             </TooltipTrigger>
             <TooltipContent>{t('toolbar.configureProviderHint')}</TooltipContent>
           </Tooltip>
-        )
-      )}
+        )}
 
       {/* ── Course material (extractor + upload) combined Popover ── */}
       <Popover>

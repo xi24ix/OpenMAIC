@@ -1,7 +1,7 @@
 ---
 name: deep-interactive
-title: "深度交互"
-description: Deep Interactive courses. Plans the course so the learner manipulates something on most pages — simulations, diagrams they explore, code they run, games, 3D scenes — with slides reserved for the opening frame and the closing consolidation. Use when the topic has a mechanism, a variable to vary, a process to trace, or a structure to inspect.
+title: "التفاعل العميق"
+description: "تخطيط دورة يتلاعب فيها المتعلّم بشيءٍ في معظم الصفحات — محاكاة، ومخططات يستكشفها، وبرمجيات يشغّلها، وألعاب، ومشاهد ثلاثية الأبعاد — مع تخصيص الشرائح للإطار الافتتاحي والخلاصة الختامية. استخدمها عندما يتضمّن الموضوع آليةً أو متغيّرًا يتغيّر أو عمليةً تُتتبَّع أو بنيةً تُفحَص."
 ---
 
 # Deep Interactive course design

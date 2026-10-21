@@ -1,7 +1,8 @@
 /**
- * The home toolbar's course model: a picker whenever the workspace may set
- * the llm slot and has chat models, with nothing selected while no model is
- * set (no default model), so picking one sets the slot.
+ * The home prompt box no longer offers a model pill: the course model is
+ * picked in workspace settings. The only model surface left here is the
+ * #580 set-up CTA, which appears when no usable chat provider exists so
+ * the homepage never dead-ends.
  */
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -46,36 +47,33 @@ function withChatProvider(view: ModelSettingsView): ModelSettingsView {
 
 afterEach(() => modelSettingsClient.adopt(null));
 
+/** The slots course generation needs resolved before nothing is missing. */
+function usableCourseView(): ModelSettingsView {
+  const target = { registryId: 'openai', providerId: 'openai', modelId: 'gpt-5' };
+  return modelSettingsViewFor({
+    llm: target,
+    'course.outline': target,
+    'course.actions': target,
+    'course.content.slide': target,
+  });
+}
+
 describe('the toolbar course model', () => {
-  it('offers the picker with nothing selected when no model is set', () => {
-    const markup = render(withChatProvider(modelSettingsViewFor({})));
-    expect(markup).toContain('aria-label="toolbar.pickModel"');
+  it('shows no model name or picker when the course model is set', () => {
+    const markup = render(withChatProvider(usableCourseView()));
+    expect(markup).not.toContain('gpt-5');
+    expect(markup).not.toContain('toolbar.pickModel');
     expect(markup).not.toContain('toolbar.configureProvider');
   });
 
-  it('shows the model set for the workspace', () => {
-    const markup = render(
-      withChatProvider(
-        modelSettingsViewFor({
-          llm: { registryId: 'openai', providerId: 'openai', modelId: 'gpt-5' },
-        }),
-      ),
-    );
-    expect(markup).toContain('aria-label="OpenAI / gpt-5"');
-  });
-
-  it('asks to set up a model when there is nothing to pick', () => {
+  it('asks to set up a model when nothing usable is configured', () => {
     const markup = render(modelSettingsViewFor({}));
     expect(markup).toContain('toolbar.configureProvider');
     expect(markup).not.toContain('toolbar.pickModel');
   });
 
   it('renders no model control at all when the deployment locks the default model', () => {
-    const view = withChatProvider(
-      modelSettingsViewFor({
-        llm: { registryId: 'openai', providerId: 'openai', modelId: 'gpt-5' },
-      }),
-    );
+    const view = withChatProvider(usableCourseView());
     view.slots.find((slot) => slot.slot === 'llm')!.locked = true;
     const markup = render(view);
     expect(markup).not.toContain('gpt-5');

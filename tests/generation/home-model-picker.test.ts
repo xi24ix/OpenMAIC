@@ -1,12 +1,10 @@
 // @vitest-environment jsdom
 
 /**
- * The home toolbar's model picker sets the default model: its pill shows the
- * model alone (no prefix, no count of the stages set separately: those are
- * shown in Course Model Config), its dropdown says that picking here leaves
- * the stages set separately alone, and it stays a picker whenever the default
- * model can be changed, even when every course stage has a model of its own
- * (the classroom and the agents follow the default).
+ * The home prompt box carries no model pill: the default course model is set
+ * in workspace settings, and the toolbar only surfaces the #580 set-up CTA
+ * when no usable chat provider would let generation run. No model name,
+ * no picker, and no per-stage notes leak into the prompt box.
  *
  * The i18n hook returns keys (with interpolated values appended).
  */
@@ -116,7 +114,7 @@ function click(element: HTMLElement) {
   });
 }
 
-/** The stages every course is generated with. */
+/** The stages course generation resolves before nothing is missing. */
 const COURSE_STAGES = [
   'course.outline',
   'course.content.slide',
@@ -126,53 +124,44 @@ const COURSE_STAGES = [
   'course.actions',
 ];
 
-describe('the home model picker', () => {
-  it('shows the selected model alone, keeping its logo and accessible name', () => {
-    const { host } = mount(workspace());
-    const pill = host.querySelector<HTMLButtonElement>('[aria-label="acme / acme-large"]');
-    expect(pill).not.toBeNull();
-    expect(pill!.textContent).toBe('Acme Large');
+describe('the home prompt box model surface', () => {
+  it('shows no model name or picker when the course model is set', () => {
+    const { host, opened } = mount(
+      workspace(
+        Object.fromEntries(COURSE_STAGES.map((slot) => [slot, own(slot, 'acme:acme-small')])),
+      ),
+    );
+    expect(host.querySelector('[aria-label="acme / acme-large"]')).toBeNull();
+    expect(host.textContent).not.toContain('Acme Large');
+    expect(buttonWith('toolbar.configureProvider')).toBeUndefined();
+    expect(opened).toEqual([]);
   });
 
-  it('shows the first-run "Pick a model" state', () => {
-    modelSettingsClient.adopt(null);
-    const { host } = mount(makeView({ providers: [workspaceProvider('acme')] }));
-    const pill = host.querySelector('[aria-label="toolbar.pickModel"]');
-    expect(pill?.textContent).toContain('toolbar.pickModel');
+  it('asks to set up a model when nothing usable is configured', () => {
+    const { opened } = mount(makeView({ providers: [workspaceProvider('acme')] }));
+    const cta = buttonWith('toolbar.configureProvider');
+    expect(cta).toBeDefined();
+    click(cta!);
+    expect(opened.length).toBe(1);
   });
 
-  it('says nothing next to the picker about stages set separately', () => {
+  it('renders nothing when the default model is locked', () => {
+    const view = workspace({ 'course.outline': own('course.outline', 'other:gpt-5') });
+    view.slots.find((slot) => slot.slot === 'llm')!.locked = true;
+    const { host } = mount(view);
+    expect(host.querySelector('[aria-label="acme / acme-large"]')).toBeNull();
+    expect(host.textContent).not.toContain('Acme Large');
+  });
+
+  it('says nothing in the prompt box about stages set separately', () => {
     const { host } = mount(
       workspace({
+        ...Object.fromEntries(COURSE_STAGES.map((slot) => [slot, own(slot, 'acme:acme-small')])),
         'course.outline': own('course.outline', 'other:gpt-5'),
         classroom: own('classroom', 'acme:acme-small'),
       }),
     );
     expect(host.textContent).not.toMatch(/separately|perStage/i);
     expect(buttonWith('toolbar.stagesSetSeparately')).toBeUndefined();
-  });
-
-  it('notes in the dropdown that picking here changes the default only', () => {
-    const { host } = mount(workspace());
-    click(host.querySelector<HTMLButtonElement>('[aria-label="acme / acme-large"]')!);
-    expect(document.body.textContent).toContain('toolbar.defaultModelNote');
-  });
-
-  it('stays a picker when every course stage has its own model', () => {
-    const { host } = mount(
-      workspace(
-        Object.fromEntries(COURSE_STAGES.map((slot) => [slot, own(slot, 'acme:acme-small')])),
-      ),
-    );
-    const pill = host.querySelector<HTMLButtonElement>('[aria-label="acme / acme-large"]');
-    expect(pill?.textContent).toBe('Acme Large');
-    expect(buttonWith('toolbar.perStageSetup')).toBeUndefined();
-  });
-
-  it('renders nothing for a locked default model', () => {
-    const view = workspace({ 'course.outline': own('course.outline', 'other:gpt-5') });
-    view.slots.find((slot) => slot.slot === 'llm')!.locked = true;
-    const { host } = mount(view);
-    expect(host.querySelector('[aria-label="acme / acme-large"]')).toBeNull();
   });
 });

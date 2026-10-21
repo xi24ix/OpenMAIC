@@ -11,6 +11,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - PDF page selection in the classic composer. A PDF is uploaded with `POST /api/materials?extract=false`, `GET /api/materials/<id>/pages` reports `{ pageCount }`, and `GET /api/materials/<id>/pages?page=N` returns that page as a PNG thumbnail. `POST /api/materials/<id>/extraction` with `{ "pages": [1, 3, 8] }` or `{ "pages": "all" }` validates the selection against the document, stores it on the extraction, slices the PDF to those pages, and then runs the extractor. Extraction reads report `selectedPages` and `sourcePageCount`; existing materials need no migration.
 - Course-design skills in the classic composer. `GET /api/generation/skills` lists the built-in skills that shape a classroom (the twelve outline skills), and a generation run accepts up to five `skillIds`, resolved for the owner and passed to the outline step. Unknown or non-outline skill ids are refused before the run starts.
 
+### Changed
+
+- The twelve outline skills speak Arabic. Their SKILL.md frontmatter titles and descriptions — what the skill picker shows — are Arabic now; the English `/handle` stays the machine contract. Arabic display names for the workbench were already in the ar-SA overlay.
+- Mobile classrooms play like a video player: the live scene is the main element, the roundtable shrinks to a bottom control dock (118px on short viewports), and the plan / speaker-notes panels open as fixed overlay drawers from the dock toggles. The old mobile reel cards (`MobileSceneReels`) are removed.
+- The lesson prompt box no longer carries a model pill. The course model is configured in workspace settings; the toolbar keeps only the no-provider set-up CTA (#580) so a fresh homepage still dead-ends somewhere instead of nowhere.
+
+
 ## [1.2.0-rc.2] - 2026-10-11
 
 ### Security

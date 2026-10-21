@@ -1,8 +1,9 @@
 ---
 name: zone-of-proximal-development
-description: "Design a coherent assessment-and-practice lesson using zone-of-proximal-development principles: independent diagnosis, targeted review, supported practice, fresh independent checks, and an evidence-based next step. Use for 习题课（最近发展区）, 最近发展区, 测验习题课, diagnostic review lessons, or guided-to-independent practice. Can also run one practice cycle in chat; do not turn a request for a single exercise or theory explanation into a full lesson."
+title: "منطقة النمو القريب"
+description: "تصميم درس تقييم وتدريب متسق وفق منطقة النمو القريب: تشخيص مستقل، ثم مراجعة موجّهة، ثم تدريب بمساندة، ثم فحوصات مستقلة جديدة، فخطوة تالية مبنية على الأدلة. استخدمها لدروس المراجعة التشخيصية أو الانتقال من الموجَّه إلى المستقل. يشغّل أيضًا دورة تدريب واحدة داخل المحادثة؛ ولا يحوّل طلب تمرين واحد أو شرح نظرية إلى درس كامل."
 metadata:
-  title: "习题课（最近发展区）"
+  title: "منطقة النمو القريب"
   version: "0.2.0-experimental"
 ---
 
