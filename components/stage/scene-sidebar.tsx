@@ -107,6 +107,7 @@ export function SceneSidebar({
 
   return (
     <div
+      data-collapsed={collapsed}
       style={{
         width: displayWidth,
         transition: isDraggingRef.current ? 'none' : 'width 0.3s ease',

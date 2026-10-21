@@ -269,6 +269,7 @@ export const ChatArea = forwardRef<ChatAreaRef, ChatAreaProps>(
 
     return (
       <div
+        data-collapsed={collapsed}
         style={{
           width: displayWidth,
           transition: isDragging ? 'none' : 'width 0.3s ease',

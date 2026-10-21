@@ -45,7 +45,6 @@ import type { AudioIndicatorState } from '@/components/roundtable/audio-indicato
 import type { Action, DiscussionAction, SpeechAction } from '@/lib/types/action';
 import { cn } from '@/lib/utils';
 import { ChatArea, type ChatAreaRef } from '@/components/chat/chat-area';
-import { MobileSceneReels } from '@/components/classroom/MobileSceneReels';
 import type { SessionCleanupPayload } from '@/components/chat/use-chat-sessions';
 import { agentsToParticipants, useAgentRegistry } from '@/lib/orchestration/registry/store';
 import type { AgentConfig } from '@/lib/orchestration/registry/types';
@@ -1720,219 +1719,20 @@ export const PlaybackChromeRoot = forwardRef<PlaybackChromeRootHandle, PlaybackC
               suppressHydrationWarning
             >
               <CanvasArea
-              currentScene={currentScene}
-              currentSceneIndex={currentSceneIndex}
-              scenesCount={totalScenesCount}
-              mode={mode}
-              engineState={canvasEngineState}
-              isLiveSession={
-                chatIsStreaming ||
-                chatIsSoftClosing ||
-                isTopicPending ||
-                engineMode === 'live' ||
-                !!chatSessionType
-              }
-              isSoftClosing={chatIsSoftClosing}
-              softCloseDeadline={softCloseDeadline}
-              whiteboardOpen={whiteboardOpen}
-              sidebarCollapsed={sidebarCollapsed}
-              chatCollapsed={chatAreaCollapsed}
-              onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
-              onToggleChat={() => setChatAreaCollapsed(!chatAreaCollapsed)}
-              onPrevSlide={handlePreviousScene}
-              onNextSlide={handleNextScene}
-              onPlayPause={handlePlayPause}
-              onWhiteboardClose={handleWhiteboardToggle}
-              isPresenting={isPresenting}
-              onTogglePresentation={togglePresentation}
-              showStopDiscussion={
-                engineMode === 'live' ||
-                ((chatIsStreaming || chatIsSoftClosing) &&
-                  (chatSessionType === 'qa' || chatSessionType === 'discussion'))
-              }
-              onStopDiscussion={handleStopDiscussion}
-              onContinueDiscussion={handleContinueDiscussion}
-              showElementReference={showElementReference}
-              canPickSlideElement={canPickElement}
-              elementPickActive={elementPickActive}
-              onToggleElementPick={handleToggleElementPick}
-              onPickElement={handlePickElement}
-              whiteboardElementReference={
-                showElementReference &&
-                draftElementReference?.reference.kind === 'whiteboard_element'
-                  ? draftElementReference.reference
-                  : undefined
-              }
-              onPickWhiteboardElement={handlePickWhiteboardElement}
-              onCancelElementPick={() => setElementPickActive(false)}
-              hideToolbar={mode === 'playback' || (isPresenting && !controlsVisible)}
-              isPendingScene={isPendingScene}
-              isCourseComplete={isCourseComplete}
-              isGenerationFailed={
-                isPendingScene && failedOutlines.some((f) => f.id === generatingOutlines[0]?.id)
-              }
-              isGenerationInterrupted={isPendingScene && generationInterrupted}
-              generationFailureMessage={generationFailureMessage}
-              onRetryGeneration={
-                onRetryOutline && generatingOutlines[0]
-                  ? () => onRetryOutline(generatingOutlines[0].id)
-                  : undefined
-              }
-            />
-          </div>
-
-            <MobileSceneReels
-              scenes={scenes}
-              currentSceneId={currentSceneId}
-              onSelect={(sceneId) => {
-                void gatedSceneSwitch(sceneId);
-              }}
-            />
-
-          {/* Roundtable Area */}
-          {mode === 'playback' && (
-            <div
-              className={cn(
-                'aurora-roundtable transition-opacity duration-300',
-                !isPresenting && 'shrink-0',
-                isPresenting && 'absolute inset-x-0 bottom-0 z-20',
-              )}
-            >
-              <Roundtable
-                mode={mode}
-                initialParticipants={participants}
-                playbackView={playbackView}
-                currentSpeech={liveSpeech}
-                lectureSpeech={lectureSpeech}
-                idleText={firstSpeechText}
-                playbackCompleted={playbackCompleted}
-                discussionRequest={discussionRequest}
-                engineMode={engineMode}
-                isStreaming={chatIsStreaming}
-                audioIndicatorState={audioIndicatorState}
-                audioAgentId={audioAgentId}
-                sessionType={
-                  chatSessionType === 'qa'
-                    ? 'qa'
-                    : chatSessionType === 'discussion'
-                      ? 'discussion'
-                      : undefined
-                }
-                speakingAgentId={speakingAgentId}
-                speechProgress={speechProgress}
-                showEndFlash={showEndFlash}
-                endFlashSessionType={endFlashSessionType}
-                thinkingState={thinkingState}
-                isCueUser={isCueUser}
-                isSoftClosing={chatIsSoftClosing}
-                softCloseDeadline={softCloseDeadline}
-                isTopicPending={isTopicPending}
-                canSendMessage={canSendReferencedMessage}
-                onMessageSend={async (msg) => {
-                  const draft = showElementReference ? draftElementReferenceRef.current : null;
-                  const elementReferenceSnapshot: ElementReferenceSendSnapshot | undefined = draft
-                    ? {
-                        reference: draft.reference,
-                        selectionVersion: draft.selectionVersion,
-                      }
-                    : undefined;
-                  // Always clear Level-1 pause state — the closure may hold a stale
-                  // isDiscussionPaused value (e.g. voice input's onTranscription callback
-                  // captures onMessageSend before React re-renders with the updated state).
-                  setIsDiscussionPaused(false);
-                  // Clear the sticky livePausedRef so the next agent-loop buffer
-                  // starts unpaused. (pauseActiveLiveBuffer sets a ref that new
-                  // buffers inherit — must be cleared before sendMessage creates one.)
-                  chatAreaRef.current?.resumeActiveLiveBuffer();
-                  // Flush any buffered / in-flight TTS audio from the previous
-                  // agent turn so it doesn't leak into the next round.
-                  discussionTTS.cleanup();
-                  // Clear soft-paused state — user is continuing the topic
-                  if (isTopicPending) {
-                    setIsTopicPending(false);
-                    setLiveSpeech(null);
-                    setSpeakingAgentId(null);
-                  }
-                  setChatIsSoftClosing(false);
-                  // User interrupts during playback — handleUserInterrupt triggers
-                  // onUserInterrupt callback which already calls sendMessage, so skip
-                  // the direct sendMessage below to avoid sending twice.
-                  // Include 'paused' because onInputActivate pauses the engine before
-                  // the user finishes typing — without this the interrupt position
-                  // would never be saved and resuming after QA skips to the next sentence.
-                  if (
-                    engineRef.current &&
-                    (engineMode === 'playing' || engineMode === 'live' || engineMode === 'paused')
-                  ) {
-                    pendingInterruptElementReferenceRef.current = elementReferenceSnapshot;
-                    try {
-                      engineRef.current.handleUserInterrupt(msg);
-                    } finally {
-                      pendingInterruptElementReferenceRef.current = undefined;
-                    }
-                  } else {
-                    void sendMessageWithElementReference(msg, elementReferenceSnapshot);
-                  }
-                  // Auto-switch to chat tab when user sends a message
-                  chatAreaRef.current?.switchToTab('chat');
-                  setIsCueUser(false);
-                  // Immediately mark streaming for synchronized stop button
-                  setChatIsStreaming(true);
-                  setChatSessionType(chatSessionType || 'qa');
-                  // Optimistic thinking: show thinking dots immediately so there's
-                  // no blank gap between userMessage expiry and the SSE thinking event.
-                  // The real SSE event will overwrite this with the same or updated value.
-                  setThinkingState({ stage: 'director' });
-                }}
-                onDiscussionStart={() => {
-                  // User clicks "Join" on ProactiveCard
-                  engineRef.current?.confirmDiscussion();
-                }}
-                onDiscussionSkip={() => {
-                  // User clicks "Skip" on ProactiveCard
-                  engineRef.current?.skipDiscussion();
-                }}
-                onStopDiscussion={handleStopDiscussion}
-                onContinueDiscussion={handleContinueDiscussion}
-                onUserInputActivity={() => {
-                  handleContinueDiscussion();
-                }}
-                onInputActivate={() => {
-                  // Level-1 pause: freeze buffer tick + TTS audio while SSE keeps buffering.
-                  // User resumes manually via Space / pause button after closing the input.
-                  // No isDiscussionPaused guard — always attempt to pause the buffer.
-                  // The return value ensures UI state stays in sync with buffer state.
-                  if (chatSessionType === 'qa' || chatSessionType === 'discussion') {
-                    const paused = chatAreaRef.current?.pauseActiveLiveBuffer();
-                    if (paused) {
-                      discussionTTS.pause();
-                      setIsDiscussionPaused(true);
-                    }
-                  }
-                  // Also pause playback engine
-                  if (engineRef.current && (engineMode === 'playing' || engineMode === 'live')) {
-                    engineRef.current.pause();
-                  }
-                }}
-                onResumeTopic={doResumeTopic}
-                onPlayPause={handlePlayPause}
-                isDiscussionPaused={isDiscussionPaused}
-                onDiscussionPause={() => {
-                  const paused = chatAreaRef.current?.pauseActiveLiveBuffer();
-                  if (paused) {
-                    discussionTTS.pause();
-                    setIsDiscussionPaused(true);
-                  }
-                }}
-                onDiscussionResume={() => {
-                  chatAreaRef.current?.resumeActiveLiveBuffer();
-                  discussionTTS.resume();
-                  setIsDiscussionPaused(false);
-                }}
-                totalActions={totalActions}
-                currentActionIndex={currentPlaybackActionIndex ?? 0}
+                currentScene={currentScene}
                 currentSceneIndex={currentSceneIndex}
                 scenesCount={totalScenesCount}
+                mode={mode}
+                engineState={canvasEngineState}
+                isLiveSession={
+                  chatIsStreaming ||
+                  chatIsSoftClosing ||
+                  isTopicPending ||
+                  engineMode === 'live' ||
+                  !!chatSessionType
+                }
+                isSoftClosing={chatIsSoftClosing}
+                softCloseDeadline={softCloseDeadline}
                 whiteboardOpen={whiteboardOpen}
                 sidebarCollapsed={sidebarCollapsed}
                 chatCollapsed={chatAreaCollapsed}
@@ -1940,38 +1740,229 @@ export const PlaybackChromeRoot = forwardRef<PlaybackChromeRootHandle, PlaybackC
                 onToggleChat={() => setChatAreaCollapsed(!chatAreaCollapsed)}
                 onPrevSlide={handlePreviousScene}
                 onNextSlide={handleNextScene}
+                onPlayPause={handlePlayPause}
                 onWhiteboardClose={handleWhiteboardToggle}
                 isPresenting={isPresenting}
-                controlsVisible={controlsVisible}
                 onTogglePresentation={togglePresentation}
-                onPresentationInteractionChange={setIsPresentationInteractionActive}
-                fullscreenContainerRef={stageRef}
+                showStopDiscussion={
+                  engineMode === 'live' ||
+                  ((chatIsStreaming || chatIsSoftClosing) &&
+                    (chatSessionType === 'qa' || chatSessionType === 'discussion'))
+                }
+                onStopDiscussion={handleStopDiscussion}
+                onContinueDiscussion={handleContinueDiscussion}
                 showElementReference={showElementReference}
                 canPickSlideElement={canPickElement}
                 elementPickActive={elementPickActive}
                 onToggleElementPick={handleToggleElementPick}
-                elementReferencePill={
-                  draftElementReference
-                    ? {
-                        sceneLabel:
-                          draftElementReference.reference.kind === 'whiteboard_element'
-                            ? t('whiteboard.title')
-                            : t('chat.lectureNotes.pageLabel', {
-                                n: (draftElementReference.sceneOrder ?? 0) + 1,
-                              }),
-                        elementType:
-                          draftElementReference.elementType === 'interactive'
-                            ? t('edit.sceneType.interactive')
-                            : getSlideElementTypeLabel(draftElementReference.elementType, t),
-                        displaySummary: draftElementReference.displaySummary,
-                      }
+                onPickElement={handlePickElement}
+                whiteboardElementReference={
+                  showElementReference &&
+                  draftElementReference?.reference.kind === 'whiteboard_element'
+                    ? draftElementReference.reference
                     : undefined
                 }
-                onClearElementReference={() => setDraftElementReference(null)}
+                onPickWhiteboardElement={handlePickWhiteboardElement}
+                onCancelElementPick={() => setElementPickActive(false)}
+                hideToolbar={mode === 'playback' || (isPresenting && !controlsVisible)}
+                isPendingScene={isPendingScene}
+                isCourseComplete={isCourseComplete}
+                isGenerationFailed={
+                  isPendingScene && failedOutlines.some((f) => f.id === generatingOutlines[0]?.id)
+                }
+                isGenerationInterrupted={isPendingScene && generationInterrupted}
+                generationFailureMessage={generationFailureMessage}
+                onRetryGeneration={
+                  onRetryOutline && generatingOutlines[0]
+                    ? () => onRetryOutline(generatingOutlines[0].id)
+                    : undefined
+                }
               />
             </div>
-          )}
-        </div>
+
+            {/* Roundtable Area */}
+            {mode === 'playback' && (
+              <div
+                className={cn(
+                  'aurora-roundtable transition-opacity duration-300',
+                  !isPresenting && 'shrink-0',
+                  isPresenting && 'absolute inset-x-0 bottom-0 z-20',
+                )}
+              >
+                <Roundtable
+                  mode={mode}
+                  initialParticipants={participants}
+                  playbackView={playbackView}
+                  currentSpeech={liveSpeech}
+                  lectureSpeech={lectureSpeech}
+                  idleText={firstSpeechText}
+                  playbackCompleted={playbackCompleted}
+                  discussionRequest={discussionRequest}
+                  engineMode={engineMode}
+                  isStreaming={chatIsStreaming}
+                  audioIndicatorState={audioIndicatorState}
+                  audioAgentId={audioAgentId}
+                  sessionType={
+                    chatSessionType === 'qa'
+                      ? 'qa'
+                      : chatSessionType === 'discussion'
+                        ? 'discussion'
+                        : undefined
+                  }
+                  speakingAgentId={speakingAgentId}
+                  speechProgress={speechProgress}
+                  showEndFlash={showEndFlash}
+                  endFlashSessionType={endFlashSessionType}
+                  thinkingState={thinkingState}
+                  isCueUser={isCueUser}
+                  isSoftClosing={chatIsSoftClosing}
+                  softCloseDeadline={softCloseDeadline}
+                  isTopicPending={isTopicPending}
+                  canSendMessage={canSendReferencedMessage}
+                  onMessageSend={async (msg) => {
+                    const draft = showElementReference ? draftElementReferenceRef.current : null;
+                    const elementReferenceSnapshot: ElementReferenceSendSnapshot | undefined = draft
+                      ? {
+                          reference: draft.reference,
+                          selectionVersion: draft.selectionVersion,
+                        }
+                      : undefined;
+                    // Always clear Level-1 pause state — the closure may hold a stale
+                    // isDiscussionPaused value (e.g. voice input's onTranscription callback
+                    // captures onMessageSend before React re-renders with the updated state).
+                    setIsDiscussionPaused(false);
+                    // Clear the sticky livePausedRef so the next agent-loop buffer
+                    // starts unpaused. (pauseActiveLiveBuffer sets a ref that new
+                    // buffers inherit — must be cleared before sendMessage creates one.)
+                    chatAreaRef.current?.resumeActiveLiveBuffer();
+                    // Flush any buffered / in-flight TTS audio from the previous
+                    // agent turn so it doesn't leak into the next round.
+                    discussionTTS.cleanup();
+                    // Clear soft-paused state — user is continuing the topic
+                    if (isTopicPending) {
+                      setIsTopicPending(false);
+                      setLiveSpeech(null);
+                      setSpeakingAgentId(null);
+                    }
+                    setChatIsSoftClosing(false);
+                    // User interrupts during playback — handleUserInterrupt triggers
+                    // onUserInterrupt callback which already calls sendMessage, so skip
+                    // the direct sendMessage below to avoid sending twice.
+                    // Include 'paused' because onInputActivate pauses the engine before
+                    // the user finishes typing — without this the interrupt position
+                    // would never be saved and resuming after QA skips to the next sentence.
+                    if (
+                      engineRef.current &&
+                      (engineMode === 'playing' || engineMode === 'live' || engineMode === 'paused')
+                    ) {
+                      pendingInterruptElementReferenceRef.current = elementReferenceSnapshot;
+                      try {
+                        engineRef.current.handleUserInterrupt(msg);
+                      } finally {
+                        pendingInterruptElementReferenceRef.current = undefined;
+                      }
+                    } else {
+                      void sendMessageWithElementReference(msg, elementReferenceSnapshot);
+                    }
+                    // Auto-switch to chat tab when user sends a message
+                    chatAreaRef.current?.switchToTab('chat');
+                    setIsCueUser(false);
+                    // Immediately mark streaming for synchronized stop button
+                    setChatIsStreaming(true);
+                    setChatSessionType(chatSessionType || 'qa');
+                    // Optimistic thinking: show thinking dots immediately so there's
+                    // no blank gap between userMessage expiry and the SSE thinking event.
+                    // The real SSE event will overwrite this with the same or updated value.
+                    setThinkingState({ stage: 'director' });
+                  }}
+                  onDiscussionStart={() => {
+                    // User clicks "Join" on ProactiveCard
+                    engineRef.current?.confirmDiscussion();
+                  }}
+                  onDiscussionSkip={() => {
+                    // User clicks "Skip" on ProactiveCard
+                    engineRef.current?.skipDiscussion();
+                  }}
+                  onStopDiscussion={handleStopDiscussion}
+                  onContinueDiscussion={handleContinueDiscussion}
+                  onUserInputActivity={() => {
+                    handleContinueDiscussion();
+                  }}
+                  onInputActivate={() => {
+                    // Level-1 pause: freeze buffer tick + TTS audio while SSE keeps buffering.
+                    // User resumes manually via Space / pause button after closing the input.
+                    // No isDiscussionPaused guard — always attempt to pause the buffer.
+                    // The return value ensures UI state stays in sync with buffer state.
+                    if (chatSessionType === 'qa' || chatSessionType === 'discussion') {
+                      const paused = chatAreaRef.current?.pauseActiveLiveBuffer();
+                      if (paused) {
+                        discussionTTS.pause();
+                        setIsDiscussionPaused(true);
+                      }
+                    }
+                    // Also pause playback engine
+                    if (engineRef.current && (engineMode === 'playing' || engineMode === 'live')) {
+                      engineRef.current.pause();
+                    }
+                  }}
+                  onResumeTopic={doResumeTopic}
+                  onPlayPause={handlePlayPause}
+                  isDiscussionPaused={isDiscussionPaused}
+                  onDiscussionPause={() => {
+                    const paused = chatAreaRef.current?.pauseActiveLiveBuffer();
+                    if (paused) {
+                      discussionTTS.pause();
+                      setIsDiscussionPaused(true);
+                    }
+                  }}
+                  onDiscussionResume={() => {
+                    chatAreaRef.current?.resumeActiveLiveBuffer();
+                    discussionTTS.resume();
+                    setIsDiscussionPaused(false);
+                  }}
+                  totalActions={totalActions}
+                  currentActionIndex={currentPlaybackActionIndex ?? 0}
+                  currentSceneIndex={currentSceneIndex}
+                  scenesCount={totalScenesCount}
+                  whiteboardOpen={whiteboardOpen}
+                  sidebarCollapsed={sidebarCollapsed}
+                  chatCollapsed={chatAreaCollapsed}
+                  onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  onToggleChat={() => setChatAreaCollapsed(!chatAreaCollapsed)}
+                  onPrevSlide={handlePreviousScene}
+                  onNextSlide={handleNextScene}
+                  onWhiteboardClose={handleWhiteboardToggle}
+                  isPresenting={isPresenting}
+                  controlsVisible={controlsVisible}
+                  onTogglePresentation={togglePresentation}
+                  onPresentationInteractionChange={setIsPresentationInteractionActive}
+                  fullscreenContainerRef={stageRef}
+                  showElementReference={showElementReference}
+                  canPickSlideElement={canPickElement}
+                  elementPickActive={elementPickActive}
+                  onToggleElementPick={handleToggleElementPick}
+                  elementReferencePill={
+                    draftElementReference
+                      ? {
+                          sceneLabel:
+                            draftElementReference.reference.kind === 'whiteboard_element'
+                              ? t('whiteboard.title')
+                              : t('chat.lectureNotes.pageLabel', {
+                                  n: (draftElementReference.sceneOrder ?? 0) + 1,
+                                }),
+                          elementType:
+                            draftElementReference.elementType === 'interactive'
+                              ? t('edit.sceneType.interactive')
+                              : getSlideElementTypeLabel(draftElementReference.elementType, t),
+                          displaySummary: draftElementReference.displaySummary,
+                        }
+                      : undefined
+                  }
+                  onClearElementReference={() => setDraftElementReference(null)}
+                />
+              </div>
+            )}
+          </div>
 
           {/* Chat Area — playback / autonomous always renders it here; Pro
             (edit) mode unmounts this whole PlaybackChromeRoot, so the
@@ -1980,72 +1971,72 @@ export const PlaybackChromeRoot = forwardRef<PlaybackChromeRootHandle, PlaybackC
             <ChatArea
               className="aurora-chat"
               ref={chatAreaRef}
-            width={chatAreaWidth}
-            onWidthChange={setChatAreaWidth}
-            collapsed={chatAreaCollapsed}
-            onCollapseChange={setChatAreaCollapsed}
-            activeBubbleId={activeBubbleId}
-            onActiveBubble={(id) => setActiveBubbleId(id)}
-            currentSceneId={currentSceneId}
-            currentActionIndex={currentPlaybackActionIndex}
-            canJumpToAction={canJumpToAction}
-            onJumpToAction={(sceneId, actionIndex) => {
-              void handleJumpToAction(sceneId, actionIndex);
-            }}
-            onLiveSpeech={(text, agentId) => {
-              // Capture epoch at call time — discard if scene has changed since
-              const epoch = sceneEpochRef.current;
-              // Use queueMicrotask to let any pending scene-switch reset settle first
-              queueMicrotask(() => {
-                if (sceneEpochRef.current !== epoch) return; // stale — scene changed
-                setLiveSpeech(text);
-                if (agentId !== undefined) {
-                  setSpeakingAgentId(agentId);
-                }
-                if (text !== null || agentId) {
-                  setChatIsStreaming(true);
-                  setChatSessionType(chatAreaRef.current?.getActiveSessionType?.() ?? null);
-                  setIsTopicPending(false);
-                } else if (text === null && agentId === null) {
-                  setChatIsStreaming(false);
-                  // Don't clear chatSessionType here — it's needed by the stop
-                  // button when director cues user (cue_user → done → liveSpeech null).
-                  // It gets properly cleared in doSessionCleanup and scene change.
-                }
-              });
-            }}
-            onSpeechProgress={(ratio) => {
-              const epoch = sceneEpochRef.current;
-              queueMicrotask(() => {
-                if (sceneEpochRef.current !== epoch) return;
-                setSpeechProgress(ratio);
-              });
-            }}
-            onThinking={(state) => {
-              const epoch = sceneEpochRef.current;
-              queueMicrotask(() => {
-                if (sceneEpochRef.current !== epoch) return;
-                setThinkingState(state);
-              });
-            }}
-            onCueUser={(_fromAgentId, _prompt) => {
-              setIsCueUser(true);
-            }}
-            onLiveSessionError={handleLiveSessionError}
-            onSoftCloseSession={() => {
-              setThinkingState(null);
-              setSpeechProgress(null);
-              setIsCueUser(false);
-              setActiveBubbleId(null);
-            }}
-            onSoftClosingChange={(softClosing, deadline) => {
-              setChatIsSoftClosing(softClosing);
-              setSoftCloseDeadline(deadline);
-            }}
-            onStopSession={handleSessionStop}
-            onSegmentSealed={discussionTTS.handleSegmentSealed}
-            shouldHoldAfterReveal={discussionTTS.shouldHold}
-          />
+              width={chatAreaWidth}
+              onWidthChange={setChatAreaWidth}
+              collapsed={chatAreaCollapsed}
+              onCollapseChange={setChatAreaCollapsed}
+              activeBubbleId={activeBubbleId}
+              onActiveBubble={(id) => setActiveBubbleId(id)}
+              currentSceneId={currentSceneId}
+              currentActionIndex={currentPlaybackActionIndex}
+              canJumpToAction={canJumpToAction}
+              onJumpToAction={(sceneId, actionIndex) => {
+                void handleJumpToAction(sceneId, actionIndex);
+              }}
+              onLiveSpeech={(text, agentId) => {
+                // Capture epoch at call time — discard if scene has changed since
+                const epoch = sceneEpochRef.current;
+                // Use queueMicrotask to let any pending scene-switch reset settle first
+                queueMicrotask(() => {
+                  if (sceneEpochRef.current !== epoch) return; // stale — scene changed
+                  setLiveSpeech(text);
+                  if (agentId !== undefined) {
+                    setSpeakingAgentId(agentId);
+                  }
+                  if (text !== null || agentId) {
+                    setChatIsStreaming(true);
+                    setChatSessionType(chatAreaRef.current?.getActiveSessionType?.() ?? null);
+                    setIsTopicPending(false);
+                  } else if (text === null && agentId === null) {
+                    setChatIsStreaming(false);
+                    // Don't clear chatSessionType here — it's needed by the stop
+                    // button when director cues user (cue_user → done → liveSpeech null).
+                    // It gets properly cleared in doSessionCleanup and scene change.
+                  }
+                });
+              }}
+              onSpeechProgress={(ratio) => {
+                const epoch = sceneEpochRef.current;
+                queueMicrotask(() => {
+                  if (sceneEpochRef.current !== epoch) return;
+                  setSpeechProgress(ratio);
+                });
+              }}
+              onThinking={(state) => {
+                const epoch = sceneEpochRef.current;
+                queueMicrotask(() => {
+                  if (sceneEpochRef.current !== epoch) return;
+                  setThinkingState(state);
+                });
+              }}
+              onCueUser={(_fromAgentId, _prompt) => {
+                setIsCueUser(true);
+              }}
+              onLiveSessionError={handleLiveSessionError}
+              onSoftCloseSession={() => {
+                setThinkingState(null);
+                setSpeechProgress(null);
+                setIsCueUser(false);
+                setActiveBubbleId(null);
+              }}
+              onSoftClosingChange={(softClosing, deadline) => {
+                setChatIsSoftClosing(softClosing);
+                setSoftCloseDeadline(deadline);
+              }}
+              onStopSession={handleSessionStop}
+              onSegmentSealed={discussionTTS.handleSegmentSealed}
+              shouldHoldAfterReveal={discussionTTS.shouldHold}
+            />
           </div>
         </div>
 
