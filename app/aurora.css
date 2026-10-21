@@ -366,6 +366,19 @@
   backdrop-filter: blur(22px) saturate(1.2);
 }
 
+/* The presenting wrapper is a 0-height anchor whose children float —
+   the dockskin above would turn it into a clipping, fixed-position
+   containing block (backdrop-filter + overflow) and swallow the whole
+   fullscreen controls pill. Neutralize the surface styling on it. */
+.aurora-roundtable > .aurora-presenting-root {
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
 .aurora-classroom.is-presenting .aurora-stage-wrap {
   padding: 0;
   gap: 0;

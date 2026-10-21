@@ -747,7 +747,7 @@ export function Roundtable({
 
   if (isPresenting) {
     return (
-      <div className="h-0 w-full relative z-10 overflow-visible">
+      <div className="aurora-presenting-root h-0 w-full relative z-10 overflow-visible">
         {/* Speech overlay — fills the full stage area via absolute positioning */}
         <PresentationSpeechOverlay
           playbackView={enrichedPlaybackView}
