@@ -193,6 +193,15 @@ export const PlaybackChromeRoot = forwardRef<PlaybackChromeRootHandle, PlaybackC
     const setTTSMuted = useSettingsStore((s) => s.setTTSMuted);
     const setTTSVolume = useSettingsStore((s) => s.setTTSVolume);
 
+    // On phone layouts the plan/chat panels are overlay drawers (aurora.css
+    // ≤1100px): start them collapsed so the slide owns the screen.
+    useEffect(() => {
+      if (!window.matchMedia('(max-width: 1100px)').matches) return;
+      if (!useSettingsStore.getState().sidebarCollapsed) setSidebarCollapsed(true);
+      if (!useSettingsStore.getState().chatAreaCollapsed) setChatAreaCollapsed(true);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     // PlaybackEngine state
     const [engineMode, setEngineMode] = useState<EngineMode>('idle');
     const [playbackCompleted, setPlaybackCompleted] = useState(false); // Distinguishes "never played" idle from "finished" idle
