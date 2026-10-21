@@ -1125,9 +1125,11 @@
   }
 
   /* The tray pops out of the dock as a fixed sheet — the dock clips
-     absolutely-positioned children via overflow:hidden. */
+     absolutely-positioned children via overflow:hidden. top:auto keeps
+     the top-full utility from over-constraining the fixed box. */
   .aurora-controls-bar .aurora-controls-bar-tray {
     position: fixed;
+    inset-block-start: auto;
     bottom: 142px;
     inset-inline: 8px;
   }
