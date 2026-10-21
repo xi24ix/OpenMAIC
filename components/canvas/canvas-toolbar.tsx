@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect, useSyncExternalStore } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ChevronLeft,
   ChevronRight,
@@ -541,149 +542,159 @@ export function CanvasToolbar({
         )}
       </div>
 
-      {/* ── Phone tray: the controls moved off the compact row ── */}
-      {isPhone && trayOpen && (onToggleMute || onTogglePresentation) && (
-        <div
-          className="aurora-controls-bar-tray absolute inset-x-1 top-full z-[55] mt-2 rounded-2xl p-2 flex flex-col gap-1.5 shadow-[0_14px_40px_-12px_rgba(10,14,35,0.55)]"
-          style={{
-            background: 'var(--aurora-drawer-solid, #101631)',
-            border: '1px solid var(--aurora-line-strong, rgba(255,255,255,0.16))',
-          }}
-        >
+      {/* ── Phone tray: the controls moved off the compact row. Portaled
+          to body — the dock's overflow:hidden + backdrop-filter trap any
+          fixed child inside its own 132px box. ── */}
+      {isPhone &&
+        trayOpen &&
+        (onToggleMute || onTogglePresentation || onCycleSpeed) &&
+        createPortal(
           <div
-            className="grid gap-1"
+            className="aurora-controls-bar-tray z-[55] rounded-2xl p-2 flex flex-col gap-1.5 shadow-[0_14px_40px_-12px_rgba(10,14,35,0.55)]"
             style={{
-              gridTemplateColumns: showElementReference
-                ? 'repeat(5, minmax(0, 1fr))'
-                : 'repeat(4, minmax(0, 1fr))',
+              background: 'var(--aurora-drawer-solid, #101631)',
+              border: '1px solid var(--aurora-line-strong, rgba(255,255,255,0.16))',
             }}
           >
-            {onToggleMute && (
-              <button
-                onClick={onToggleMute}
-                disabled={!ttsEnabled}
-                className={cn(
-                  'h-11 w-11 mx-auto rounded-xl flex items-center justify-center transition-colors',
-                  !ttsEnabled
-                    ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
-                    : ttsMuted
-                      ? 'text-red-500 dark:text-red-400'
-                      : 'text-gray-500 dark:text-gray-300',
-                )}
-                aria-label={ttsMuted ? 'Unmute' : 'Mute'}
-              >
-                <VolumeIcon muted={!!ttsMuted} volume={ttsVolume} disabled={!ttsEnabled} />
-              </button>
-            )}
-            {onCycleSpeed && (
-              <button
-                onClick={onCycleSpeed}
-                className={cn(
-                  'h-11 min-w-11 px-2 mx-auto rounded-xl flex items-center justify-center',
-                  'text-[12px] font-semibold tabular-nums transition-colors',
-                  playbackSpeed !== 1
-                    ? 'text-violet-600 dark:text-violet-400'
-                    : 'text-gray-500 dark:text-gray-300',
-                )}
-                aria-label="Playback speed"
-              >
-                {playbackSpeed === 1.5 ? '1.5x' : `${playbackSpeed}x`}
-              </button>
-            )}
-            {onToggleAutoPlay && (
-              <button
-                onClick={onToggleAutoPlay}
-                className={cn(
-                  'h-11 w-11 mx-auto rounded-xl flex items-center justify-center transition-colors',
-                  autoPlayLecture
-                    ? 'text-violet-600 dark:text-violet-400'
-                    : 'text-gray-500 dark:text-gray-300',
-                )}
-                aria-label={
-                  autoPlayLecture ? t('roundtable.autoPlayOff') : t('roundtable.autoPlay')
-                }
-              >
-                <Repeat className="w-5 h-5" />
-              </button>
-            )}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onWhiteboardClose();
+            <div
+              className="grid gap-1"
+              style={{
+                gridTemplateColumns: showElementReference
+                  ? 'repeat(5, minmax(0, 1fr))'
+                  : 'repeat(4, minmax(0, 1fr))',
               }}
-              className={cn(
-                'relative h-11 w-11 mx-auto rounded-xl flex items-center justify-center transition-colors',
-                whiteboardOpen
-                  ? 'text-violet-600 dark:text-violet-400'
-                  : 'text-gray-500 dark:text-gray-300',
-              )}
-              aria-label={whiteboardOpen ? t('whiteboard.minimize') : t('whiteboard.open')}
             >
-              <PencilLine className="w-5 h-5" />
-              {!whiteboardOpen && whiteboardElementCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-violet-500 rounded-full" />
+              {onToggleMute && (
+                <button
+                  onClick={onToggleMute}
+                  disabled={!ttsEnabled}
+                  className={cn(
+                    'h-11 w-11 mx-auto rounded-xl flex items-center justify-center transition-colors',
+                    !ttsEnabled
+                      ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                      : ttsMuted
+                        ? 'text-red-500 dark:text-red-400'
+                        : 'text-gray-500 dark:text-gray-300',
+                  )}
+                  aria-label={ttsMuted ? 'Unmute' : 'Mute'}
+                >
+                  <VolumeIcon muted={!!ttsMuted} volume={ttsVolume} disabled={!ttsEnabled} />
+                </button>
               )}
-            </button>
-            {showElementReference && (
+              {onCycleSpeed && (
+                <button
+                  onClick={onCycleSpeed}
+                  className={cn(
+                    'h-11 min-w-11 px-2 mx-auto rounded-xl flex items-center justify-center',
+                    'text-[12px] font-semibold tabular-nums transition-colors',
+                    playbackSpeed !== 1
+                      ? 'text-violet-600 dark:text-violet-400'
+                      : 'text-gray-500 dark:text-gray-300',
+                  )}
+                  aria-label="Playback speed"
+                >
+                  {playbackSpeed === 1.5 ? '1.5x' : `${playbackSpeed}x`}
+                </button>
+              )}
+              {onToggleAutoPlay && (
+                <button
+                  onClick={onToggleAutoPlay}
+                  className={cn(
+                    'h-11 w-11 mx-auto rounded-xl flex items-center justify-center transition-colors',
+                    autoPlayLecture
+                      ? 'text-violet-600 dark:text-violet-400'
+                      : 'text-gray-500 dark:text-gray-300',
+                  )}
+                  aria-label={
+                    autoPlayLecture ? t('roundtable.autoPlayOff') : t('roundtable.autoPlay')
+                  }
+                >
+                  <Repeat className="w-5 h-5" />
+                </button>
+              )}
               <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onToggleElementPick?.();
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onWhiteboardClose();
                 }}
-                disabled={!canPickSlideElement}
                 className={cn(
-                  'h-11 w-11 mx-auto rounded-xl flex items-center justify-center transition-colors',
-                  elementPickActive
-                    ? 'bg-violet-500/15 text-violet-700 dark:text-violet-300'
+                  'relative h-11 w-11 mx-auto rounded-xl flex items-center justify-center transition-colors',
+                  whiteboardOpen
+                    ? 'text-violet-600 dark:text-violet-400'
                     : 'text-gray-500 dark:text-gray-300',
-                  !canPickSlideElement && 'cursor-not-allowed opacity-35',
                 )}
-                aria-label={t('chat.elementReference.button')}
-                aria-pressed={elementPickActive}
+                aria-label={whiteboardOpen ? t('whiteboard.minimize') : t('whiteboard.open')}
               >
-                <Quote className="w-5 h-5" />
+                <PencilLine className="w-5 h-5" />
+                {!whiteboardOpen && whiteboardElementCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-violet-500 rounded-full" />
+                )}
+              </button>
+              {showElementReference && (
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onToggleElementPick?.();
+                  }}
+                  disabled={!canPickSlideElement}
+                  className={cn(
+                    'h-11 w-11 mx-auto rounded-xl flex items-center justify-center transition-colors',
+                    elementPickActive
+                      ? 'bg-violet-500/15 text-violet-700 dark:text-violet-300'
+                      : 'text-gray-500 dark:text-gray-300',
+                    !canPickSlideElement && 'cursor-not-allowed opacity-35',
+                  )}
+                  aria-label={t('chat.elementReference.button')}
+                  aria-pressed={elementPickActive}
+                >
+                  <Quote className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+            {onToggleMute && (
+              <div className="flex items-center gap-2.5 px-2 pt-1 border-t border-gray-200/60 dark:border-gray-700/40">
+                <span className="text-[11px] font-medium tabular-nums text-gray-400 dark:text-gray-500 shrink-0 w-7">
+                  {Math.round(effectiveVolume * 100)}
+                </span>
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  value={effectiveVolume}
+                  onChange={(e) => {
+                    const v = parseFloat(e.target.value);
+                    onVolumeChange?.(v);
+                    if (v > 0 && ttsMuted) onToggleMute?.();
+                  }}
+                  className="flex-1 h-8 cursor-pointer accent-violet-500"
+                  aria-label="Volume"
+                />
+              </div>
+            )}
+            {onTogglePresentation && (
+              <button
+                onClick={onTogglePresentation}
+                className={cn(
+                  'h-10 rounded-xl flex items-center justify-center gap-2 text-xs font-medium transition-colors',
+                  isPresenting
+                    ? 'text-violet-600 dark:text-violet-400 bg-violet-500/10'
+                    : 'text-gray-500 dark:text-gray-300',
+                )}
+                aria-label={presentationLabel}
+              >
+                {isPresenting ? (
+                  <Minimize2 className="w-4 h-4" />
+                ) : (
+                  <Maximize2 className="w-4 h-4" />
+                )}
+                {presentationLabel}
               </button>
             )}
-          </div>
-          {onToggleMute && (
-            <div className="flex items-center gap-2.5 px-2 pt-1 border-t border-gray-200/60 dark:border-gray-700/40">
-              <span className="text-[11px] font-medium tabular-nums text-gray-400 dark:text-gray-500 shrink-0 w-7">
-                {Math.round(effectiveVolume * 100)}
-              </span>
-              <input
-                type="range"
-                min={0}
-                max={1}
-                step={0.05}
-                value={effectiveVolume}
-                onChange={(e) => {
-                  const v = parseFloat(e.target.value);
-                  onVolumeChange?.(v);
-                  if (v > 0 && ttsMuted) onToggleMute?.();
-                }}
-                className="flex-1 h-8 cursor-pointer accent-violet-500"
-                aria-label="Volume"
-              />
-            </div>
-          )}
-          {onTogglePresentation && (
-            <button
-              onClick={onTogglePresentation}
-              className={cn(
-                'h-10 rounded-xl flex items-center justify-center gap-2 text-xs font-medium transition-colors',
-                isPresenting
-                  ? 'text-violet-600 dark:text-violet-400 bg-violet-500/10'
-                  : 'text-gray-500 dark:text-gray-300',
-              )}
-              aria-label={presentationLabel}
-            >
-              {isPresenting ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-              {presentationLabel}
-            </button>
-          )}
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
