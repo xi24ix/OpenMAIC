@@ -1124,6 +1124,14 @@
     height: 19px;
   }
 
+  /* The tray pops out of the dock as a fixed sheet — the dock clips
+     absolutely-positioned children via overflow:hidden. */
+  .aurora-controls-bar .aurora-controls-bar-tray {
+    position: fixed;
+    bottom: 142px;
+    inset-inline: 8px;
+  }
+
   .aurora-stage-wrap > .aurora-plan {
     inset-inline-start: 10px;
     border-radius: 18px;
@@ -1160,6 +1168,10 @@
     .aurora-stage-wrap > .aurora-plan,
     .aurora-chat-wrap > .aurora-chat {
       inset-block: 66px 64px;
+    }
+
+    .aurora-controls-bar .aurora-controls-bar-tray {
+      bottom: 64px;
     }
   }
 

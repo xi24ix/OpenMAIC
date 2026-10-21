@@ -544,7 +544,7 @@ export function CanvasToolbar({
       {/* ── Phone tray: the controls moved off the compact row ── */}
       {isPhone && trayOpen && (onToggleMute || onTogglePresentation) && (
         <div
-          className="absolute inset-x-1 top-full z-[45] mt-2.5 rounded-2xl p-2 flex flex-col gap-1.5 shadow-[0_14px_40px_-12px_rgba(10,14,35,0.55)]"
+          className="aurora-controls-bar-tray absolute inset-x-1 top-full z-[55] mt-2 rounded-2xl p-2 flex flex-col gap-1.5 shadow-[0_14px_40px_-12px_rgba(10,14,35,0.55)]"
           style={{
             background: 'var(--aurora-drawer-solid, #101631)',
             border: '1px solid var(--aurora-line-strong, rgba(255,255,255,0.16))',
@@ -553,8 +553,9 @@ export function CanvasToolbar({
           <div
             className="grid gap-1"
             style={{
-              gridTemplateColumns: showElementReference ? 'repeat(5, minmax(0,1fr))' : undefined,
-              gridTemplateAreas: showElementReference ? undefined : 'none',
+              gridTemplateColumns: showElementReference
+                ? 'repeat(5, minmax(0, 1fr))'
+                : 'repeat(4, minmax(0, 1fr))',
             }}
           >
             {onToggleMute && (
