@@ -18,6 +18,7 @@ import { PENDING_SCENE_ID } from '@/lib/store/stage';
 import { useCanvasStore } from '@/lib/store/canvas';
 import { useSettingsStore } from '@/lib/store/settings';
 import { useI18n } from '@/lib/hooks/use-i18n';
+import { usePhoneLayout } from '@/lib/hooks/use-phone-layout';
 import { SceneSidebar } from '@/components/stage/scene-sidebar';
 import { Header } from '@/components/header';
 import { CanvasArea } from '@/components/canvas/canvas-area';
@@ -247,6 +248,7 @@ export const PlaybackChromeRoot = forwardRef<PlaybackChromeRootHandle, PlaybackC
     const sceneSwitchConfirmingRef = useRef(false);
     const [isPresenting, setIsPresenting] = useState(false);
     const [controlsVisible, setControlsVisible] = useState(true);
+    const isPhone = usePhoneLayout();
     const [isPresentationInteractionActive, setIsPresentationInteractionActive] = useState(false);
 
     // Whiteboard state (from canvas store so AI tools can open it)
@@ -619,6 +621,22 @@ export const PlaybackChromeRoot = forwardRef<PlaybackChromeRootHandle, PlaybackC
       const stageElement = stageRef.current;
       if (!stageElement) return;
 
+      // On phones the browser Fullscreen API squeezes the lesson card into
+      // the classroom chrome; instead flip layout-only fullscreen — header
+      // and dock hide via isPresenting and the canvas letterboxes on black
+      // (aurora.css), like a mobile video player.
+      if (isPhone) {
+        if (document.fullscreenElement) {
+          await document.exitFullscreen().catch(() => {});
+        }
+        setControlsVisible(true);
+        if (!isPresenting) {
+          clearPresentationIdleTimer();
+        }
+        setIsPresenting(!isPresenting);
+        return;
+      }
+
       try {
         if (document.fullscreenElement === stageElement) {
           // Unlock Escape key before exiting fullscreen
@@ -638,7 +656,7 @@ export const PlaybackChromeRoot = forwardRef<PlaybackChromeRootHandle, PlaybackC
         // Firefox may deny fullscreen from certain keyboard events (e.g. F11)
         console.warn('[Presentation] Fullscreen request denied — browser policy');
       }
-    }, []);
+    }, [isPhone, isPresenting, clearPresentationIdleTimer]);
 
     useEffect(() => {
       const onFullscreenChange = () => {

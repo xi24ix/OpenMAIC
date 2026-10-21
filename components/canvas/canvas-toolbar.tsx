@@ -136,8 +136,11 @@ export function CanvasToolbar({
   const showPlayPause = !isLiveSession;
 
   // Phone layout (aurora.css ≤1100px): a compact playback row with the
-  // remaining controls behind an expandable tray.
+  // remaining controls behind an expandable tray. In fullscreen the bar
+  // is the whole player: scenes/chat toggles drop, autoplay and exit
+  // fullscreen join the row so users never leave the video to control it.
   const isPhone = usePhoneLayout();
+  const phoneFullscreen = isPhone && !!isPresenting;
   const [trayOpen, setTrayOpen] = useState(false);
   useEffect(() => {
     const apply = () => {
@@ -182,7 +185,7 @@ export function CanvasToolbar({
     >
       {/* ── Left: sidebar toggle + page indicator ── */}
       <div data-bar-zone="left" className="flex items-center gap-1 shrink-0 pl-1">
-        {onToggleSidebar && (
+        {onToggleSidebar && !phoneFullscreen && (
           <button
             onClick={onToggleSidebar}
             className={cn(
@@ -502,6 +505,30 @@ export function CanvasToolbar({
             )}
           </button>
         )}
+        {isPhone && isPresenting && onTogglePresentation && (
+          <button
+            onClick={onTogglePresentation}
+            className={cn(ctrlBtn, 'w-6 h-6', 'text-violet-600 dark:text-violet-400')}
+            aria-label={presentationLabel}
+          >
+            <Minimize2 className="w-4 h-4" />
+          </button>
+        )}
+        {isPhone && isPresenting && onToggleAutoPlay && (
+          <button
+            onClick={onToggleAutoPlay}
+            className={cn(
+              ctrlBtn,
+              'w-6 h-6',
+              autoPlayLecture
+                ? 'text-violet-600 dark:text-violet-400'
+                : 'text-gray-500 dark:text-gray-400',
+            )}
+            aria-label={autoPlayLecture ? 'Auto-play on' : 'Auto-play off'}
+          >
+            <Repeat className="w-4 h-4" />
+          </button>
+        )}
         {isPhone && (
           <button
             onClick={() => setTrayOpen((open) => !open)}
@@ -518,7 +545,7 @@ export function CanvasToolbar({
             {trayOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
           </button>
         )}
-        {onToggleChat && (
+        {onToggleChat && !phoneFullscreen && (
           <button
             onClick={onToggleChat}
             className={cn(
@@ -552,9 +579,14 @@ export function CanvasToolbar({
             <div
               className="grid gap-1"
               style={{
-                gridTemplateColumns: showElementReference
-                  ? 'repeat(5, minmax(0, 1fr))'
-                  : 'repeat(4, minmax(0, 1fr))',
+                gridTemplateColumns: `repeat(${
+                  [
+                    onToggleMute,
+                    onCycleSpeed,
+                    onToggleAutoPlay && !phoneFullscreen,
+                    showElementReference,
+                  ].filter(Boolean).length + 1
+                }, minmax(0, 1fr))`,
               }}
             >
               {onToggleMute && (
@@ -589,7 +621,7 @@ export function CanvasToolbar({
                   {playbackSpeed === 1.5 ? '1.5x' : `${playbackSpeed}x`}
                 </button>
               )}
-              {onToggleAutoPlay && (
+              {onToggleAutoPlay && !phoneFullscreen && (
                 <button
                   onClick={onToggleAutoPlay}
                   className={cn(
@@ -666,7 +698,7 @@ export function CanvasToolbar({
                 />
               </div>
             )}
-            {onTogglePresentation && (
+            {onTogglePresentation && !phoneFullscreen && (
               <button
                 onClick={onTogglePresentation}
                 className={cn(
