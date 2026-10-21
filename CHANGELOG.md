@@ -14,7 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - The twelve outline skills speak Arabic. Their SKILL.md frontmatter titles and descriptions — what the skill picker shows — are Arabic now; the English `/handle` stays the machine contract. Arabic display names for the workbench were already in the ar-SA overlay.
-- Mobile classrooms play like a video player: the live scene is the main element, the roundtable shrinks to a bottom control dock (118px on short viewports), and the plan / speaker-notes panels open as fixed overlay drawers from the dock toggles. The old mobile reel cards (`MobileSceneReels`) are removed.
+- Mobile classrooms play like a video player: the live scene is the main element, the roundtable shrinks to a bottom control dock (132px portrait — the landscape dock is the 56px controls bar only), and the plan / chat panels open as fixed overlay drawers from the dock toggles. Drawer surfaces are solid (`--aurora-drawer-solid`) so a white slide can't wash the text out. The dock's controls keep a compact row (scenes · prev play next · tray · chat) with volume, speed, autoplay, whiteboard, quote and fullscreen in an expandable tray sheet above the dock; 40px+ touch targets throughout. The old mobile reel cards (`MobileSceneReels`) are removed.
+- Home popovers fit the phone now: the agent-bar panel spans its composer row with a 384px cap (was a fixed-width panel hanging off the screen edge) and the skills popover keeps a 12px collision margin with a hard cap.
 - The lesson prompt box no longer carries a model pill. The course model is configured in workspace settings; the toolbar keeps only the no-provider set-up CTA (#580) so a fresh homepage still dead-ends somewhere instead of nowhere.
 
 
