@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useLayoutEffect, useCallback } from 'react';
+import { useEffect, useRef, useState, useLayoutEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { spotlightV1 } from '@/lib/choreography';
 import { useSceneSelector } from '@/lib/contexts/scene-context';
@@ -83,6 +83,24 @@ export function SpotlightOverlay({
     // eslint-disable-next-line react-hooks/set-state-in-effect -- DOM measurement requires effect
     measure();
   }, [measure, elements]);
+
+  // A measurement is only valid for the current layout: the stage box resizes
+  // with the window (rotation, fullscreen, viewport-fit controls), and the
+  // browser does not re-render the overlay when its DOM measurement goes
+  // stale. Re-measure whenever the container's box changes while the
+  // spotlight is active.
+  useEffect(() => {
+    if (!spotlightElementId || !containerRef.current) return;
+    const container = containerRef.current;
+    const observer = new ResizeObserver(() => measure());
+    observer.observe(container);
+    const onWindowResize = () => measure();
+    window.addEventListener('resize', onWindowResize);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', onWindowResize);
+    };
+  }, [measure, spotlightElementId]);
 
   const active = !!spotlightElementId && !!spotlightOptions && !!rect;
   const resolvedLayers = rect

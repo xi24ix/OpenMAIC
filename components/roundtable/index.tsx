@@ -23,6 +23,7 @@ import type { AudioIndicatorState } from './audio-indicator';
 import { CanvasToolbar } from '@/components/canvas/canvas-toolbar';
 import { useAudioRecorder } from '@/lib/hooks/use-audio-recorder';
 import { useI18n } from '@/lib/hooks/use-i18n';
+import { usePhoneLayout } from '@/lib/hooks/use-phone-layout';
 import { toast } from 'sonner';
 import { useSettingsStore, PLAYBACK_SPEEDS } from '@/lib/store/settings';
 import { useModelCapabilities } from '@/lib/model-settings/use-model-settings';
@@ -212,6 +213,9 @@ export function Roundtable({
   onClearElementReference,
 }: RoundtableProps) {
   const { t } = useI18n();
+  // Phones: the speech bubble overlays the scene it narrates — keep the stage
+  // clear instead (no bubble, no avatar chips in the dock). Desktop keeps both.
+  const isPhone = usePhoneLayout();
   const ttsMuted = useSettingsStore((s) => s.ttsMuted);
   const setTTSMuted = useSettingsStore((s) => s.setTTSMuted);
   // The workspace's tts and asr slots decide whether narration and speech
@@ -749,17 +753,19 @@ export function Roundtable({
     return (
       <div className="aurora-presenting-root h-0 w-full relative z-10 overflow-visible">
         {/* Speech overlay — fills the full stage area via absolute positioning */}
-        <PresentationSpeechOverlay
-          playbackView={enrichedPlaybackView}
-          participants={initialParticipants}
-          speakingAgentId={speakingAgentId ?? null}
-          isTopicPending={!!isTopicPending}
-          side="left"
-          onBubbleClick={handlePresentationBubbleClick}
-          audioIndicatorState={audioIndicatorState ?? 'idle'}
-          buttonState={enrichedPlaybackView?.buttonState}
-          isPaused={isDiscussionPaused || engineMode === 'paused'}
-        />
+        {!isPhone && (
+          <PresentationSpeechOverlay
+            playbackView={enrichedPlaybackView}
+            participants={initialParticipants}
+            speakingAgentId={speakingAgentId ?? null}
+            isTopicPending={!!isTopicPending}
+            side="left"
+            onBubbleClick={handlePresentationBubbleClick}
+            audioIndicatorState={audioIndicatorState ?? 'idle'}
+            buttonState={enrichedPlaybackView?.buttonState}
+            isPaused={isDiscussionPaused || engineMode === 'paused'}
+          />
+        )}
 
         {/* Click-outside backdrop to dismiss input/voice */}
         {(isInputOpen || isVoiceOpen) && (
@@ -963,18 +969,20 @@ export function Roundtable({
           style={{ right: chatCollapsed ? 20 : 20 + (chatAreaWidth ?? 320) }}
         >
           {/* Right-side speech bubble (flows above dock via flex) */}
-          <PresentationSpeechOverlay
-            playbackView={enrichedPlaybackView}
-            participants={initialParticipants}
-            speakingAgentId={speakingAgentId ?? null}
-            isTopicPending={!!isTopicPending}
-            userAvatar={userAvatar}
-            side="right"
-            onBubbleClick={handlePresentationBubbleClick}
-            audioIndicatorState={audioIndicatorState ?? 'idle'}
-            buttonState={enrichedPlaybackView?.buttonState}
-            isPaused={isDiscussionPaused || engineMode === 'paused'}
-          />
+          {!isPhone && (
+            <PresentationSpeechOverlay
+              playbackView={enrichedPlaybackView}
+              participants={initialParticipants}
+              speakingAgentId={speakingAgentId ?? null}
+              isTopicPending={!!isTopicPending}
+              userAvatar={userAvatar}
+              side="right"
+              onBubbleClick={handlePresentationBubbleClick}
+              audioIndicatorState={audioIndicatorState ?? 'idle'}
+              buttonState={enrichedPlaybackView?.buttonState}
+              isPaused={isDiscussionPaused || engineMode === 'paused'}
+            />
+          )}
 
           {/* Dock */}
           <AnimatePresence>
@@ -992,10 +1000,12 @@ export function Roundtable({
                 >
                   {/* Speaking / discussion-requesting agent avatar — shows when
                       a student agent is actively speaking OR a discussion request
-                      is pending (so the user can see who's asking before joining) */}
+                      is pending (so the user can see who's asking before joining).
+                      Phones omit it: the bubble already names the speaker. */}
                   <AnimatePresence>
                     {((activeRole === 'agent' && speakingStudent) ||
-                      presentationDiscussionParticipant) && (
+                      presentationDiscussionParticipant) &&
+                      !isPhone && (
                       <motion.div
                         ref={presentationAgentAvatarRef}
                         key={`dock-agent-${(speakingStudent || presentationDiscussionParticipant)?.id}`}
@@ -1082,38 +1092,40 @@ export function Roundtable({
                     </>
                   )}
 
-                  <button
-                    type="button"
-                    aria-label={t('roundtable.you')}
-                    className="relative group cursor-pointer shrink-0 bg-transparent border-none p-0"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleToggleInput();
-                    }}
-                  >
-                    <div
-                      className={cn(
-                        'relative w-10 h-10 rounded-full transition-all duration-300 flex items-center justify-center',
-                        activeRole === 'user' || isInputOpen || isCueUser
-                          ? 'scale-105'
-                          : 'opacity-70 group-hover:opacity-100 group-hover:scale-100',
-                      )}
+                  {!isPhone && (
+                    <button
+                      type="button"
+                      aria-label={t('roundtable.you')}
+                      className="relative group cursor-pointer shrink-0 bg-transparent border-none p-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleInput();
+                      }}
                     >
                       <div
                         className={cn(
-                          'absolute inset-0 rounded-full border-2 transition-all duration-300',
-                          isCueUser
-                            ? 'border-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.4)] animate-pulse'
-                            : activeRole === 'user' || isInputOpen
-                              ? 'border-purple-500 shadow-[0_0_6px_rgba(168,85,247,0.3)]'
-                              : 'border-gray-300/40 dark:border-white/20 group-hover:border-purple-400/50',
+                          'relative w-10 h-10 rounded-full transition-all duration-300 flex items-center justify-center',
+                          activeRole === 'user' || isInputOpen || isCueUser
+                            ? 'scale-105'
+                            : 'opacity-70 group-hover:opacity-100 group-hover:scale-100',
                         )}
-                      />
-                      <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden relative z-10 text-lg">
-                        <AvatarDisplay src={userAvatar} alt={t('roundtable.you')} />
+                      >
+                        <div
+                          className={cn(
+                            'absolute inset-0 rounded-full border-2 transition-all duration-300',
+                            isCueUser
+                              ? 'border-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.4)] animate-pulse'
+                              : activeRole === 'user' || isInputOpen
+                                ? 'border-purple-500 shadow-[0_0_6px_rgba(168,85,247,0.3)]'
+                                : 'border-gray-300/40 dark:border-white/20 group-hover:border-purple-400/50',
+                          )}
+                        />
+                        <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden relative z-10 text-lg">
+                          <AvatarDisplay src={userAvatar} alt={t('roundtable.you')} />
+                        </div>
                       </div>
-                    </div>
-                  </button>
+                    </button>
+                  )}
                 </div>
 
                 <AnimatePresence>

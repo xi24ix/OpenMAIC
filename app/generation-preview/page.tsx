@@ -11,7 +11,7 @@
 import { useEffect, useMemo, useRef, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, AlertCircle, ArrowLeft, Bot, RefreshCw } from 'lucide-react';
+import { Sparkles, AlertCircle, ArrowLeft, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { OutlinesEditor } from '@/components/generation/outlines-editor';
@@ -20,7 +20,6 @@ import { useSettingsStore } from '@/lib/store/settings';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import { useModelCapabilities } from '@/lib/model-settings/use-model-settings';
 import type { SceneOutline } from '@/lib/types/generation';
-import { AgentRevealModal } from '@/components/agent/agent-reveal-modal';
 import { createLogger } from '@/lib/logger';
 import { RunApiError, runApiErrorText } from '@/lib/generation-run-client/api';
 import { toast } from 'sonner';
@@ -78,11 +77,6 @@ function GenerationPreviewContent() {
   // The seq of a step Retry: the run shows as retrying until a step starts after it.
   const [retrySeq, setRetrySeq] = useState<number | null>(null);
   const [isRetrying, setIsRetrying] = useState(false);
-  const [showAgentReveal, setShowAgentReveal] = useState(false);
-  // The agent cards were shown and are still being revealed: the classroom
-  // waits for them, as generation did.
-  const [agentRevealPending, setAgentRevealPending] = useState(false);
-  const agentRevealShownRef = useRef(false);
   // Whether this page has caught up with the run yet.
   const attachedRef = useRef(false);
   const reviewOutlineEnabled = useSettingsStore((s) => s.reviewOutlineEnabled);
@@ -163,23 +157,14 @@ function GenerationPreviewContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view?.state, caughtUp]);
 
-  // The generated roster's cards, revealed as generation goes on.
-  useEffect(() => {
-    if (!view?.generatedAgents || agentRevealShownRef.current) return;
-    if (view.input.agents.mode !== 'auto' || view.stageId) return;
-    agentRevealShownRef.current = true;
-    setAgentRevealPending(true);
-    setShowAgentReveal(true);
-  }, [view?.generatedAgents, view?.input.agents.mode, view?.stageId]);
-
   // The first scene is in the course: the classroom takes over.
   // A confirmation that lost to another tab keeps its edits on screen until
   // the learner acknowledges it.
   useEffect(() => {
-    if (!view?.stageId || agentRevealPending || confirmConflict) return;
+    if (!view?.stageId || confirmConflict) return;
     if (view.state === 'ended') return;
     router.replace(`/classroom/${encodeURIComponent(view.stageId)}`);
-  }, [view?.stageId, view?.state, agentRevealPending, confirmConflict, router]);
+  }, [view?.stageId, view?.state, confirmConflict, router]);
 
   // A Retry is queued until a step starts after it (a media item in flight
   // finishes first).
@@ -333,7 +318,6 @@ function GenerationPreviewContent() {
         ? t('generation.reviewOutlineAutoContinue')
         : '';
   const webSearchSources = view.researchSources;
-  const generatedAgents = view.generatedAgents ?? [];
 
   const activeStep =
     steps.length > 0 ? steps[Math.min(currentStepIndex, steps.length - 1)] : ALL_STEPS[0];
@@ -559,31 +543,11 @@ function GenerationPreviewContent() {
               >
                 <Sparkles className="size-3 animate-pulse" />
                 {t('generation.aiWorking')}
-                {generatedAgents.length > 0 && !showAgentReveal && (
-                  <button
-                    onClick={() => setShowAgentReveal(true)}
-                    className="ml-2 flex items-center gap-1.5 rounded-full border border-purple-300/30 bg-purple-500/10 px-3 py-1 text-xs font-medium normal-case tracking-normal text-purple-400 transition-colors hover:bg-purple-500/20 hover:text-purple-300"
-                  >
-                    <Bot className="size-3" />
-                    {t('generation.viewAgents')}
-                  </button>
-                )}
               </motion.div>
             ) : null}
           </AnimatePresence>
         </div>
       </div>
-
-      {/* Agent Reveal Modal */}
-      <AgentRevealModal
-        agents={generatedAgents}
-        open={showAgentReveal}
-        onClose={() => {
-          setShowAgentReveal(false);
-          setAgentRevealPending(false);
-        }}
-        onAllRevealed={() => setAgentRevealPending(false)}
-      />
     </div>
   );
 }
