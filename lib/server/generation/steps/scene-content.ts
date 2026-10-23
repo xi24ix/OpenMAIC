@@ -55,6 +55,8 @@ export interface SceneContentInput {
   imageMapping?: ImageMapping;
   agents?: AgentInfo[];
   languageDirective?: string;
+  /** The formatted per-course design directive the outline step inferred. */
+  designDirective?: string;
   requirements?: UserRequirements;
   /** The learner's locale, when known. */
   targetLanguage?: string;
@@ -76,7 +78,8 @@ export async function generateSceneContent(
   input: SceneContentInput,
   ctx: OwnerStepContext,
 ): Promise<SceneContentResult> {
-  const { pdfImages, imageMapping, agents, languageDirective, requirements } = input;
+  const { pdfImages, imageMapping, agents, languageDirective, designDirective, requirements } =
+    input;
   const {
     model: languageModel,
     modelInfo,
@@ -299,6 +302,7 @@ export async function generateSceneContent(
     resolvedVisionImages,
     agents,
     languageDirective,
+    designDirective,
     targetLanguage: input.targetLanguage || undefined,
     userRequirements: requirements,
     allowProceduralSkill: vocationalActive,

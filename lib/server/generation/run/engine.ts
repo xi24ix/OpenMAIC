@@ -504,7 +504,7 @@ async function executeClaimedRun(
     sceneIndex: number,
     contentSignal: AbortSignal,
   ): Promise<SceneContentResult> => {
-    const { outlines, languageDirective, taskEngineMode } = outline();
+    const { outlines, languageDirective, taskEngineMode, designDirective } = outline();
     const stepId = sceneStepId(sceneIndex, 'content');
     const research = output<ResearchOutput>('research');
     return withRouteRetry(
@@ -517,6 +517,7 @@ async function executeClaimedRun(
               ...materialImages(),
               agents: agents().agents.agents,
               languageDirective,
+              designDirective,
               // The first scene is generated with the session's requirements;
               // the classroom generates the rest with the task-engine flag only.
               requirements:
@@ -792,6 +793,9 @@ async function executeClaimedRun(
         case 'courseTitle':
           append([{ type: 'outline_course_title', data: { data: event.data } }]);
           break;
+        case 'designDirective':
+          append([{ type: 'outline_design_directive', data: { data: event.data } }]);
+          break;
         case 'outline':
           append([{ type: 'outline_item', data: { index: event.index, outline: event.data } }]);
           break;
@@ -847,6 +851,7 @@ async function executeClaimedRun(
       outlines: result.outlines,
       languageDirective: result.languageDirective,
       ...(result.courseTitle ? { courseTitle: result.courseTitle } : {}),
+      ...(result.designDirective ? { designDirective: result.designDirective } : {}),
       taskEngineMode: result.taskEngineMode,
     };
     // The run waits for confirmation holding no worker, unless its caller
@@ -882,7 +887,7 @@ async function executeClaimedRun(
   };
 
   const resolveAgents = async (): Promise<AgentsOutput> => {
-    const { outlines, languageDirective, courseTitle, taskEngineMode } = outline();
+    const { outlines, languageDirective, courseTitle, taskEngineMode, designDirective } = outline();
     const name = courseTitle || topicFromRequirement(input.requirement);
     const presets = async (agentIds: readonly string[]): Promise<GenerationRunAgentsResult> => {
       const configs = await services.presetAgents(owner, agentIds);
@@ -976,6 +981,7 @@ async function executeClaimedRun(
       interactiveMode: input.interactive,
       taskEngineMode,
       languageDirective,
+      ...(designDirective ? { designDirective } : {}),
       agentIds: result.agentIds,
       ...(result.generatedAgentConfigs
         ? { generatedAgentConfigs: result.generatedAgentConfigs }

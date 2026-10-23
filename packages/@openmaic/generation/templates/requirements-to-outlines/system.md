@@ -57,6 +57,45 @@ Produce a **`courseTitle`** (required): a concise, human-readable name for the *
 
 ---
 
+## Design Directive Inference
+
+Produce a **`designDirective`** (required): the visual identity the **entire course** will follow. Every scene (slides, widgets, animations) later receives your directive as a hard constraint, so make it concrete enough to enforce.
+
+Structure:
+
+```json
+"designDirective": {
+  "concept": "one 10-20 word visual metaphor that unifies the course",
+  "palette": ["#hex", "#hex", "#hex"],
+  "background": "dark" | "paper" | "light",
+  "motionPersonality": "calm" | "energetic" | "playful" | "cinematic"
+}
+```
+
+**Inference rules (apply in order):**
+
+1. **Explicit style request wins**: "让孩子觉得像游戏" → `playful` + bright palette; "高端商务" → `cinematic` + dark/monochrome.
+2. **Domain defaults**: programming/AI/data → `dark` background with one strong accent (amber, electric blue) + `calm`; kids/language/k-12 → `paper` (warm cream) with saturated primaries + `playful`; medicine/law/finance → `light` or `dark` restrained duotone + `calm`; film/space/psychology storytelling → `dark`/`cinematic`.
+3. **Palette discipline**: exactly 2-5 hex colors. Pair a dominant with 1-2 accents and a functional gray family. Never more than 5.
+4. **`concept`** must be a metaphor the scenes can literally draw (e.g., "teaching recursion as Russian nesting dolls", "把函数视作输入加工的流水线机器"). Avoid vague words like "modern", "professional" alone.
+
+---
+
+## Intro Scene (MANDATORY — every course)
+
+The **first scene** must always be `"type": "interactive"` with `"widgetType": "animation-explainer"` — a 25-45 second pure motion-graphics intro that hooks the learner before any teaching. It does not count against the interactive-scene budget.
+
+Requirements:
+
+- `title`: the course hook (NOT "Introduction") — e.g. "为什么递归会停？" / "Why Light Bends".
+- `description`: one sentence naming the attention hook (paradox, surprise, question).
+- `keyPoints`: exactly 4 beats in display order — HOOK → TEASE (3-4 keyword cards) → SPARK (the signature animated infographic) → TITLE (course title lock-up).
+- `widgetOutline`: `{ "concept": "<what the animation shows>", "keyBeats": ["<beat 1, one short phrase>", ... 4 beats], "mood": "<e.g. 'curious, meteoric, cosmic'>" }`.
+
+This gives the course a cinematic cold open consistent with the design directive.
+
+---
+
 ## Design Principles
 
 ### MAIC Platform Technical Constraints
@@ -145,7 +184,7 @@ Use `interactive` type when a concept benefits significantly from hands-on inter
 
 **Constraints**:
 
-- Limit to **1-2 interactive scenes per course** (they are resource-intensive)
+- Limit to **1-2 interactive scenes per course** (they are resource-intensive). The mandatory `animation-explainer` intro scene does NOT count against this budget.
 - Interactive scenes **require** an `interactiveConfig` object
 - Do NOT use interactive for purely textual/conceptual content - use slides instead
 - The `interactiveConfig.designIdea` should describe the specific interactive elements and user interactions
@@ -156,13 +195,14 @@ When generating an interactive scene, you MUST select the appropriate widget typ
 
 **Selection Logic:**
 
-| Concept Characteristics | Widget Type | widgetOutline Fields |
-|-------------------------|-------------|---------------------|
-| Physics/chemistry phenomena with adjustable parameters | `simulation` | `concept`, `keyVariables` |
-| Processes, workflows, cause-effect chains | `diagram` | `diagramType` |
-| Programming concepts, algorithms | `code` | `language` |
-| Practice activities, gamified assessment | `game` | `gameType`, `challenge` |
-| Biological/geometric structures, 3D models | `visualization3d` | `visualizationType`, `objects` |
+| Concept Characteristics                                     | Widget Type           | widgetOutline Fields                          |
+| ----------------------------------------------------------- | --------------------- | --------------------------------------------- |
+| Physics/chemistry phenomena with adjustable parameters      | `simulation`          | `concept`, `keyVariables`                     |
+| Processes, workflows, cause-effect chains                   | `diagram`             | `diagramType`                                 |
+| Programming concepts, algorithms                            | `code`                | `language`                                    |
+| Practice activities, gamified assessment                    | `game`                | `gameType`, `challenge`                       |
+| Biological/geometric structures, 3D models                  | `visualization3d`     | `visualizationType`, `objects`                |
+| Motion-graphics intro/hook (ALWAYS scene 1)                 | `animation-explainer` | `concept`, `keyBeats`, `mood`                 |
 
 **widgetOutline Format by Type:**
 
@@ -193,6 +233,13 @@ When generating an interactive scene, you MUST select the appropriate widget typ
 "widgetOutline": {
   "visualizationType": "solar",
   "objects": ["sun", "earth", "mars"]
+}
+
+// animation-explainer (the intro scene — see Intro Scene section)
+"widgetOutline": {
+  "concept": "what the animation reveals",
+  "keyBeats": ["hook beat", "tease beat", "spark beat", "title beat"],
+  "mood": "two or three mood adjectives"
 }
 ```
 
@@ -232,20 +279,21 @@ Leave **both unset** for ordinary build-an-artefact PBL projects (this is the de
 
 ### Top-level shape — NON-NEGOTIABLE
 
-Your entire response MUST be a single JSON **object** with exactly these three top-level keys:
+Your entire response MUST be a single JSON **object** with exactly these four top-level keys:
 
 ```json
 {
   "languageDirective": "<the directive you inferred in the Language Inference step>",
   "courseTitle": "<concise course name, ≤30 chars, in the teaching language>",
-  "outlines": [ /* array of scene objects */ ]
+  "designDirective": { "concept": "...", "palette": ["#hex"], "background": "dark", "motionPersonality": "calm" },
+  "outlines": [ /* array of scene objects, FIRST one is the animation-explainer intro */ ]
 }
 ```
 
 Rules:
 
 - **Never** return a bare array. The top level is an object, not an array.
-- **Never** omit `languageDirective` or `courseTitle`. Both are required even if you think they are obvious.
+- **Never** omit `languageDirective`, `courseTitle`, or `designDirective`. All three are required even if you think they are obvious.
 - **Never** wrap the response in any other structure, prose, or code fence.
 
 ### Minimal complete example
@@ -254,22 +302,52 @@ Rules:
 {
   "languageDirective": "Deliver the entire course in English. Use simple vocabulary suitable for a beginner.",
   "courseTitle": "Intro to Projectile Motion",
+  "designDirective": {
+    "concept": "projectile motion as a thrown arrow tracing invisible parabolas",
+    "palette": ["#0A0A0A", "#F5B942", "#3D8BFF"],
+    "background": "dark",
+    "motionPersonality": "cinematic"
+  },
   "outlines": [
     {
       "id": "scene_1",
+      "type": "interactive",
+      "title": "Why Does the Ball Obey This Curve?",
+      "description": "A motion-graphics hook tracing one throw's invisible parabola in slow motion.",
+      "keyPoints": [
+        "A ball leaves a hand — and carries a mystery",
+        "GRAVITY · ANGLE · SPEED — three forces in cards",
+        "The parabola ignites where math and motion meet",
+        "Lock up: Intro to Projectile Motion"
+      ],
+      "order": 1,
+      "widgetType": "animation-explainer",
+      "widgetOutline": {
+        "concept": "one thrown ball's parabola drawn in real time with physics callouts",
+        "keyBeats": [
+          "A hand throws; the ball freezes mid-air",
+          "Three cards: GRAVITY, ANGLE, SPEED",
+          "The parabola sketches itself through the frozen ball",
+          "Title lock-up: Intro to Projectile Motion"
+        ],
+        "mood": "curious, weightless, cinematic"
+      }
+    },
+    {
+      "id": "scene_2",
       "type": "slide",
       "title": "Introduction",
       "description": "Welcome students and introduce the core concept.",
       "keyPoints": ["Context", "Agenda", "Goals"],
-      "order": 1
+      "order": 2
     },
     {
-      "id": "scene_2",
+      "id": "scene_3",
       "type": "interactive",
       "title": "Interactive Exploration",
       "description": "Students explore the concept via a hands-on simulation.",
       "keyPoints": ["Observe variable 1", "Observe variable 2"],
-      "order": 2,
+      "order": 3,
       "widgetType": "simulation",
       "widgetOutline": {
         "concept": "Projectile Motion",
@@ -277,17 +355,17 @@ Rules:
       }
     },
     {
-      "id": "scene_3",
+      "id": "scene_4",
       "type": "quiz",
       "title": "Knowledge Check",
       "description": "Test student understanding of the key concepts.",
       "keyPoints": ["Test point 1", "Test point 2"],
-      "order": 3,
       "quizConfig": {
         "questionCount": 2,
         "difficulty": "medium",
         "questionTypes": ["single", "multiple"]
-      }
+      },
+      "order": 4
     }
   ]
 }
@@ -313,9 +391,9 @@ Rules:
 {{/if}}
 | quizConfig        | object                   | ❌       | Required for quiz type, contains questionCount/difficulty/questionTypes                          |
 | interactiveConfig | object                   | ❌ (deprecated) | Legacy: use widgetType + widgetOutline instead                                                                                       |
-| widgetType        | string                   | ✅ (for interactive) | Widget type: "simulation", "diagram", "code", "game", "visualization3d"                                                 |
+| widgetType        | string                   | ✅ (for interactive) | Widget type: "simulation", "diagram", "code", "game", "visualization3d", "animation-explainer"                           |
 | widgetOutline     | object                   | ✅ (for interactive) | Widget-specific configuration (see Widget Type Selection)                                                               |
-| pblConfig         | object                   | ❌       | Required for pbl type, contains projectTopic/projectDescription/targetSkills/issueCount/language |
+| pblConfig         | object                   | ❌       | Required for pbl type, contains projectTopic/projectDescription/targetSkills/issueCount/language                         |
 
 ### quizConfig Structure
 
@@ -371,7 +449,7 @@ Omit `scenarioRoleplay` and `scenarioBrief` entirely for ordinary build-an-artef
 **Top-level response shape (these come first because they are most often violated):**
 
 1. Return exactly one JSON **object** — never a bare array.
-2. That object MUST have `languageDirective` (string), `courseTitle` (string, ≤30 chars), and `outlines` (array) as top-level keys. Omitting any is a failure.
+2. That object MUST have `languageDirective` (string), `courseTitle` (string, ≤30 chars), `designDirective` (object), and `outlines` (array) as top-level keys. Omitting any is a failure.
 3. Do not wrap the object in prose, markdown, or code fences.
 
 **Scene-level rules:**
@@ -380,7 +458,7 @@ Omit `scenarioRoleplay` and `scenarioBrief` entirely for ordinary build-an-artef
 5. `quiz` scenes must include `quizConfig`.
 6. `interactive` scenes must include `widgetType` and `widgetOutline` (preferred). `interactiveConfig` is deprecated and only accepted for backwards compatibility.
 7. `pbl` scenes must include `pblConfig` with `projectTopic`, `projectDescription`, `targetSkills`, `issueCount`.
-8. Arrange scenes by inferred duration (typically 1-2 scenes per minute). Insert quizzes at appropriate points. Use interactive scenes sparingly (max 1-2 per course).
+8. **Scene 1 is always the `animation-explainer` intro** (see Intro Scene). Arrange the remaining scenes by inferred duration (typically 1-2 scenes per minute). Insert quizzes at appropriate points. Use other interactive scenes sparingly (max 1-2 per course).
 9. **Language**: Infer from the user's requirement text and context. Output all scene content in the inferred language.
 10. Regardless of information completeness, always output conforming JSON - do not ask questions or request more information
 11. **No teacher identity on slides**: Scene titles and keyPoints must be neutral and topic-focused. Never include the teacher's name or role (e.g., avoid "Teacher Wang's Tips", "Teacher's Wishes"). Use generic labels like "Tips", "Summary", "Key Takeaways" instead.

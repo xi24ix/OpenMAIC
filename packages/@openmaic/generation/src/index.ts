@@ -110,5 +110,11 @@ export type {
   WidgetOutline,
   WidgetType,
 } from './outline-types.js';
+export {
+  FALLBACK_DESIGN_DIRECTIVE,
+  formatDesignDirective,
+  normalizeDesignDirective,
+} from './design-directive.js';
+export type { DesignDirective } from './design-directive.js';
 
 export * from './prompts/index.js';

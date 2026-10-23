@@ -20,6 +20,7 @@ export const PROMPT_IDS = {
   GAME_CONTENT: 'game-content',
   VISUALIZATION3D_CONTENT: 'visualization3d-content',
   PROCEDURAL_SKILL_CONTENT: 'procedural-skill-content',
+  ANIMATION_EXPLAINER_CONTENT: 'animation-explainer-content',
   SLIDE_ACTIONS: 'slide-actions',
   QUIZ_ACTIONS: 'quiz-actions',
   INTERACTIVE_ACTIONS: 'interactive-actions',

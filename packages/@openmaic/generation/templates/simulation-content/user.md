@@ -20,6 +20,11 @@ Create a simulation widget for: {{conceptName}}
 
 {{languageDirective}}
 
+## Design Directive
+The course's visual identity — treat it as LAW for this widget's colors, mood and motion:
+
+{{designDirective}}
+
 ---
 
 Generate a complete, interactive HTML simulation with these MANDATORY features:

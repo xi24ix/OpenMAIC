@@ -113,6 +113,8 @@ export interface GenerationRunOutline {
   outlines: SceneOutline[];
   languageDirective: string;
   courseTitle?: string;
+  /** The formatted per-course design directive (palette/mood/motion personality). */
+  designDirective?: string;
   /** The server-effective task-engine mode the outline was generated in. */
   taskEngineMode: boolean;
 }
@@ -294,6 +296,11 @@ export const GENERATION_RUN_EVENT_TYPES = [
   'outline_language_directive',
   /** `{ data }`: the course title the outline stream inferred. */
   'outline_course_title',
+  /**
+   * `{ data }`: the formatted design directive the outline stream inferred
+   * (per-course palette/mood/motion personality applied by every scene).
+   */
+  'outline_design_directive',
   /** `{ index, outline }`: one outline item as the model wrote it. */
   'outline_item',
   /** `{ revision, outline }`: the outline waits for confirmation. */

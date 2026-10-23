@@ -20,6 +20,11 @@ Create an educational GAME widget for: {{title}}
 
 {{languageDirective}}
 
+## Design Directive
+The course's visual identity — treat it as LAW for this widget's colors, mood and motion:
+
+{{designDirective}}
+
 ---
 
 Generate a FUN, INTERACTIVE HTML game with these MANDATORY features:

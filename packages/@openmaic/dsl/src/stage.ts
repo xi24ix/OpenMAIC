@@ -146,6 +146,12 @@ export interface Stage {
   updatedAt: number;
   // Stage metadata
   languageDirective?: string;
+  /**
+   * The formatted per-course design directive (concept, palette, background
+   * mode, motion personality) every scene's generation received. Absent on
+   * legacy classrooms.
+   */
+  designDirective?: string;
   style?: string;
   // Whiteboard data
   whiteboard?: Whiteboard[];

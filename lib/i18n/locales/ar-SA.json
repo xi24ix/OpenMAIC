@@ -324,7 +324,10 @@
     "voiceAutoAssign": "سيتم تعيين الأصوات تلقائيًا",
     "searchVoice": "البحث عن الأصوات",
     "noMatchingVoices": "لا توجد أصوات مطابقة",
-    "noVoice": "لا يوجد صوت"
+    "noVoice": "لا يوجد صوت",
+    "fishVoiceIdPlaceholder": "معرّف نموذج صوت Fish أو رابط",
+    "fishVoiceIdApply": "استخدام",
+    "fishVoiceIdHint": "الصق المعرّف من أي صفحة صوت fish.audio/m/…"
   },
   "proactiveCard": {
     "discussion": "نقاش",
@@ -1269,7 +1272,8 @@
     "runLoadFailed": "تعذّر تحميل عملية التوليد هذه",
     "runLoadRetrying": "جارٍ إعادة المحاولة…",
     "mediaGenerationFailed": "فشل توليد الوسائط",
-    "mediaGenerationDisabled": "التوليد معطّل"
+    "mediaGenerationDisabled": "التوليد معطّل",
+    "widgetAnimationExplainer": "شاشة افتتاحية متحركة"
   },
   "settings": {
     "title": "الإعدادات",
@@ -1432,6 +1436,7 @@
     "providerMiniMaxTTS": "MiniMax TTS",
     "providerGoogleTTS": "Google Gemini TTS",
     "providerLemonadeTTS": "Lemonade TTS (محلي)",
+    "providerFishAudioTTS": "Fish Audio TTS",
     "providerBrowserNativeTTS": "تحويل النص إلى كلام المدمج في المتصفح",
     "voxcpmVoicesTitle": "أصوات VoxCPM",
     "voxcpmVoicesDescription": "تُحفظ في هذا المتصفح وتُضاف إلى مجموعة الأصوات المشتركة في Agent Bar.",

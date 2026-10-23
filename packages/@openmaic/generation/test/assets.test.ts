@@ -22,6 +22,7 @@ const PROMPT_IDS = [
   'game-content',
   'visualization3d-content',
   'procedural-skill-content',
+  'animation-explainer-content',
   'slide-actions',
   'quiz-actions',
   'interactive-actions',
@@ -38,6 +39,7 @@ const SNIPPET_IDS = [
   'slide-generated-image-instructions',
   'slide-video-instructions',
   'speech-tts-readability',
+  'widget-visual-polish',
 ] as const satisfies readonly SnippetId[];
 
 const GRANDFATHERED_NON_CAMEL_CASE_PLACEHOLDERS = [
@@ -53,6 +55,7 @@ const GRANDFATHERED_NON_CAMEL_CASE_PLACEHOLDERS = [
 
 function listFiles(directory: string): string[] {
   return readdirSync(directory)
+    .filter((name) => !name.startsWith('.'))
     .flatMap((name) => {
       const entry = join(directory, name);
       return statSync(entry).isDirectory() ? listFiles(entry) : [entry];

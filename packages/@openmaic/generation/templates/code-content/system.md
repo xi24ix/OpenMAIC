@@ -231,4 +231,6 @@ Return ONLY the HTML document, no markdown fences or explanations.
 - [ ] **Pyodide uses async execution** - `runPythonAsync()` not `runPython()`
 
 
+{{snippet:widget-visual-polish}}
+
 {{snippet:interactive-observation}}

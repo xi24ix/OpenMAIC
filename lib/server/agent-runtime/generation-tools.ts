@@ -421,6 +421,7 @@ export function buildGenerationTools(deps: GenerationToolDeps): AgentTool<never,
         content = await generateSceneContent(outline, aiCallFor(sceneContentStage(params.type)), {
           agents,
           languageDirective: doc.stage.languageDirective ?? '',
+          designDirective: doc.stage.designDirective ?? '',
           allowProceduralSkill: true,
           ...(assignedImages.length ? { assignedImages, imageMapping } : {}),
           ...(params.instruction ? { editDirective: params.instruction } : {}),

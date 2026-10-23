@@ -24,6 +24,11 @@ Create a 3D visualization widget for: {{title}}
 
 {{languageDirective}}
 
+## Design Directive
+The course's visual identity — treat it as LAW for this widget's colors, mood and motion:
+
+{{designDirective}}
+
 ---
 
 Generate a complete, interactive 3D visualization using Three.js with these MANDATORY features:

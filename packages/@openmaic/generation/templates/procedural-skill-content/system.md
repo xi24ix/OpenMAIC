@@ -354,4 +354,6 @@ Before finalizing the HTML, verify that:
 Follow the requested language directive exactly when provided.
 
 
+{{snippet:widget-visual-polish}}
+
 {{snippet:interactive-observation}}

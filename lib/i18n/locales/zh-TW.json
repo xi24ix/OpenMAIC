@@ -324,7 +324,10 @@
     "voiceAutoAssign": "聲線將自動分配",
     "searchVoice": "搜尋聲音",
     "noMatchingVoices": "沒有符合的聲音",
-    "noVoice": "無可用音色"
+    "noVoice": "無可用音色",
+    "fishVoiceIdPlaceholder": "Fish 音色模型 ID 或連結",
+    "fishVoiceIdApply": "使用",
+    "fishVoiceIdHint": "貼上任意 fish.audio/m/… 音色頁面連結或其中的模型 ID"
   },
   "proactiveCard": {
     "discussion": "討論",
@@ -1254,7 +1257,8 @@
     "runLoadFailed": "無法載入此次生成",
     "runLoadRetrying": "正在重試…",
     "mediaGenerationFailed": "媒體生成失敗",
-    "mediaGenerationDisabled": "生成已停用"
+    "mediaGenerationDisabled": "生成已停用",
+    "widgetAnimationExplainer": "開場動畫"
   },
   "settings": {
     "title": "設定",
@@ -1417,6 +1421,7 @@
     "providerMiniMaxTTS": "MiniMax TTS",
     "providerGoogleTTS": "Google Gemini TTS",
     "providerLemonadeTTS": "Lemonade TTS（本機）",
+    "providerFishAudioTTS": "Fish Audio TTS",
     "providerBrowserNativeTTS": "瀏覽器原生 TTS",
     "voxcpmVoicesTitle": "VoxCPM 聲音",
     "voxcpmVoicesDescription": "儲存在目前瀏覽器，進入統一音色池後可在 AI 代理聲音列中使用。",

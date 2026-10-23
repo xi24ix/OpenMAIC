@@ -79,6 +79,12 @@ Return exactly one JSON object with these top-level keys:
 {
   "languageDirective": "<teaching language directive>",
   "courseTitle": "<concise course name, ≤30 chars, in the teaching language>",
+  "designDirective": {
+    "concept": "one 10-20 word visual metaphor that unifies the course",
+    "palette": ["#hex", "#hex", "#hex"],
+    "background": "dark",
+    "motionPersonality": "calm"
+  },
   "outlines": [ /* scene outlines */ ]
 }
 ```
@@ -87,6 +93,7 @@ Rules:
 
 - Do not return prose, markdown fences, or a bare array.
 - Never omit `courseTitle`: a concise, human-readable course name (≤30 chars, a noun phrase, in the teaching language) — not the raw user request.
+- Never omit `designDirective`: the visual identity every scene later receives as a hard constraint. Infer it from the task domain (training/industrial safety → restrained high-contrast duotone, `calm`; the `concept` should be a literal workshop-control-room metaphor the scenes can draw). Keep the palette to 2-5 hex colors.
 - For suitable vocational tasks, produce 10-14 scenes.
 - For suitable vocational tasks, prefer 10-12 scenes by default.
 - For suitable vocational tasks, generate at least 10 scenes.

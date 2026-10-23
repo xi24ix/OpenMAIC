@@ -12,5 +12,8 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['test/**/*.test.ts'],
+    // macOS AppleDouble resource-fork clones that external drives emit next to
+    // touched files; they are binary junk and cannot transform.
+    exclude: ['**/node_modules/**', '**/._*'],
   },
 });

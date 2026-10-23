@@ -13,6 +13,7 @@ export type PromptId =
   | 'game-content'
   | 'visualization3d-content'
   | 'procedural-skill-content'
+  | 'animation-explainer-content'
   | 'slide-actions'
   | 'quiz-actions'
   | 'interactive-actions'
@@ -28,7 +29,8 @@ export type SnippetId =
   | 'slide-image-instructions'
   | 'slide-generated-image-instructions'
   | 'slide-video-instructions'
-  | 'speech-tts-readability';
+  | 'speech-tts-readability'
+  | 'widget-visual-polish';
 
 /** Loaded prompt template. */
 export interface LoadedPrompt {

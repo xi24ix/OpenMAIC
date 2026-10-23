@@ -108,6 +108,8 @@ export function ttsEndpointPath(providerId: string): string {
       return '/services/aigc/multimodal-generation/generation';
     case 'elevenlabs-tts':
       return '/text-to-speech';
+    case 'fish-tts':
+      return '/tts';
     case 'doubao-tts':
       return '/unidirectional';
     case 'google-tts':

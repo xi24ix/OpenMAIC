@@ -324,7 +324,10 @@
     "voiceAutoAssign": "Voices will be auto-assigned",
     "searchVoice": "Search voices",
     "noMatchingVoices": "No matching voices",
-    "noVoice": "No voice"
+    "noVoice": "No voice",
+    "fishVoiceIdPlaceholder": "Fish voice model ID or URL",
+    "fishVoiceIdApply": "Use",
+    "fishVoiceIdHint": "Paste the ID from any fish.audio/m/… voice page URL"
   },
   "proactiveCard": {
     "discussion": "Discussion",
@@ -1269,7 +1272,8 @@
     "runLoadFailed": "Couldn't load this generation",
     "runLoadRetrying": "Trying again…",
     "mediaGenerationFailed": "Media generation failed",
-    "mediaGenerationDisabled": "Generation disabled"
+    "mediaGenerationDisabled": "Generation disabled",
+    "widgetAnimationExplainer": "Motion Intro"
   },
   "settings": {
     "title": "Settings",
@@ -1432,6 +1436,7 @@
     "providerMiniMaxTTS": "MiniMax TTS",
     "providerGoogleTTS": "Google Gemini TTS",
     "providerLemonadeTTS": "Lemonade TTS (Local)",
+    "providerFishAudioTTS": "Fish Audio TTS",
     "providerBrowserNativeTTS": "Browser Native TTS",
     "voxcpmVoicesTitle": "VoxCPM Voices",
     "voxcpmVoicesDescription": "Saved in this browser and added to the shared Agent Bar voice pool.",

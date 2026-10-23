@@ -27,6 +27,11 @@ import {
 } from '@openmaic/generation';
 import type { AgentInfo } from '@openmaic/generation';
 import { DEFAULT_LANGUAGE_DIRECTIVE } from '@openmaic/generation';
+import {
+  formatDesignDirective,
+  normalizeDesignDirective,
+  type DesignDirective,
+} from '@openmaic/generation';
 import { MAX_PDF_CONTENT_CHARS, MAX_VISION_IMAGES } from '@/lib/constants/generation';
 import { MAX_OUTLINE_SCENES } from '@/lib/server/generation/outline-schema';
 import { nanoid } from 'nanoid';
@@ -106,6 +111,51 @@ function extractCourseTitle(buffer: string): string | null {
   const head = buffer.length > 8192 ? buffer.slice(0, 8192) : buffer;
   const match = head.match(COURSE_TITLE_RE);
   return match ? normalizeStreamedTitle(match[1]) : null;
+}
+
+/**
+ * Extract the designDirective from the streamed wrapper JSON. Unlike the two
+ * string directives above, the directive is an object, so it is recovered by
+ * a balanced-brace scan (string-aware) starting at its key. The scan re-runs
+ * per chunk until found; it is bounded to the 16 KB head, where the wrapper
+ * directives live — normal shape is `"designDirective":{...},"outlines":[`.
+ */
+const DESIGN_DIRECTIVE_KEY_RE = /"designDirective"\s*:\s*\{/;
+
+function extractDesignDirective(buffer: string): DesignDirective | null {
+  const head = buffer.length > 16384 ? buffer.slice(0, 16384) : buffer;
+  const match = head.match(DESIGN_DIRECTIVE_KEY_RE);
+  if (!match || match.index === undefined) return null;
+  const start = match.index + match[0].length - 1;
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let i = start; i < head.length; i++) {
+    const char = head[i];
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (char === '\\' && inString) {
+      escaped = true;
+      continue;
+    }
+    if (char === '"') inString = !inString;
+    if (inString) continue;
+    if (char === '{') depth++;
+    else if (char === '}') {
+      depth--;
+      if (depth === 0) {
+        try {
+          const raw: unknown = JSON.parse(head.substring(start, i + 1));
+          return normalizeDesignDirective(raw);
+        } catch {
+          return null;
+        }
+      }
+    }
+  }
+  return null; // Object not complete in the head yet — scan again next chunk.
 }
 
 /**
@@ -333,6 +383,7 @@ export interface PreparedOutline {
 export type OutlineEvent =
   | { type: 'languageDirective'; data: string }
   | { type: 'courseTitle'; data: string }
+  | { type: 'designDirective'; data: string }
   | { type: 'outline'; data: SceneOutline; index: number }
   /** A retry of the stream; `fallback` names the fallback model when it switched to one. */
   | { type: 'retry'; attempt: number; maxAttempts: number; fallback?: string };
@@ -341,6 +392,8 @@ export interface OutlineResult {
   outlines: SceneOutline[];
   languageDirective: string;
   courseTitle: string | undefined;
+  /** Formatted per-course design directive; formatted fallback when the outline stage produced none. */
+  designDirective?: string;
   taskEngineMode: boolean;
 }
 
@@ -607,6 +660,7 @@ async function streamOutlines(
   let parsedOutlines: SceneOutline[] = [];
   let languageDirective: string | null = null;
   let courseTitle: string | null = null;
+  let designDirective: DesignDirective | null = null;
   let lastError: string | undefined;
   let lastCause: unknown;
 
@@ -624,6 +678,7 @@ async function streamOutlines(
       parsedOutlines = [];
       languageDirective = null;
       courseTitle = null;
+      designDirective = null;
       const usedOutlineIds = new Set<string>();
       // Consume the FULL stream, not just textStream: errors that
       // happen before the stream starts (a 401, an invalid key) and
@@ -674,6 +729,15 @@ async function streamOutlines(
         if (!courseTitle) {
           courseTitle = extractCourseTitle(fullText);
           if (courseTitle) emit({ type: 'courseTitle', data: courseTitle });
+        }
+
+        // Try to extract the design directive early (balanced scan, per chunk
+        // until its object closes in the head window)
+        if (!designDirective) {
+          designDirective = extractDesignDirective(fullText);
+          if (designDirective) {
+            emit({ type: 'designDirective', data: formatDesignDirective(designDirective) });
+          }
         }
 
         // Try to extract new outlines from the accumulated text,
@@ -798,6 +862,7 @@ async function streamOutlines(
     outlines: uniquifyMediaElementIds(parsedOutlines),
     languageDirective: languageDirective || DEFAULT_LANGUAGE_DIRECTIVE,
     courseTitle: courseTitle || undefined,
+    designDirective: formatDesignDirective(designDirective),
     taskEngineMode,
   };
 }

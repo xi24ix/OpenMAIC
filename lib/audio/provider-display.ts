@@ -33,6 +33,7 @@ const TTS_PROVIDER_NAME_KEYS: Record<string, string> = {
   'minimax-tts': 'settings.providerMiniMaxTTS',
   'google-tts': 'settings.providerGoogleTTS',
   'lemonade-tts': 'settings.providerLemonadeTTS',
+  'fish-tts': 'settings.providerFishAudioTTS',
   'browser-native-tts': 'settings.providerBrowserNativeTTS',
 };
 

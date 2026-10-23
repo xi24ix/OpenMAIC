@@ -11,6 +11,7 @@
  * - Qwen TTS (https://bailian.console.aliyun.com/)
  * - Doubao TTS (https://www.volcengine.com/docs/6561/1257543)
  * - Google Gemini TTS (https://ai.google.dev/gemini-api/docs/speech-generation)
+ * - Fish Audio TTS (https://docs.fish.audio/text-to-speech/api)
  * - Browser Native TTS (Web Speech API, client-side only)
  *
  * Currently Supported ASR Providers:
@@ -21,7 +22,6 @@
  *
  * Future Provider Support (extensible):
  * - ElevenLabs TTS/ASR (https://elevenlabs.io/docs)
- * - Fish Audio TTS (https://fish.audio/docs)
  * - Cartesia TTS (https://cartesia.ai/docs)
  * - PlayHT TTS (https://docs.play.ht/)
  * - AssemblyAI ASR (https://www.assemblyai.com/docs)
@@ -91,6 +91,7 @@ export type BuiltInTTSProviderId =
   | 'minimax-tts'
   | 'google-tts'
   | 'lemonade-tts'
+  | 'fish-tts'
   | 'browser-native-tts';
 
 export type TTSProviderId = BuiltInTTSProviderId | `custom-tts-${string}`;

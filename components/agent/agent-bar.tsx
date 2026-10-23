@@ -268,6 +268,18 @@ function AgentVoicePill({
                     ? `${provider.providerName} · ${group.modelName}`
                     : provider.providerName}
                 </div>
+                {provider.providerId === 'fish-tts' && group === groups[0] && (
+                  <FishVoiceIdRow
+                    active={resolved?.providerId === 'fish-tts'}
+                    onPick={(voiceId) => {
+                      setAgentVoiceOverride(agent.id, {
+                        providerId: provider.providerId,
+                        voiceId,
+                      });
+                      setPopoverOpen(false);
+                    }}
+                  />
+                )}
                 {group.voices.map((voice) => {
                   const isActive =
                     resolved?.providerId === provider.providerId &&
@@ -533,6 +545,15 @@ function TeacherVoicePill({
                     ? `${provider.providerName} · ${group.modelName}`
                     : provider.providerName}
                 </div>
+                {provider.providerId === 'fish-tts' && group === groups[0] && (
+                  <FishVoiceIdRow
+                    active={ttsProviderId === 'fish-tts'}
+                    onPick={(voiceId) => {
+                      setTTSVoice(voiceId, provider.providerId);
+                      setPopoverOpen(false);
+                    }}
+                  />
+                )}
                 {group.voices.map((voice) => {
                   const isActive = ttsProviderId === provider.providerId && ttsVoice === voice.id;
                   const previewKey = `${provider.providerId}::${voice.id}`;
@@ -591,6 +612,85 @@ function TeacherVoicePill({
         </div>
       </PopoverContent>
     </Popover>
+  );
+}
+
+/**
+ * A Fish Audio voice reference: accept either the raw voice-model ID or the
+ * voice page URL (`https://fish.audio/m/<id>…`) and take the ID from it.
+ * Returns `undefined` when nothing usable was typed.
+ */
+export function fishVoiceIdFromInput(input: string): string | undefined {
+  const trimmed = input.trim();
+  if (!trimmed) return undefined;
+  const match = trimmed.match(
+    /(?:fish\.audio\/(?:m|voice)\/)?([0-9a-fA-F]{16,64})(?:[/?#]|$)/,
+  );
+  const id = match?.[1] ?? trimmed;
+  const cleaned = id.trim();
+  return /^[0-9a-fA-F]{16,64}$/.test(cleaned) ? cleaned.toLowerCase() : trimmed || undefined;
+}
+
+/**
+ * Fish Audio voices are community/custom voice models identified by an opaque
+ * model ID, so the pickers add a free-text row for pasting that ID (or the
+ * voice page URL). `onPick` receives the resolved voice ID.
+ */
+function FishVoiceIdRow({
+  onPick,
+  active,
+}: {
+  onPick: (voiceId: string) => void;
+  active: boolean;
+}) {
+  const { t } = useI18n();
+  const [customVoiceInput, setCustomVoiceInput] = useState('');
+  const commit = () => {
+    const voiceId = fishVoiceIdFromInput(customVoiceInput);
+    if (!voiceId) return;
+    setCustomVoiceInput('');
+    onPick(voiceId);
+  };
+  return (
+    <div className="px-2 py-1.5 space-y-1">
+      <div className="flex items-center gap-1.5">
+        <input
+          value={customVoiceInput}
+          onChange={(e) => setCustomVoiceInput(e.target.value)}
+          onBlur={() => {
+            if (customVoiceInput.trim()) commit();
+          }}
+          onKeyDown={(e) => {
+            e.stopPropagation();
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              commit();
+            }
+          }}
+          aria-label={t('agentBar.fishVoiceIdPlaceholder')}
+          placeholder={t('agentBar.fishVoiceIdPlaceholder')}
+          className={cn(
+            'h-7 min-w-0 flex-1 rounded-sm border border-input bg-background px-2 text-[12px]',
+            'outline-none transition-colors placeholder:text-muted-foreground/50',
+            active ? 'border-primary/50 text-primary' : 'focus:border-primary/50',
+          )}
+        />
+        <button
+          type="button"
+          onClick={commit}
+          disabled={!customVoiceInput.trim()}
+          className={cn(
+            'shrink-0 rounded-sm border border-border/60 px-2 py-1 text-[11px] font-medium',
+            'text-muted-foreground hover:border-border hover:text-foreground disabled:opacity-40',
+          )}
+        >
+          {t('agentBar.fishVoiceIdApply')}
+        </button>
+      </div>
+      <p className="px-0.5 text-[10px] leading-tight text-muted-foreground/60">
+        {t('agentBar.fishVoiceIdHint')}
+      </p>
+    </div>
   );
 }
 

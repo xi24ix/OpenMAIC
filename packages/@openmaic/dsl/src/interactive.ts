@@ -7,7 +7,8 @@ export type WidgetType =
   | 'code'
   | 'game'
   | 'visualization3d'
-  | 'procedural-skill';
+  | 'procedural-skill'
+  | 'animation-explainer';
 
 /** Frozen set of every valid {@link WidgetType}. */
 export const WIDGET_TYPES = [
@@ -17,6 +18,7 @@ export const WIDGET_TYPES = [
   'game',
   'visualization3d',
   'procedural-skill',
+  'animation-explainer',
 ] as const satisfies readonly WidgetType[];
 
 // Compile-time exhaustiveness in both directions: `satisfies` above rejects an

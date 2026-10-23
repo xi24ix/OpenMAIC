@@ -324,7 +324,10 @@
     "voiceAutoAssign": "Las voces se asignarán automáticamente",
     "searchVoice": "Buscar voces",
     "noMatchingVoices": "No hay voces que coincidan",
-    "noVoice": "Sin voz"
+    "noVoice": "Sin voz",
+    "fishVoiceIdPlaceholder": "ID del modelo de voz Fish o URL",
+    "fishVoiceIdApply": "Usar",
+    "fishVoiceIdHint": "Pega el ID de cualquier página de voz fish.audio/m/…"
   },
   "proactiveCard": {
     "discussion": "Debate",
@@ -1269,7 +1272,8 @@
     "runLoadFailed": "No se pudo cargar esta generación",
     "runLoadRetrying": "Reintentando…",
     "mediaGenerationFailed": "Falló la generación de medios",
-    "mediaGenerationDisabled": "Generación desactivada"
+    "mediaGenerationDisabled": "Generación desactivada",
+    "widgetAnimationExplainer": "Intro animada"
   },
   "settings": {
     "title": "Configuración",
@@ -1432,6 +1436,7 @@
     "providerMiniMaxTTS": "MiniMax TTS",
     "providerGoogleTTS": "Google Gemini TTS",
     "providerLemonadeTTS": "Lemonade TTS (local)",
+    "providerFishAudioTTS": "Fish Audio TTS",
     "providerBrowserNativeTTS": "TTS nativo del navegador",
     "voxcpmVoicesTitle": "Voces de VoxCPM",
     "voxcpmVoicesDescription": "Se guardan en este navegador y se agregan al conjunto de voces compartido de la barra de agentes.",

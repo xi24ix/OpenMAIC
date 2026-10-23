@@ -158,4 +158,6 @@ So highlight/annotate/reveal can target nodes, give each node a stable id:
 
 Return exactly ONE complete HTML document. No markdown fences, no duplication.
 
+{{snippet:widget-visual-polish}}
+
 {{snippet:interactive-observation}}

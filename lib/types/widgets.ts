@@ -197,6 +197,21 @@ export interface ProceduralSkillConfig extends WidgetConfigBase {
   successCriteria?: string[];
 }
 
+// ==================== Animation Explainer Widget ====================
+
+/**
+ * Motion-graphic explainer: a deterministic code-animation scene (GSAP/
+ * CSS vector graphics) that plays itself — the lesson's opening "trailer".
+ */
+export interface AnimationExplainerConfig extends WidgetConfigBase {
+  type: 'animation-explainer';
+  concept: string;
+  description: string;
+  /** Ordered named beats of the animation (p0, p1, ... p_N markers). */
+  beats?: Array<{ id: string; label: string }>;
+  mood?: string;
+}
+
 // ==================== Union Types ====================
 
 export type WidgetConfig =
@@ -205,4 +220,5 @@ export type WidgetConfig =
   | CodeConfig
   | GameConfig
   | Visualization3DConfig
-  | ProceduralSkillConfig;
+  | ProceduralSkillConfig
+  | AnimationExplainerConfig;

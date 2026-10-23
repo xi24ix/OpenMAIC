@@ -13,6 +13,8 @@ import {
   sortDocumentImagesForVision,
 } from './outline-formatters.js';
 import { uniquifyMediaElementIds } from './outline-media.js';
+import { normalizeDesignDirective } from './design-directive.js';
+import type { DesignDirective } from './design-directive.js';
 import type { ImageMapping, PdfImage, SceneOutline, UserRequirements } from './outline-types.js';
 import type { AICallFn, GenerationResult } from './pipeline-types.js';
 import { buildPrompt, PROMPT_IDS } from './prompts/index.js';
@@ -124,7 +126,12 @@ export async function generateSceneOutlinesFromRequirements(
   aiCall: AICallFn,
   options?: OutlineGenerationOptions,
 ): Promise<
-  GenerationResult<{ languageDirective: string; courseTitle?: string; outlines: SceneOutline[] }>
+  GenerationResult<{
+    languageDirective: string;
+    courseTitle?: string;
+    designDirective?: DesignDirective;
+    outlines: SceneOutline[];
+  }>
 > {
   const logger = options?.logger ?? noopGenerationLogger;
   const context: OutlinePromptContext = { ...options, pdfText, pdfImages };
@@ -144,11 +151,18 @@ export async function generateSceneOutlinesFromRequirements(
   try {
     const response = await aiCall(prompts.system, prompts.user, visionImages);
     const parsed = parseJsonResponse<
-      { languageDirective: string; courseTitle?: string; outlines: SceneOutline[] } | SceneOutline[]
+      | {
+          languageDirective: string;
+          courseTitle?: string;
+          designDirective?: unknown;
+          outlines: SceneOutline[];
+        }
+      | SceneOutline[]
     >(response, { logger });
 
     let languageDirective: string;
     let courseTitle: string | undefined;
+    let designDirective: DesignDirective | undefined;
     let rawOutlines: SceneOutline[];
 
     if (Array.isArray(parsed)) {
@@ -159,6 +173,7 @@ export async function generateSceneOutlinesFromRequirements(
       const rawTitle = parsed.courseTitle;
       courseTitle =
         typeof rawTitle === 'string' && rawTitle.trim() ? rawTitle.trim().slice(0, 120) : undefined;
+      designDirective = normalizeDesignDirective(parsed.designDirective) ?? undefined;
       rawOutlines = parsed.outlines;
     } else {
       return { success: false, error: 'Failed to parse scene outlines response' };
@@ -179,7 +194,10 @@ export async function generateSceneOutlinesFromRequirements(
 
     const result = uniquifyMediaElementIds(enriched);
 
-    return { success: true, data: { languageDirective, courseTitle, outlines: result } };
+    return {
+      success: true,
+      data: { languageDirective, courseTitle, ...(designDirective ? { designDirective } : {}), outlines: result },
+    };
   } catch (error) {
     return { success: false, error: String(error) };
   }

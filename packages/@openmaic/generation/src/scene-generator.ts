@@ -96,6 +96,13 @@ export interface SceneContentOptions {
   resolvedVisionImages?: Array<{ id: string; src: string; width?: number; height?: number }>;
   agents?: AgentInfo[];
   languageDirective?: string;
+  /**
+   * Formatted per-course design directive (see `formatDesignDirective`): a
+   * shared palette/mood/motion-personality block every scene applies so a
+   * course keeps one visual identity. Always a non-empty string — when the
+   * outline stage produced none it instructs the model to choose its own.
+   */
+  designDirective?: string;
   /** Authoritative UI locale selected by the user, consumed by the PBL v2 planner. */
   targetLanguage?: string;
   /** Original course request/profile, used by PBL v2 for explicit learner-level signals. */
@@ -124,6 +131,7 @@ export interface SceneActionsOptions {
   agents?: AgentInfo[];
   userProfile?: string;
   languageDirective?: string;
+  designDirective?: string;
   logger?: GenerationLogger;
 }
 
@@ -245,6 +253,7 @@ export async function generateSceneContent(
     resolvedVisionImages,
     agents,
     languageDirective,
+    designDirective,
     targetLanguage,
     userRequirements,
     allowProceduralSkill = false,
@@ -272,9 +281,10 @@ export async function generateSceneContent(
       };
     }
 
-    // Route to widget generation (handles all 5 types)
+    // Route to widget generation (handles all widget types)
     return generateWidgetContent(outline, aiCall, languageDirective, {
       allowProceduralSkill,
+      designDirective,
       logger: log,
       onFailure: options.onFailure,
     });
@@ -296,6 +306,7 @@ export async function generateSceneContent(
         baselineContent,
         log,
         options.onFailure,
+        designDirective,
       );
     case 'quiz':
       return generateQuizContent(outline, aiCall, languageDirective, log, options.onFailure);
@@ -617,6 +628,7 @@ async function generateSlideContent(
   baselineContent?: GeneratedSlideContent,
   log: GenerationLogger = noopGenerationLogger,
   onFailure?: (failure: SceneContentFailure) => void,
+  designDirective?: string,
 ): Promise<GeneratedSlideContent | null> {
   // Build assigned images description for the prompt
   let assignedImagesText = '无可用图片，禁止插入任何 image 元素';
@@ -721,6 +733,7 @@ async function generateSlideContent(
     canvas_height: canvasHeight,
     teacherContext,
     languageDirective: languageDirective || '',
+    designDirective: designDirective || '',
     imageElementEnabled,
     generatedImageEnabled,
     generatedVideoEnabled,
@@ -1222,6 +1235,7 @@ export async function generateWidgetContent(
   languageDirective?: string,
   options: {
     allowProceduralSkill?: boolean;
+    designDirective?: string;
     logger?: GenerationLogger;
     onFailure?: (failure: SceneContentFailure) => void;
   } = {},
@@ -1238,6 +1252,7 @@ export async function generateWidgetContent(
   // Select appropriate prompt based on widget type
   let promptId: PromptId;
   let variables: Record<string, unknown>;
+  const designDirectiveText = options.designDirective || '';
 
   switch (widgetType) {
     case 'simulation':
@@ -1249,6 +1264,7 @@ export async function generateWidgetContent(
         variables: widgetOutline.keyVariables?.join(', ') || '',
         designIdea: '',
         languageDirective: languageDirective || '',
+        designDirective: designDirectiveText,
       };
       break;
 
@@ -1265,6 +1281,7 @@ export async function generateWidgetContent(
         hasNodeCount: typeof widgetOutline.nodeCount === 'number' && widgetOutline.nodeCount > 0,
         hasPrescribedNodes: prescribedNodes.length > 0,
         languageDirective: languageDirective || '',
+        designDirective: designDirectiveText,
       };
       break;
     }
@@ -1280,6 +1297,7 @@ export async function generateWidgetContent(
         testCases: '', // AI generates appropriate test cases based on challenge
         hints: '', // AI generates progressive hints based on challenge
         languageDirective: languageDirective || '',
+        designDirective: designDirectiveText,
       };
       break;
 
@@ -1292,6 +1310,7 @@ export async function generateWidgetContent(
         keyPoints: (outline.keyPoints || []).join('\n'),
         scoring: { correctPoints: 10, speedBonus: 5 },
         languageDirective: languageDirective || '',
+        designDirective: designDirectiveText,
       };
       break;
 
@@ -1305,6 +1324,7 @@ export async function generateWidgetContent(
         objects: widgetOutline.objects || [],
         interactions: widgetOutline.interactions || [],
         languageDirective: languageDirective || '',
+        designDirective: designDirectiveText,
       };
       break;
 
@@ -1325,8 +1345,35 @@ export async function generateWidgetContent(
         successCriteria: widgetOutline.successCriteria || [],
         errorConsequences: widgetOutline.errorConsequences || [],
         languageDirective: languageDirective || '',
+        designDirective: designDirectiveText,
       };
       break;
+
+    case 'animation-explainer': {
+      const beats =
+        (widgetOutline.keyBeats && widgetOutline.keyBeats.length > 0
+          ? widgetOutline.keyBeats
+          : [
+              `Hook — open on the central question or paradox of "${outline.title}"`,
+              'Tease — the main key points as 3-4 keyword/icon cards',
+              'Spark — the signature animated infographic for the core mechanism',
+              `Title — lock up the course title "${outline.title}" and settle to ambient`,
+            ]) ?? [];
+      promptId = PROMPT_IDS.ANIMATION_EXPLAINER_CONTENT;
+      variables = {
+        title: outline.title,
+        concept: widgetOutline.concept || outline.title,
+        description: outline.description,
+        keyPoints: (outline.keyPoints || []).join('\n'),
+        beats: beats.map((beat, index) => `${index + 1}. ${beat}`).join('\n'),
+        mood:
+          widgetOutline.mood ||
+          (designDirectiveText.match(/Motion personality:\s*(\w+)/)?.[1] ?? ''),
+        languageDirective: languageDirective || '',
+        designDirective: designDirectiveText,
+      };
+      break;
+    }
 
     default:
       log.warn(`Unknown widget type: ${widgetType}`);

@@ -54,6 +54,45 @@ Produce a **`courseTitle`** (required): a concise, human-readable name for the *
 
 ---
 
+## Design Directive Inference
+
+Produce a **`designDirective`** (required): the visual identity the **entire course** will follow. Every scene (slides, widgets, animations) later receives your directive as a hard constraint, so make it concrete enough to enforce.
+
+Structure:
+
+```json
+"designDirective": {
+  "concept": "one 10-20 word visual metaphor that unifies the course",
+  "palette": ["#hex", "#hex", "#hex"],
+  "background": "dark" | "paper" | "light",
+  "motionPersonality": "calm" | "energetic" | "playful" | "cinematic"
+}
+```
+
+**Inference rules (apply in order):**
+
+1. **Explicit style request wins**: "让孩子觉得像游戏" → `playful` + bright palette; "高端商务" → `cinematic` + dark/monochrome.
+2. **Domain defaults**: programming/AI/data → `dark` background with one strong accent (amber, electric blue) + `calm`; kids/language/k-12 → `paper` (warm cream) with saturated primaries + `playful`; medicine/law/finance → `light` or `dark` restrained duotone + `calm`; film/space/psychology storytelling → `dark`/`cinematic`.
+3. **Palette discipline**: exactly 2-5 hex colors. Pair a dominant with 1-2 accents and a functional gray family. Never more than 5.
+4. **`concept`** must be a metaphor the scenes can literally draw (e.g., "teaching recursion as Russian nesting dolls", "把函数视作输入加工的流水线机器"). Avoid vague words like "modern", "professional" alone.
+
+---
+
+## Intro Scene (MANDATORY — every course)
+
+The **first scene** must always be `"type": "interactive"` with `"widgetType": "animation-explainer"` — a 25-45 second pure motion-graphics intro that hooks the learner before any teaching. It does not count against the widget quota.
+
+Requirements:
+
+- `title`: the course hook (NOT "Introduction") — e.g. "为什么递归会停？" / "Why Light Bends".
+- `description`: one sentence naming the attention hook (paradox, surprise, question).
+- `keyPoints`: exactly 4 beats in display order — HOOK → TEASE (3-4 keyword cards) → SPARK (the signature animated infographic) → TITLE (course title lock-up).
+- `widgetOutline`: `{ "concept": "<what the animation shows>", "keyBeats": ["<beat 1, one short phrase>", ... 4 beats], "mood": "<e.g. 'curious, meteoric, cosmic'>" }`.
+
+This gives the course a cinematic cold open consistent with the design directive.
+
+---
+
 ## Widget Types
 
 ### 1. Simulation Widget (`simulation`)
@@ -154,26 +193,42 @@ Interactive 3D scenes using Three.js for immersive learning experiences.
 - Performance-optimized geometry
 - Smooth animations with requestAnimationFrame
 
+### 6. Motion-Graphics Explainer (`animation-explainer`)
+A pure motion-graphics page that HOOKS the learner with animated typography, iconography, and a signature animated infographic — exactly the mandatory intro scene of every course. GSAP-driven phases (HOOK → TEASE → SPARK → TITLE), no narration narrator, no interactive controls beyond play/replay.
+
+**Output in widgetOutline:**
+- `concept`: What the animation reveals (the hook payload)
+- `keyBeats`: The 4 beats in display order (one short phrase each)
+- `mood`: 2-3 mood adjectives that tune pacing, easing and composition
+
+**Design Principles:**
+- Deterministic timeline, not random: exact easing, phase labels, replay button
+- FIRST frame must be a composed poster frame, not a blank canvas
+- Honor the course design directive: its palette is the ONLY palette
+- Typography is a character: scale contrast, letter-spacing play, masked reveals
+
 ## Widget Selection Guide
 
-| Content Type | Recommended Widget | Reason |
-|--------------|-------------------|--------|
-| Physics formulas/concepts | simulation | Let students EXPERIMENT with variables |
-| Step-by-step processes | diagram | Visual walkthrough with reveal |
-| Programming concepts | code | Hands-on coding practice |
-| Practice/challenge | game (action) | FUN gameplay to apply knowledge |
-| Concept relationships | diagram | Visual connections |
-| Force/motion problems | simulation + game | Simulate physics, gamify the challenge |
-| 3D structures/models | visualization3d | Immersive 3D exploration |
-| Molecular/anatomical models | visualization3d | Spatial understanding in 3D |
-| Solar system/astronomy | visualization3d | Scale and orbit visualization |
+| Content Type                | Recommended Widget     | Reason                                        |
+| --------------------------- | ---------------------- | --------------------------------------------- |
+| Course intro hook (scene 1) | animation-explainer    | MANDATORY cinematic cold open                 |
+| Physics formulas/concepts   | simulation             | Let students EXPERIMENT with variables        |
+| Step-by-step processes      | diagram                | Visual walkthrough with reveal                |
+| Programming concepts        | code                   | Hands-on coding practice                      |
+| Practice/challenge          | game (action)          | FUN gameplay to apply knowledge               |
+| Concept relationships       | diagram                | Visual connections                            |
+| Force/motion problems       | simulation + game      | Simulate physics, gamify the challenge        |
+| 3D structures/models        | visualization3d        | Immersive 3D exploration                      |
+| Molecular/anatomical models | visualization3d        | Spatial understanding in 3D                   |
+| Solar system/astronomy      | visualization3d        | Scale and orbit visualization                 |
 
 ## Widget Distribution Guidelines
 
-1. **Opening scenes (slides)**: Introduction, learning objectives, context setting
-2. **Middle scenes (widgets)**: Hands-on exploration, practice, discovery
-3. **Transition scenes (slides)**: Concept explanations between widgets
-4. **Closing scenes (slides)**: Summary, key takeaways, next steps
+1. **Scene 1 (`animation-explainer`)**: The mandatory motion-graphics intro — hook first, always.
+2. **Opening scenes (slides)**: Introduction, learning objectives, context setting
+3. **Middle scenes (widgets)**: Hands-on exploration, practice, discovery
+4. **Transition scenes (slides)**: Concept explanations between widgets
+5. **Closing scenes (slides)**: Summary, key takeaways, next steps
 
 ## Widget Type Preferences (Adjust Based on Course Length)
 
@@ -252,20 +307,21 @@ For **shorter courses (<10 scenes)**:
 
 ### Top-level shape — NON-NEGOTIABLE
 
-Your entire response MUST be a single JSON **object** with exactly these three top-level keys:
+Your entire response MUST be a single JSON **object** with exactly these four top-level keys:
 
 ```json
 {
   "languageDirective": "<the directive you inferred in the Language Inference step>",
   "courseTitle": "<concise course name, ≤30 chars, in the teaching language>",
-  "outlines": [ /* array of scene objects */ ]
+  "designDirective": { "concept": "...", "palette": ["#hex"], "background": "dark", "motionPersonality": "calm" },
+  "outlines": [ /* array of scene objects, FIRST one is the animation-explainer intro */ ]
 }
 ```
 
 Rules:
 
 - **Never** return a bare array. The top level is an object, not an array.
-- **Never** omit `languageDirective` or `courseTitle`. Both are required even if you think they are obvious.
+- **Never** omit `languageDirective`, `courseTitle`, or `designDirective`. All three are required even if you think they are obvious.
 - **Never** wrap the response in any other structure, prose, or code fence.
 
 ### Minimal complete example
@@ -274,22 +330,52 @@ Rules:
 {
   "languageDirective": "Deliver the entire course in English. Use simple vocabulary suitable for a beginner.",
   "courseTitle": "Intro to Projectile Motion",
+  "designDirective": {
+    "concept": "projectile motion as a thrown arrow tracing invisible parabolas",
+    "palette": ["#0A0A0A", "#F5B942", "#3D8BFF"],
+    "background": "dark",
+    "motionPersonality": "cinematic"
+  },
   "outlines": [
     {
       "id": "scene_1",
+      "type": "interactive",
+      "title": "Why Does the Ball Obey This Curve?",
+      "description": "A motion-graphics hook tracing one throw's invisible parabola in slow motion.",
+      "keyPoints": [
+        "A ball leaves a hand — and carries a mystery",
+        "GRAVITY · ANGLE · SPEED — three forces in cards",
+        "The parabola ignites where math and motion meet",
+        "Lock up: Intro to Projectile Motion"
+      ],
+      "order": 1,
+      "widgetType": "animation-explainer",
+      "widgetOutline": {
+        "concept": "one thrown ball's parabola drawn in real time with physics callouts",
+        "keyBeats": [
+          "A hand throws; the ball freezes mid-air",
+          "Three cards: GRAVITY, ANGLE, SPEED",
+          "The parabola sketches itself through the frozen ball",
+          "Title lock-up: Intro to Projectile Motion"
+        ],
+        "mood": "curious, weightless, cinematic"
+      }
+    },
+    {
+      "id": "scene_2",
       "type": "slide",
       "title": "Introduction to Projectile Motion",
       "description": "Introduce the concept and learning objectives",
       "keyPoints": ["What is projectile motion", "Real-world examples", "Key variables"],
-      "order": 1
+      "order": 2
     },
     {
-      "id": "scene_2",
+      "id": "scene_3",
       "type": "interactive",
       "title": "Projectile Motion Simulator",
       "description": "Explore how angle and velocity affect trajectory",
       "keyPoints": ["Adjust angle and velocity", "Observe trajectory changes", "Hit the target challenge"],
-      "order": 2,
+      "order": 3,
       "widgetType": "simulation",
       "widgetOutline": {
         "concept": "projectile_motion",
@@ -305,15 +391,16 @@ Rules:
 **Top-level response shape (most often violated):**
 
 1. Return exactly one JSON **object** — never a bare array.
-2. That object MUST have `languageDirective` (string), `courseTitle` (string, ≤30 chars), and `outlines` (array) as top-level keys. Omitting any is a failure.
+2. That object MUST have `languageDirective` (string), `courseTitle` (string, ≤30 chars), `designDirective` (object), and `outlines` (array) as top-level keys. Omitting any is a failure.
 3. Do not wrap the object in prose, markdown, or code fences.
 
 **Scene-level rules:**
 
-4. **Interactive focus**: Prefer interactive widgets for hands-on learning.
-5. **Widget variety**: Use different widget types throughout the course when appropriate.
-6. **Flow**: Slides should introduce concepts, widgets should let students explore.
-7. **Language**: Apply the Language Inference decision rules above when producing `languageDirective`, and author all scene content in the inferred language.
-8. **REQUIRED for interactive scenes**: Every scene with `type: "interactive"` MUST include both `widgetType` AND `widgetOutline` fields.
-9. **Game quality**: Game widgets should be INTERACTIVE and FUN, not boring quizzes.
-10. **Mobile-first**: All widgets should work well on mobile devices.
+4. **Scene 1 is always the `animation-explainer` intro** (see Intro Scene). The intro does not count against the widget quota.
+5. **Interactive focus**: Prefer interactive widgets for hands-on learning.
+6. **Widget variety**: Use different widget types throughout the course when appropriate.
+7. **Flow**: Slides should introduce concepts, widgets should let students explore.
+8. **Language**: Apply the Language Inference decision rules above when producing `languageDirective`, and author all scene content in the inferred language.
+9. **REQUIRED for interactive scenes**: Every scene with `type: "interactive"` MUST include both `widgetType` AND `widgetOutline` fields.
+10. **Game quality**: Game widgets should be INTERACTIVE and FUN, not boring quizzes.
+11. **Mobile-first**: All widgets should work well on mobile devices.

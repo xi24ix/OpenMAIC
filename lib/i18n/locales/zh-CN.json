@@ -324,7 +324,10 @@
     "voiceAutoAssign": "音色将自动分配",
     "searchVoice": "搜索音色",
     "noMatchingVoices": "没有匹配音色",
-    "noVoice": "无可用音色"
+    "noVoice": "无可用音色",
+    "fishVoiceIdPlaceholder": "Fish 音色模型 ID 或链接",
+    "fishVoiceIdApply": "使用",
+    "fishVoiceIdHint": "粘贴任意 fish.audio/m/… 音色页面链接或其中的模型 ID"
   },
   "proactiveCard": {
     "discussion": "讨论",
@@ -1269,7 +1272,8 @@
     "runLoadFailed": "无法加载此次生成",
     "runLoadRetrying": "正在重试…",
     "mediaGenerationFailed": "媒体生成失败",
-    "mediaGenerationDisabled": "生成已禁用"
+    "mediaGenerationDisabled": "生成已禁用",
+    "widgetAnimationExplainer": "开场动画"
   },
   "settings": {
     "title": "设置",
@@ -1432,6 +1436,7 @@
     "providerMiniMaxTTS": "MiniMax TTS",
     "providerGoogleTTS": "Google Gemini TTS",
     "providerLemonadeTTS": "Lemonade TTS（本地）",
+    "providerFishAudioTTS": "Fish Audio TTS",
     "providerBrowserNativeTTS": "浏览器原生 TTS",
     "voxcpmVoicesTitle": "VoxCPM 音色",
     "voxcpmVoicesDescription": "保存在当前浏览器，进入统一音色池后可在 Agent Bar 中使用。",

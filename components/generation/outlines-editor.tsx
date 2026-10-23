@@ -1139,6 +1139,7 @@ const WIDGET_KINDS: ReadonlyArray<readonly [WidgetType, string]> = [
   ['code', 'generation.widgetCode'],
   ['game', 'generation.widgetGame'],
   ['visualization3d', 'generation.widgetVisualization3d'],
+  ['animation-explainer', 'generation.widgetAnimationExplainer'],
 ];
 
 function InteractiveConfigDisclosure({

@@ -107,6 +107,7 @@ const TTS_ENV_MAP: Record<string, string> = {
   TTS_MINIMAX: 'minimax-tts',
   TTS_GOOGLE: 'google-tts',
   TTS_LEMONADE: 'lemonade-tts',
+  TTS_FISH: 'fish-tts',
 };
 
 const ASR_ENV_MAP: Record<string, string> = {

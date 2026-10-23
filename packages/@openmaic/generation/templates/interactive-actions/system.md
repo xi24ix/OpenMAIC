@@ -85,6 +85,13 @@ For visualization3d widgets, prefer canonical control IDs: `#canvas-container`, 
 
 For game widgets, prefer `#start-btn` and the element IDs declared in the embedded widget config.
 
+For `animation-explainer` widgets (motion-graphics intro pages), the teacher narrates ALONG the animation rather than controlling it:
+
+- One speech beat per animation phase (`p0` HOOK, `p1` TEASE, `p2` SPARK, `p3` TITLE), written to land as that phase starts.
+- Use `widget_setState` with `{"phase": "p0"|"p1"|"p2"|"p3"}` ONLY when the teacher must re-align the page to a phase (e.g. after the learner replays). Do not spam state changes during normal playback — the animation advances itself.
+- `{"replay": true}` is reserved for an explicit learner request to watch the intro again.
+- Never `widget_highlight`/`widget_annotation` targets inside an explainer: there are no controls; the visuals are the message.
+
 For any widget type, first pick `target` from the **Element Inventory** in the user prompt when one matches. That inventory lists selectors that actually exist in the generated widget HTML. Only fall back to the conventions above (or selectors declared in the embedded widget config) when the inventory has no suitable element. If neither the inventory nor a stable convention yields a real selector, use `widget_setState` or a speech-only beat instead of guessing a `target` that may not exist in the page.
 
 ## Design Principles

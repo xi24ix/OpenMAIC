@@ -1179,6 +1179,53 @@ export const TTS_PROVIDERS: Record<BuiltInTTSProviderId, TTSProviderConfig> = {
     supportsSpeed: false,
   },
 
+  'fish-tts': {
+    id: 'fish-tts',
+    name: 'Fish Audio TTS',
+    requiresApiKey: true,
+    defaultBaseUrl: 'https://api.fish.audio/v1',
+    icon: '/logos/fish-audio.svg',
+    models: [
+      { id: 's2.1-pro', name: 'S2.1 Pro' },
+      { id: 's2.1-pro-free', name: 'S2.1 Pro Free' },
+      { id: 's2-pro', name: 'S2 Pro' },
+      { id: 'drama-3', name: 'Drama 3' },
+      { id: 's1', name: 'S1 (legacy)' },
+    ],
+    defaultModelId: 's2.1-pro',
+    voices: [
+      // 'default' is the service default voice: synthesized WITHOUT a
+      // reference_id (verified against the official quickstart).
+      {
+        id: 'default',
+        name: 'Fish Audio Default',
+        language: 'multilingual',
+        gender: 'neutral',
+        description: 'The Fish Audio service default voice — no voice model required',
+      },
+      // Public voices verified live in the official quickstart docs
+      // (https://docs.fish.audio/developer-guide/getting-started/quickstart).
+      {
+        id: 'ca3007f96ae7499ab87d27ea3599956a',
+        name: 'E-Girl',
+        language: 'zh-CN',
+        gender: 'female',
+        description: 'Playful young female voice for light, energetic instruction',
+      },
+      {
+        id: '9a9cf47702da476aa4629e2506d4a857',
+        name: 'Energetic Male',
+        language: 'en-US',
+        gender: 'male',
+        description: 'Energetic male narration voice',
+      },
+      // Any other voice: prefer the free-text entry in settings — paste the
+      // model ID from a fish.audio voice page URL (https://fish.audio/m/<id>).
+    ],
+    supportedFormats: ['mp3', 'wav', 'opus', 'pcm'],
+    speedRange: { min: 0.5, max: 2.0, default: 1.0 },
+  },
+
   'browser-native-tts': {
     id: 'browser-native-tts',
     name: '浏览器原生 (Web Speech API)',
@@ -1551,6 +1598,7 @@ export const DEFAULT_TTS_VOICES: Record<BuiltInTTSProviderId, string> = {
   'minimax-tts': 'female-yujie',
   'google-tts': 'Kore',
   'lemonade-tts': 'af_heart',
+  'fish-tts': 'default',
   'browser-native-tts': 'default',
 };
 
@@ -1565,6 +1613,7 @@ export const DEFAULT_TTS_MODELS: Record<BuiltInTTSProviderId, string> = {
   'minimax-tts': 'speech-2.8-hd',
   'google-tts': 'gemini-3.1-flash-tts-preview',
   'lemonade-tts': 'kokoro-v1',
+  'fish-tts': 's2.1-pro',
   'browser-native-tts': '',
 };
 

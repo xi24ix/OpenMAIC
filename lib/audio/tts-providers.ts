@@ -12,6 +12,7 @@
  * - MiniMax TTS: https://platform.minimaxi.com/docs/api-reference/speech-t2a-http
  * - Doubao TTS: https://www.volcengine.com/docs/6561/1257543
  * - ElevenLabs TTS: https://elevenlabs.io/docs/api-reference/text-to-speech/convert
+ * - Fish Audio TTS: https://docs.fish.audio/text-to-speech/api
  * - Google Gemini TTS: https://ai.google.dev/gemini-api/docs/speech-generation
  * - Browser Native: Web Speech API (client-side only)
  *
@@ -329,6 +330,9 @@ export async function generateTTS(
 
       case 'google-tts':
         return await generateGoogleTTS(config, text, signal);
+
+      case 'fish-tts':
+        return await generateFishAudioTTS(config, text, signal);
 
       case 'lemonade-tts':
         return await generateLemonadeTTS(config, text, signal);
@@ -1341,6 +1345,56 @@ async function generateElevenLabsTTS(
 
 // Re-export from constants for convenience
 export { getAllTTSProviders, getTTSProvider, getTTSVoices } from './constants';
+
+/**
+ * Fish Audio TTS implementation (https://docs.fish.audio/text-to-speech/api).
+ *
+ * - `POST {baseUrl}/tts` (default baseUrl `https://api.fish.audio/v1`), Bearer
+ *   auth, and the model is carried in a `model` HEADER (s2.1-pro default;
+ *   s2.1-pro-free, s2-pro, drama-3, s1 are the other routes).
+ * - `reference_id` is the voice-model ID from a fish.audio voice page URL.
+ *   The `default` registry voice is the sentinel for the service default
+ *   voice (verified: the official quickstart omits `reference_id` entirely).
+ * - Binary audio response (mp3/wav/opus/pcm).
+ */
+async function generateFishAudioTTS(
+  config: TTSModelConfig,
+  text: string,
+  signal: AbortSignal,
+): Promise<TTSGenerationResult> {
+  const baseUrl = config.baseUrl || TTS_PROVIDERS['fish-tts'].defaultBaseUrl;
+  const requestedFormat = config.format || 'mp3';
+  const format = ['mp3', 'wav', 'opus', 'pcm'].includes(requestedFormat) ? requestedFormat : 'mp3';
+
+  const body: Record<string, unknown> = { text, format };
+  if (config.voice && config.voice !== 'default') {
+    body.reference_id = config.voice;
+  }
+  const speed = config.speed && config.speed > 0 ? Math.min(2.0, Math.max(0.5, config.speed)) : 1.0;
+  if (speed !== 1.0) {
+    body.prosody = { speed };
+  }
+
+  const response = await ttsFetch(config, `${baseUrl}/tts`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${config.apiKey!}`,
+      'Content-Type': 'application/json',
+      // Fish routes the backend model through a plain `model` header, not the body.
+      model: config.modelId || TTS_PROVIDERS['fish-tts'].defaultModelId,
+    },
+    body: JSON.stringify(body),
+    signal,
+  });
+
+  if (!response.ok) {
+    throwIfTtsRateLimited('Fish Audio', response.status, response.headers?.get('retry-after'));
+    const errorText = await response.text().catch(() => response.statusText);
+    throw new Error(`Fish Audio TTS API error (${response.status}): ${errorText || response.statusText}`);
+  }
+
+  return await validateTTSAudioResponse(response, 'Fish Audio', requestedFormat);
+}
 
 /**
  * Doubao TTS 2.0 implementation (Volcengine Seed-TTS 2.0).

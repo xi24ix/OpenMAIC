@@ -36,6 +36,11 @@ Create a procedural skill widget for: {{title}}
 
 {{languageDirective}}
 
+## Design Directive
+The course's visual identity — treat it as LAW for this widget's colors, mood and motion:
+
+{{designDirective}}
+
 ---
 
 Generate a complete, self-contained HTML procedural skill widget with these mandatory features:

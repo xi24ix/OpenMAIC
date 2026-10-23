@@ -56,6 +56,10 @@ export interface WidgetOutline {
     details?: string;
   }>;
   challengeType?: string;
+  /** Animation-explainer: named story beats (hook label, tease label, spark description, title). */
+  keyBeats?: string[];
+  /** Animation-explainer: motion personality override for this scene. */
+  mood?: string;
 }
 
 export interface MediaGenerationRequest {

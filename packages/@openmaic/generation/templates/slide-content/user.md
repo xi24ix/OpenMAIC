@@ -23,6 +23,11 @@ Based on the scene information above, generate a complete Canvas/PPT component f
 ## Language Directive
 {{languageDirective}}
 
+## Design Directive
+The course's visual identity — treat it as LAW for this slide's colors, mood and composition:
+
+{{designDirective}}
+
 **Must Follow**:
 
 1. Output pure JSON directly, without any explanation or description

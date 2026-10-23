@@ -324,7 +324,10 @@
     "voiceAutoAssign": "Голоса будут назначены автоматически",
     "searchVoice": "Поиск голосов",
     "noMatchingVoices": "Подходящих голосов нет",
-    "noVoice": "Нет голоса"
+    "noVoice": "Нет голоса",
+    "fishVoiceIdPlaceholder": "ID модели голоса Fish или URL",
+    "fishVoiceIdApply": "Применить",
+    "fishVoiceIdHint": "Вставьте ID со страницы голоса fish.audio/m/…"
   },
   "proactiveCard": {
     "discussion": "Обсуждение",
@@ -1269,7 +1272,8 @@
     "runLoadFailed": "Не удалось загрузить эту генерацию",
     "runLoadRetrying": "Повторная попытка…",
     "mediaGenerationFailed": "Не удалось создать медиа",
-    "mediaGenerationDisabled": "Генерация отключена"
+    "mediaGenerationDisabled": "Генерация отключена",
+    "widgetAnimationExplainer": "Моушн-интро"
   },
   "settings": {
     "title": "Настройки",
@@ -1432,6 +1436,7 @@
     "providerMiniMaxTTS": "MiniMax TTS",
     "providerGoogleTTS": "Google Gemini TTS",
     "providerLemonadeTTS": "Lemonade TTS (Локальный)",
+    "providerFishAudioTTS": "Fish Audio TTS",
     "providerBrowserNativeTTS": "Встроенный TTS браузера",
     "voxcpmVoicesTitle": "Голоса VoxCPM",
     "voxcpmVoicesDescription": "Сохраняются в этом браузере и добавляются в общий пул голосов Agent Bar.",
