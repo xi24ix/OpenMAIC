@@ -4,6 +4,8 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    networks:
+      - coolify
     volumes:
       - curriculum-kb-data:/app/data
     healthcheck:
@@ -16,3 +18,7 @@ volumes:
   curriculum-kb-data:
     external: true
     name: lcgipmxidt1feeqzzklkvg7y_curriculum-kb-data
+
+networks:
+  coolify:
+    external: true
