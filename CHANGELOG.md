@@ -13,8 +13,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   by what it does carry (a known `widgetType` makes it `interactive`, teaching content makes it a
   `slide`), and a fragment the model dropped into the `outlines` array (a stray design-directive
   object, an unfinished draft) is discarded instead of failing the whole outline; an outline
-  reduced to nothing by the drop is still refused. The outline prompt now also orders the array to
-  hold only complete scene objects.
+  reduced to nothing by the drop is still refused. The outline step re-checks its streamed outline
+  per attempt, so an unusable one is retried like an empty response (including the fallback model)
+  instead of pausing the run, and the step now only ever commits the normal form. The outline
+  prompt now also orders the array to hold only complete scene objects.
 
 ### Added
 
