@@ -891,20 +891,21 @@ async function streamOutlines(
   // run that never starts — and fails with why when that too yields
   // nothing usable.
   const strict = normalizeSceneOutlines(parsedOutlines);
-  const salvage =
-    strict.ok ? strict : normalizeSceneOutlines(parsedOutlines, { lastResort: true });
-  if (!salvage.ok) {
-    log.error(`Outline generation failed: ${strict.message}`);
-    throw new OutlineGenerationError(`The generated outline is unusable: ${strict.message}`, {
-      cause: lastCause,
-    });
-  }
   if (!strict.ok) {
+    const salvaged = normalizeSceneOutlines(parsedOutlines, { lastResort: true });
+    if (!salvaged.ok) {
+      log.error(`Outline generation failed: ${strict.message}`);
+      throw new OutlineGenerationError(`The generated outline is unusable: ${strict.message}`, {
+        cause: lastCause,
+      });
+    }
     log.warn(
-      `Outline salvage after the last roll: the last-resort repair yielded ${salvage.value.length} usable scene(s)`,
+      `Outline salvage after the last roll: the last-resort repair yielded ${salvaged.value.length} usable scene(s)`,
     );
+    parsedOutlines = salvaged.value;
+  } else {
+    parsedOutlines = strict.value;
   }
-  parsedOutlines = salvage.value;
 
   return {
     // Replace sequential gen_img_N/gen_vid_N with globally unique IDs
