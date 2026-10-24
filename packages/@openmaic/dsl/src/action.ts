@@ -213,6 +213,14 @@ export interface WidgetHighlightAction extends ActionBase {
 export interface WidgetSetStateAction extends ActionBase {
   type: 'widget_setState';
   state: Record<string, unknown>;
+  /**
+   * Optional beat/phase metadata for exploded animation-explainer scene cuts
+   * (`p0..pN`, see the app's `intro-explosion.ts`). Documentation for humans
+   * and tools: the runtime call that reaches the widget iframe is
+   * `state.phase` (the bridge forwards only `state` and `content`), so lead
+   * actions always carry the phase inside `state` as well.
+   */
+  phase?: string;
   content?: string; // Speech text to accompany the state change
 }
 

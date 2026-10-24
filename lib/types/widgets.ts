@@ -210,6 +210,14 @@ export interface AnimationExplainerConfig extends WidgetConfigBase {
   /** Ordered named beats of the animation (p0, p1, ... p_N markers). */
   beats?: Array<{ id: string; label: string }>;
   mood?: string;
+  /**
+   * Exploded intro groups (see `lib/server/generation/run/intro-explosion.ts`):
+   * the classroom phase this *scene copy* drives (`p0..pN`). The widget html
+   * is shared across the group; each sibling scene starts its own cut here.
+   */
+  startPhase?: string;
+  /** Human label of `startPhase`. */
+  phaseLabel?: string;
 }
 
 // ==================== Union Types ====================

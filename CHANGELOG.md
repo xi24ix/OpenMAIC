@@ -8,23 +8,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Bug Fixes
 
-- Generation runs no longer die on a scene outline the outline model mis-wrote. The outline
-  normalizer repairs before refusing: a scene whose `type` is missing, blank or over-long is routed
-  by what it does carry (a known `widgetType` makes it `interactive`, teaching content makes it a
-  `slide`), and a fragment the model dropped into the `outlines` array (a stray design-directive
-  object, an unfinished draft) is discarded instead of failing the whole outline; an outline
-  reduced to nothing by the drop is still refused. The outline step re-checks its streamed outline
-  per attempt, so an unusable one is retried like an empty response (including the fallback model)
-  instead of pausing the run, and the step now only ever commits the normal form; when every roll
-  is spent it falls one step further and rebuilds an unwrapped animation-explainer draft (the
-  model's `mood`/`concept`/`keyBeats` vocabulary with no scene wrapper) into its proper
-  `interactive` scene rather than refuse a run the model did try to write, and the same last-resort
-  pass reroutes a bare MediaGeneration the model dropped into the array (`type: 'image'` with a
-  prompt and an element id) into a `slide` carrying that media request, so the media pass still
-  generates what the model described instead of the run dying at a content step no image-scene
-  type exists for. The outline prompt now
-  also orders the array to hold only complete scene objects, and names the wrapper-field
-  violation the intro scene kept committing.
+- The classroom's motion-graphic intro no longer free-runs all of its beats inside one scene
+  before the user even presses play. Generated courses now cut the intro's master GSAP
+  timeline into per-beat classroom scenes: the intro explosion expands every
+  `animation-explainer` outline into one interactive scene per widget phase (`p0`, `p1`, …,
+  each carrying its own `startPhase` in the outline), plus a designed title-card slide that
+  settles the intro and doubles as the course's homepage cover. The shared widget HTML is
+  generated once per intro group (the beat-0 scene pays the model call; siblings copy it
+  relabelled), and each scene's generated actions open with the `widget_setState` that plays
+  exactly its phase — restored backstop-side if the model omits it. The widget itself now
+  boots to a designed static poster with its timeline paused and starts only on the
+  classroom's `SET_WIDGET_STATE` (`state.phase`): `playPhase` seeks the label, plays only
+  that phase's segment (`tweenTo` the next label), hands off to the ambient loop, and never
+  auto-chains into the following phase; the replay button re-plays the current phase. The
+  interactive-actions prompt carries the scene's phase (`startPhase`/`phaseLabel`) and a
+  per-cut narration doctrine instead of "the animation advances itself".
+- Speech timing semantics on `widget_setState` were widened: `phase` is now an optional,
+  documented field on the action type, while the runtime contract keeps the phase inside
+  `state` — the classroom bridge forwards only `state` and `content` into the widget iframe,
+  so lead actions always carry `state: { phase }`.
 
 ### Added
 
@@ -36,6 +38,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- The classroom roundtable sheds its avatars. The student participants rail, the teacher
+  identity rail, the user-avatar cluster and the dock's speaking-student avatar are removed;
+  the learner keeps the mic and chat buttons in a slim column, teacher words/transcript stay
+  in the left conversation column, and per-scene question suggestions (ProactiveCard) remain
+  anchored beside the conversation card and the presentation dock.
 - The twelve outline skills speak Arabic. Their SKILL.md frontmatter titles and descriptions — what the skill picker shows — are Arabic now; the English `/handle` stays the machine contract. Arabic display names for the workbench were already in the ar-SA overlay.
 - Mobile classrooms play like a video player: the live scene is the main element, the roundtable shrinks to a 56px controls bar in both orientations, and the plan / chat panels open as fixed overlay drawers from the dock toggles. Drawer surfaces are solid (`--aurora-drawer-solid`) so a white slide can't wash the text out. The dock's controls keep a compact row (scenes · prev play next · tray · chat) with volume, speed, autoplay, whiteboard, quote and fullscreen in an expandable tray sheet; 40px+ touch targets throughout. The old mobile reel cards (`MobileSceneReels`) are removed.
 - Phone fullscreen is layout-only video playback now. The browser Fullscreen API squeezed the lesson card inside the classroom chrome on phones, so `togglePresentation` flips `isPresenting` without it on phones: header and dock hide, the canvas fills the page letterboxed on black, and the fullscreen bar carries previous · play/pause · next · autoplay · exit plus the tray — users never leave the fullscreen view to control it. The tray drops the items that moved onto the bar.

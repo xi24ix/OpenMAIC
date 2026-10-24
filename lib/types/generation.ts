@@ -134,6 +134,27 @@ export interface WidgetOutline {
     details?: string;
   }>; // diagram - prescribed nodes and optional hierarchy
   challengeType?: string; // code - type of coding challenge
+  /** animation-explainer: named story beats (hook label, tease label, spark description, title). */
+  keyBeats?: string[];
+  /** animation-explainer: motion personality override for this scene. */
+  mood?: string;
+  /**
+   * animation-explainer, EXPLODED intro groups (see
+   * `lib/server/generation/run/intro-explosion.ts`): the beat this scene's
+   * classroom playback drives. `p0..pN` labels of the widget's master
+   * timeline; set only on the per-beat siblings an original explainer
+   * outline was expanded into — presence marks the outline as already
+   * exploded (idempotence across confirm/edit round-trips).
+   */
+  startPhase?: string;
+  /** Human label of {@link WidgetOutline.startPhase}, shown to the teacher. */
+  phaseLabel?: string;
+  /** Zero-based index of this sibling's beat inside the exploded group. */
+  beatIndex?: number;
+  /** Total sibling scenes the group exploded into (widget beats + title card). */
+  beatCount?: number;
+  /** Group identity shared by every sibling; keys the shared-content cache. */
+  groupId?: string;
 }
 
 /**

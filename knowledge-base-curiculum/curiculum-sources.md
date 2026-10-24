@@ -1,0 +1,10 @@
+https://elibrary.moe.edu.kw/StudentsLibrary
+https://kwedufiles.com/
+https://kwedufiles.com/pages/search?teacher_name=%D8%B9%D9%8F%D9%84%D8%A7
+https://school-kw.com/
+https://afdne.com/
+https://kw.afedne.com/
+https://kuwaitteacher.com/%D8%AD%D9%84%D9%88%D9%84-%D8%A7%D9%84%D9%83%D8%AA%D8%A8-%D8%A7%D9%84%D9%85%D8%AF%D8%B1%D8%B3%D9%8A%D8%A9/
+https://almanahj.com/kw/
+https://mnhj-kw.com/
+https://www.alktab24.com/%d8%a7%d9%84%d9%85%d9%86%d9%87%d8%ac-%d8%a7%d9%84%d9%83%d9%88%d9%8a%d8%aa%d9%8a-2/

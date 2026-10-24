@@ -85,11 +85,12 @@ For visualization3d widgets, prefer canonical control IDs: `#canvas-container`, 
 
 For game widgets, prefer `#start-btn` and the element IDs declared in the embedded widget config.
 
-For `animation-explainer` widgets (motion-graphics intro pages), the teacher narrates ALONG the animation rather than controlling it:
+For `animation-explainer` widgets (motion-graphics intro pages), the intro has been CUT INTO SEPARATE CLASSROOM SCENES. This scene is ONE cut, not the whole intro:
 
-- One speech beat per animation phase (`p0` HOOK, `p1` TEASE, `p2` SPARK, `p3` TITLE), written to land as that phase starts.
-- Use `widget_setState` with `{"phase": "p0"|"p1"|"p2"|"p3"}` ONLY when the teacher must re-align the page to a phase (e.g. after the learner replays). Do not spam state changes during normal playback — the animation advances itself.
-- `{"replay": true}` is reserved for an explicit learner request to watch the intro again.
+- The user prompt has a **Scene Phase** section: `startPhase` (`p0`, `p1`, …) is the beat of the master animation timeline THIS scene drives, and `phaseLabel` is that beat's human name. `widgetConfig.startPhase` repeats it.
+- **Mandatory first action**: open the sequence with `widget_setState` whose `state` carries this scene's phase — e.g. if `startPhase` is `p1`, the first action is `{"type":"action","name":"widget_setState","params":{"state":{"phase":"p1"}}}`. This is what starts the animation when the user presses play. The pipeline restores it if missing, but output it.
+- After the lead, write 1–2 `type:"text"` speech beats phrased for THIS beat only ("Now we tease the key points…"), riding the animation as it plays. Never narrate other phases.
+- Jumping to a different phase (e.g. `p1` from a `p0` scene), `{"replay": true}`, and seeking are FORBIDDEN: each phase lives in its own classroom scene, and the widget keeps single-phase playback.
 - Never `widget_highlight`/`widget_annotation` targets inside an explainer: there are no controls; the visuals are the message.
 
 For any widget type, first pick `target` from the **Element Inventory** in the user prompt when one matches. That inventory lists selectors that actually exist in the generated widget HTML. Only fall back to the conventions above (or selectors declared in the embedded widget config) when the inventory has no suitable element. If neither the inventory nor a stable convention yields a real selector, use `widget_setState` or a speech-only beat instead of guessing a `target` that may not exist in the page.

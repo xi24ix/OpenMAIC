@@ -143,18 +143,13 @@ function CollapsedBubblePill({
               : 'bg-white/80 dark:bg-gray-900/85 border-gray-200/70 dark:border-gray-700/70',
         )}
       >
-        <div
-          className={cn(
-            'w-6 h-6 rounded-full overflow-hidden border shrink-0',
-            bubble.role === 'user'
-              ? 'border-violet-300 dark:border-violet-600'
-              : bubble.role === 'agent'
-                ? 'border-blue-300 dark:border-blue-600'
-                : 'border-purple-200 dark:border-purple-700',
-          )}
-        >
-          <AvatarDisplay src={bubble.avatar} alt={bubble.name} />
-        </div>
+        {/* Instructor/student avatars are removed from the classroom speech UI —
+            the name pill carries who is speaking. The learner's own avatar stays. */}
+        {bubble.role === 'user' && (
+          <div className="w-6 h-6 rounded-full overflow-hidden border shrink-0 border-violet-300 dark:border-violet-600">
+            <AvatarDisplay src={bubble.avatar} alt={bubble.name} />
+          </div>
+        )}
         <span className="text-xs font-medium text-gray-700 dark:text-gray-200 truncate max-w-[120px]">
           {bubble.name}
         </span>
@@ -219,19 +214,13 @@ export function PresentationBubbleCard({
       )}
     >
       <div className="flex items-center gap-3 px-4 pt-3 pb-2">
-        <div
-          className={cn(
-            'w-10 h-10 rounded-full overflow-hidden border-2 shadow-sm shrink-0',
-            bubble.role === 'user'
-              ? 'border-violet-300 dark:border-violet-600'
-              : bubble.role === 'agent'
-                ? 'border-blue-300 dark:border-blue-600'
-                : 'border-purple-200 dark:border-purple-700',
-          )}
-        >
-          <AvatarDisplay src={bubble.avatar} alt={bubble.name} />
-        </div>
-        <div className="min-w-0">
+        {bubble.role === 'user' ? (
+          <div className="w-10 h-10 rounded-full overflow-hidden border-2 shadow-sm shrink-0 border-violet-300 dark:border-violet-600">
+            <AvatarDisplay src={bubble.avatar} alt={bubble.name} />
+          </div>
+        ) : null}
+        {/* Instructor/student avatars are removed — the role word + name identify the speaker. */}
+        <div className={cn('min-w-0', bubble.role !== 'user' && 'pt-0.5')}>
           <div
             className={cn(
               'text-[11px] font-semibold uppercase tracking-[0.16em]',

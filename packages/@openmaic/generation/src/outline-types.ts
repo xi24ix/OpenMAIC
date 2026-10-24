@@ -60,6 +60,20 @@ export interface WidgetOutline {
   keyBeats?: string[];
   /** Animation-explainer: motion personality override for this scene. */
   mood?: string;
+  /**
+   * Animation-explainer, exploded intro groups (see the app's
+   * `intro-explosion.ts`): the beat this scene's classroom playback drives
+   * (`p0..pN`). Presence marks an outline as already exploded.
+   */
+  startPhase?: string;
+  /** Human label of `startPhase`, shown to the teacher. */
+  phaseLabel?: string;
+  /** Zero-based index of this sibling's beat inside the exploded group. */
+  beatIndex?: number;
+  /** Total sibling scenes the group exploded into (widget beats + title card). */
+  beatCount?: number;
+  /** Group identity shared by every sibling; keys the shared-content cache. */
+  groupId?: string;
 }
 
 export interface MediaGenerationRequest {

@@ -1845,7 +1845,20 @@ export async function generateSceneActions(
   }
 
   if (outline.type === 'interactive' && 'html' in content) {
-    const config = outline.interactiveConfig;
+    // Exploded animation-explainer outlines carry their beat in
+    // `widgetOutline` (startPhase/phaseLabel); legacy interactiveConfig is
+    // undefined for them, so name the concept and design idea from it.
+    const explainerOutline =
+      outline.widgetType === 'animation-explainer' ? outline.widgetOutline : undefined;
+    const config = outline.interactiveConfig ??
+      (explainerOutline
+        ? {
+            conceptName: explainerOutline.concept || outline.title,
+            designIdea: explainerOutline.mood
+              ? `Motion-graphic intro (mood: ${explainerOutline.mood})`
+              : 'Motion-graphic intro',
+          }
+        : undefined);
     const agentsText = formatAgentsForPrompt(agents);
     // Always recompute the inventory from the current html so it matches what
     // the tool actually reads — persisting the field would go stale relative
@@ -1865,10 +1878,30 @@ export async function generateSceneActions(
       courseContext: buildCourseContext(ctx),
       agents: agentsText,
       languageDirective: languageDirective || '',
+      startPhase: explainerOutline?.startPhase || '',
+      phaseLabel: explainerOutline?.phaseLabel || '',
     });
 
+    // Production guarantee: the scene's animation beat starts when the
+    // classroom playback reaches it, so the actions MUST open with the
+    // widget_setState that plays this scene's phase — even if the model
+    // forgot it (the template asks for it; this is the backstop). The phase
+    // rides inside `state`: the classroom bridge forwards only `state` and
+    // `content` into the widget iframe (SET_WIDGET_STATE).
+    const explainerLead = explainerOutline?.startPhase
+      ? {
+          id: `action_${nanoid(8)}`,
+          type: 'widget_setState' as const,
+          phase: explainerOutline.startPhase,
+          state: { phase: explainerOutline.startPhase },
+          content: explainerOutline.phaseLabel || explainerOutline.startPhase,
+        }
+      : null;
+
     if (!prompts) {
-      return generateDefaultInteractiveActions(outline);
+      const fallbackActions = generateDefaultInteractiveActions(outline);
+      if (explainerLead) fallbackActions.unshift(explainerLead);
+      return processActions(fallbackActions, [], agents, log);
     }
 
     const response = await aiCall(prompts.system, prompts.user);
@@ -1879,11 +1912,21 @@ export async function generateSceneActions(
       log,
     );
 
+    if (explainerLead) {
+      const first = actions[0];
+      const coversLead =
+        first?.type === 'widget_setState' &&
+        (first.state?.phase === explainerLead.phase || first.phase === explainerLead.phase);
+      if (!coversLead) actions.unshift(explainerLead);
+    }
+
     if (actions.length > 0) {
       return processActions(actions, [], agents, log);
     }
 
-    return generateDefaultInteractiveActions(outline);
+    const fallbackActions = generateDefaultInteractiveActions(outline);
+    if (explainerLead) fallbackActions.unshift(explainerLead);
+    return processActions(fallbackActions, [], agents, log);
   }
 
   if (outline.type === 'pbl') {
