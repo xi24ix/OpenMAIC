@@ -36,6 +36,9 @@ importers:
         specifier: 4.3.5
         version: 4.3.5
     devDependencies:
+      '@masonator/coolify-mcp':
+        specifier: 3.9.0
+        version: 3.9.0
       '@types/node':
         specifier: 22.19.0
         version: 22.19.0
@@ -368,6 +371,15 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@masonator/coolify-mcp@3.9.0':
+    resolution: {integrity: sha512-tjCqT2oa0v8+oD4rgaMtRXfORFsSnB0CWdX+vphcEfT+xu6ZsOT/ZyIHkumLM6qecx8oWZhiZbSpcaoHOxdwiQ==}
+    engines: {node: '>=20'}
+    hasBin: true
+
+  '@modelcontextprotocol/core@2.4.0':
+    resolution: {integrity: sha512-z8QBKqdfXLPzkLQuG4xp8hrVEMm1PZ1IgxMN2sMbJiFiAKOWXnAzogXn2W4aqIBlP1ea6U5yiqVquvUNM1Cj6Q==}
+    engines: {node: '>=20'}
+
   '@modelcontextprotocol/sdk@1.27.1':
     resolution: {integrity: sha512-sr6GbP+4edBwFndLbM60gf07z0FQ79gaExpnsjMGePXqFcSSb7t6iscpjk9DhFhwd+mTEQrzNafGP8/iGGFYaA==}
     engines: {node: '>=18'}
@@ -377,6 +389,10 @@ packages:
     peerDependenciesMeta:
       '@cfworker/json-schema':
         optional: true
+
+  '@modelcontextprotocol/server@2.4.0':
+    resolution: {integrity: sha512-rgR9yxSaAJ+bcsi/XroT/S2AfPiIWloXAnrdfYSCms9ivVju0ishu/wW0J21Ho6+ZOR1r7RyeRbjiRuF87ix5Q==}
+    engines: {node: '>=20'}
 
   '@napi-rs/canvas-android-arm64@0.1.88':
     resolution: {integrity: sha512-KEaClPnZuVxJ8smUWjV1wWFkByBO/D+vy4lN+Dm5DFH514oqwukxKGeck9xcKJhaWJGjfruGmYGiwRe//+/zQQ==}
@@ -749,6 +765,9 @@ packages:
 
   minimist@1.2.8:
     resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
+
+  minisearch@7.2.0:
+    resolution: {integrity: sha512-dqT2XBYUOZOiC5t2HRnwADjhNS2cecp9u+TJRiJ1Qp/f5qjkeT5APcGPjHw+bz89Ms8Jp+cG4AlE+QZ/QnDglg==}
 
   mkdirp-classic@0.5.3:
     resolution: {integrity: sha512-gKLcREMhtuZRwRAfqP3RFW+TK4JqApVBtOIftVgjuABpAtpxhPGaDcfvbhNvD0B8iD1oUr/txX35NjcaY6Ns/A==}
@@ -1253,6 +1272,17 @@ snapshots:
   '@img/sharp-win32-x64@0.35.4':
     optional: true
 
+  '@masonator/coolify-mcp@3.9.0':
+    dependencies:
+      '@modelcontextprotocol/core': 2.4.0
+      '@modelcontextprotocol/server': 2.4.0
+      minisearch: 7.2.0
+      zod: 4.3.5
+
+  '@modelcontextprotocol/core@2.4.0':
+    dependencies:
+      zod: 4.3.5
+
   '@modelcontextprotocol/sdk@1.27.1(zod@4.3.5)':
     dependencies:
       '@hono/node-server': 1.19.17(hono@4.13.13)
@@ -1274,6 +1304,11 @@ snapshots:
       zod-to-json-schema: 3.25.2(zod@4.3.5)
     transitivePeerDependencies:
       - supports-color
+
+  '@modelcontextprotocol/server@2.4.0':
+    dependencies:
+      '@modelcontextprotocol/core': 2.4.0
+      zod: 4.3.5
 
   '@napi-rs/canvas-android-arm64@0.1.88':
     optional: true
@@ -1665,6 +1700,8 @@ snapshots:
 
   minimist@1.2.8:
     optional: true
+
+  minisearch@7.2.0: {}
 
   mkdirp-classic@0.5.3:
     optional: true

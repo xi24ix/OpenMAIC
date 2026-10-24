@@ -15,4 +15,4 @@ services:
 volumes:
   curriculum-kb-data:
     external: true
-    name: lcgipmxidt1feeqzzklkvg7y-kuwait-curriculum-kb-data
+    name: lcgipmxidt1feeqzzklkvg7y_curriculum-kb-data
