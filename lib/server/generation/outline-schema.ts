@@ -15,6 +15,12 @@
  * makes it a `slide`, an entry with neither is a fragment the outline
  * drops — and if that drops every entry the outline is still refused.
  *
+ * On the model's last roll (`lastResort`) the repair is one step stronger,
+ * at the call site's discretion: an entry carrying the animation-explainer
+ * vocabulary the model sometimes writes unwrapped (`mood`/`concept`/
+ * `keyBeats`, no wrapper) is rebuilt as its `interactive` scene instead of
+ * dropped — one reconstructed intro beats a run that never starts.
+ *
  * The type is still not checked against the known ones: as in the browser,
  * a scene of a type no content path supports fails at its own content step,
  * not the outline. A `null` member is treated as absent; an optional member
@@ -48,6 +54,17 @@ function jsonBytes(value: unknown): number {
 export type NormalizedOutlines =
   | { ok: true; value: SceneOutline[] }
   | { ok: false; message: string };
+
+/** How much of the model's mess the repair pass cleans. */
+export interface NormalizeOptions {
+  /**
+   * Also rebuild unwrapped animation-explainer drafts (`mood`/`concept`/
+   * `keyBeats` with no scene wrapper) instead of dropping them. For the
+   * caller's last roll only — a confirm always normalizes in the strict
+   * mode the step committed.
+   */
+  lastResort?: boolean;
+}
 
 function record(value: unknown): Record<string, unknown> | undefined {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -181,19 +198,50 @@ function hasTeachingContent(raw: Record<string, unknown>): boolean {
 }
 
 /**
+ * An animation-explainer the model wrote unwrapped — the widget's own
+ * `mood`/`concept`/`keyBeats` vocabulary with no `type`, `widgetType` or
+ * scene wrapper — rebuilt as the interactive scene it meant to be. The
+ * title, which such a draft never carries, is the concept's first sentence
+ * (the first beat when there is no concept), long enough to name the scene
+ * and short enough to stay one.
+ */
+function animationExplainerDraft(raw: Record<string, unknown>): Record<string, unknown> | null {
+  const beats = texts(raw.keyBeats, { nonEmpty: true });
+  if (!beats || beats.length === 0) return null;
+  const concept = text(raw.concept)?.trim() || undefined;
+  const mood = text(raw.mood)?.trim() || undefined;
+  const source = (concept ?? beats[0] ?? '').trim();
+  const title = source.split(/[.!:؟?؛\n]/)[0]!.trim().slice(0, 60);
+  return {
+    ...raw,
+    type: 'interactive',
+    widgetType: 'animation-explainer',
+    ...(title ? { title } : {}),
+    widgetOutline: defined({ mood, concept, keyBeats: beats }),
+  };
+}
+
+/**
  * The scene object in `value`, as far as it can carry a usable `type`, or
  * null when it is a fragment to drop. A usable type passes through; a
  * missing, blank, over-long or non-string one is repaired by routing the
  * scene on what it does carry (`WIDGET_TYPES` → `interactive`, teaching
- * content → `slide`), and an entry with neither is not a scene.
+ * content → `slide`), and an entry with neither is not a scene. With
+ * `lastResort` the unwrapped animation-explainer draft is rebuilt instead
+ * of dropped.
  */
-function usableScene(value: unknown): Record<string, unknown> | null {
+function usableScene(value: unknown, lastResort: boolean): Record<string, unknown> | null {
   const raw = record(value);
   if (!raw) return null;
   const type = text(raw.type);
   if (type && type.trim() !== '' && type.length <= MAX_TYPE_CHARS) return raw;
-  const repaired = { ...raw, type: oneOf(raw.widgetType, WIDGET_TYPES) ? 'interactive' : 'slide' };
-  return hasTeachingContent(repaired) ? repaired : null;
+  if (lastResort) {
+    const draft = animationExplainerDraft(raw);
+    if (draft) return draft;
+  }
+  return hasTeachingContent(raw) || oneOf(raw.widgetType, WIDGET_TYPES)
+    ? { ...raw, type: oneOf(raw.widgetType, WIDGET_TYPES) ? 'interactive' : 'slide' }
+    : null;
 }
 
 function sceneOutline(value: unknown, index: number): SceneOutline {
@@ -239,9 +287,14 @@ function sceneOutline(value: unknown, index: number): SceneOutline {
  * The outline in its normal form, or why it cannot be one: not 1 to
  * {@link MAX_OUTLINE_SCENES} scenes, over {@link MAX_OUTLINE_JSON_BYTES},
  * a scene without a usable id or order (ids and orders unique), or an
- * array whose every entry is a fragment the type repair dropped.
+ * array whose every entry is a fragment the type repair dropped. With
+ * `lastResort` the repair also rebuilds unwrapped animation-explainer
+ * drafts — the call the model's last roll takes.
  */
-export function normalizeSceneOutlines(value: unknown): NormalizedOutlines {
+export function normalizeSceneOutlines(
+  value: unknown,
+  { lastResort = false }: NormalizeOptions = {},
+): NormalizedOutlines {
   if (!Array.isArray(value) || value.length === 0 || value.length > MAX_OUTLINE_SCENES) {
     return {
       ok: false,
@@ -258,7 +311,7 @@ export function normalizeSceneOutlines(value: unknown): NormalizedOutlines {
     // Index positions are the raw array's, used directly in a refusal's
     // location, so a dropped fragment never renumbers another entry.
     outlines = value.flatMap((item, index) => {
-      const scene = usableScene(item);
+      const scene = usableScene(item, lastResort);
       return scene ? [sceneOutline(scene, index)] : [];
     });
   } catch (error) {

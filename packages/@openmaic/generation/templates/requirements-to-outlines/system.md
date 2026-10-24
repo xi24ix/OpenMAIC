@@ -92,6 +92,8 @@ Requirements:
 - `keyPoints`: exactly 4 beats in display order — HOOK → TEASE (3-4 keyword cards) → SPARK (the signature animated infographic) → TITLE (course title lock-up).
 - `widgetOutline`: `{ "concept": "<what the animation shows>", "keyBeats": ["<beat 1, one short phrase>", ... 4 beats], "mood": "<e.g. 'curious, meteoric, cosmic'>" }`.
 
+The intro scene is still one complete scene object: `id`, `type: "interactive"`, `title`, `description`, `keyPoints`, `order` sit at the scene's TOP level, and the animation's `concept`/`keyBeats`/`mood` sit INSIDE `widgetOutline`. Never write `concept`, `keyBeats` or `mood` directly on the scene, never omit `type` or `title`, and never put this scene's `widgetOutline` on a bare `{...}` array entry. Also never write bare fragments like `{"diagramType": "flowchart"}` as a scene — a scene entry that omits the wrapper fields is a broken schema, not a style choice.
+
 This gives the course a cinematic cold open consistent with the design directive.
 
 ---

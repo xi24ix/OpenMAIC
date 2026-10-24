@@ -5,6 +5,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { StepRefusal } from '@/lib/server/generation/steps/context';
+import { normalizeSceneOutlines } from '@/lib/server/generation/outline-schema';
 import {
   MAX_OUTLINE_JSON_BYTES,
   MAX_OUTLINE_SCENES,
@@ -294,6 +295,45 @@ describe('outline validation', () => {
     ]);
     // The normal form is a fixed point: a repaired outline confirms unchanged.
     expect(parseOutlines(parsed.ok && parsed.value)).toEqual(parsed);
+  });
+
+  it('salvages the unwrapped animation-explainer draft on the last resort only', () => {
+    // The second live failure: the intro scene streamed as the widget's own
+    // mood/concept/keyBeats vocabulary with no scene wrapper, every attempt.
+    // Strict repair drops it and refuses the outline.
+    const draft = {
+      id: 's1',
+      mood: 'فضولي، خفيف، متلألئ',
+      order: 1,
+      concept:
+        'رحلة قطرة ماء واحدة تُرسم أمام العين: تتبخر بأشعة الشمس، ثم تعود إلى البحر',
+      keyBeats: ['شمس تسخن البحر — قطرة تبدأ الصعود', 'أربع بطاقات: الشمس، البحر، السحاب'],
+    };
+    expect(parseOutlines([draft]).ok).toBe(false);
+
+    // On the model's last roll the draft is rebuilt as the interactive scene
+    // it meant to be: widget outline from the draft's vocabulary, title from
+    // the concept's first sentence.
+    const salvaged = normalizeSceneOutlines([draft], { lastResort: true });
+    expect(salvaged.ok).toBe(true);
+    if (salvaged.ok) {
+      const scene = salvaged.value[0]!;
+      expect(scene.type).toBe('interactive');
+      expect(scene.widgetType).toBe('animation-explainer');
+      expect(scene.title).toBe('رحلة قطرة ماء واحدة تُرسم أمام العين');
+      expect(scene.widgetOutline).toMatchObject({
+        mood: draft.mood,
+        concept: draft.concept,
+        keyBeats: draft.keyBeats,
+      });
+      // Strict mode is the confirm contract: the salvage normalizes unchanged.
+      expect(parseOutlines(salvaged.value)).toEqual(salvaged);
+    }
+
+    // A bare widget sub-field without the vocabulary stays a fragment.
+    expect(
+      normalizeSceneOutlines([{ id: 's2', diagramType: 'flowchart' }], { lastResort: true }).ok,
+    ).toBe(false);
   });
 
   it.each([

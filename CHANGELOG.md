@@ -15,8 +15,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   object, an unfinished draft) is discarded instead of failing the whole outline; an outline
   reduced to nothing by the drop is still refused. The outline step re-checks its streamed outline
   per attempt, so an unusable one is retried like an empty response (including the fallback model)
-  instead of pausing the run, and the step now only ever commits the normal form. The outline
-  prompt now also orders the array to hold only complete scene objects.
+  instead of pausing the run, and the step now only ever commits the normal form; when every roll
+  is spent it falls one step further and rebuilds an unwrapped animation-explainer draft (the
+  model's `mood`/`concept`/`keyBeats` vocabulary with no scene wrapper) into its proper
+  `interactive` scene rather than refuse a run the model did try to write. The outline prompt now
+  also orders the array to hold only complete scene objects, and names the wrapper-field
+  violation the intro scene kept committing.
 
 ### Added
 

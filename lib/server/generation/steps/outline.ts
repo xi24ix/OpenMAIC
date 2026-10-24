@@ -817,7 +817,8 @@ async function streamOutlines(
         // Streamed but unusable, or empty — both retry here with the same
         // cadence. A streamed outline already left its specific message in
         // `lastError`; an empty one gets the parse/empty message.
-        if (parsedOutlines.length === 0) {
+        const unusable = parsedOutlines.length > 0;
+        if (!unusable) {
           lastError = fullText.trim()
             ? 'LLM response could not be parsed into outlines'
             : 'LLM returned empty response';
@@ -829,14 +830,19 @@ async function streamOutlines(
         // The fallback round is the last attempt: it is not retried.
         if (!fellBack && attempt <= MAX_STREAM_RETRIES) {
           log.warn(
-            `${parsedOutlines.length > 0 ? 'Unusable outlines' : 'Empty outlines'} (attempt ${attempt}/${MAX_STREAM_RETRIES + 1}), retrying...`,
+            `${unusable ? 'Unusable outlines' : 'Empty outlines'} (attempt ${attempt}/${MAX_STREAM_RETRIES + 1}), retrying...`,
           );
           // Report that a retry is happening
           emit({ type: 'retry', attempt, maxAttempts: MAX_STREAM_RETRIES + 1 });
-        } else if (await maybeFallback(undefined, fullText)) {
+        } else if (await maybeFallback(undefined, unusable ? '' : fullText)) {
           // Same-model retries exhausted and the response was unusable or
           // empty: retry once on the fallback model (loop is re-entered
           // via attempt reset below).
+          //
+          // An unusable outline qualifies as an empty usable output — it
+          // counts as emptiness to `shouldFallbackFor`, so the fallback
+          // model gets the roll a stream of fragments would otherwise
+          // never earn (an unusable outline is not empty TEXT).
           attempt = 0;
           continue;
         }
@@ -879,17 +885,26 @@ async function streamOutlines(
   }
 
   // The step's result is the normal form the run commits. Streams the loop
-  // accepted with a check guarantee it; a stream cut off before the retry
-  // cadence could fix the outline (a content-filter finish, retries then
-  // fallback exhausted) leaves no usable normal form — fail with why.
-  const check = normalizeSceneOutlines(parsedOutlines);
-  if (!check.ok) {
-    log.error(`Outline generation failed: ${check.message}`);
-    throw new OutlineGenerationError(`The generated outline is unusable: ${check.message}`, {
+  // accepted with a check guarantee it; a stream that can no longer be
+  // re-rolled (a content-filter finish, retries and fallback exhausted)
+  // gets the last-resort repair first — one reconstructed scene beats a
+  // run that never starts — and fails with why when that too yields
+  // nothing usable.
+  const strict = normalizeSceneOutlines(parsedOutlines);
+  const salvage =
+    strict.ok ? strict : normalizeSceneOutlines(parsedOutlines, { lastResort: true });
+  if (!salvage.ok) {
+    log.error(`Outline generation failed: ${strict.message}`);
+    throw new OutlineGenerationError(`The generated outline is unusable: ${strict.message}`, {
       cause: lastCause,
     });
   }
-  parsedOutlines = check.value;
+  if (!strict.ok) {
+    log.warn(
+      `Outline salvage after the last roll: the last-resort repair yielded ${salvage.value.length} usable scene(s)`,
+    );
+  }
+  parsedOutlines = salvage.value;
 
   return {
     // Replace sequential gen_img_N/gen_vid_N with globally unique IDs
