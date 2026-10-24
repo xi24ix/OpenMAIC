@@ -32,6 +32,7 @@ export function viewFromSnapshot(snapshot: RunSnapshot): RunView {
     outlineRetrying: false,
     outline: snapshot.outline,
     outlineAutoConfirmAt: snapshot.outlineAutoConfirmAt ?? null,
+    designDirective: snapshot.outline?.designDirective ?? null,
     researchSources: [],
     generatedAgents: generated && generated.length > 0 ? generated : null,
     stageId: snapshot.stageId,
@@ -143,6 +144,12 @@ export function applyRunEvent(view: RunView, event: RunEvent): RunView {
       items[index] = data.outline as SceneOutline;
       next.streamingOutlines = items.filter(Boolean);
       next.outlineRetrying = false;
+      return next;
+    }
+    case 'outline_design_directive': {
+      // The course look streams before the items: fold it so the review UI
+      // shows it while the outline still streams.
+      next.designDirective = typeof data.data === 'string' ? data.data : null;
       return next;
     }
     case 'outline_ready': {

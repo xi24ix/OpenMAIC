@@ -392,6 +392,7 @@ function GenerationPreviewContent() {
               onAlwaysReviewChange={setReviewOutlineEnabled}
               isLoading={isConfirmingOutlines}
               isStreaming={isOutlineStreaming}
+              designDirective={view.designDirective ?? view.outline?.designDirective ?? null}
               onCollapse={isOutlineStreaming ? handleCollapseEditor : undefined}
             />
           </motion.div>

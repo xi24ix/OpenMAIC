@@ -41,6 +41,34 @@ describe('run view reducer', () => {
     expect(view.progress.scenesTotal).toBe(3);
   });
 
+  it('folds the streamed design directive and keeps it from the ready outline', () => {
+    const directive =
+      '- Visual concept: warm storybook paper\n' +
+      '- Palette (use ONLY these hexes): #faf3e0, #7c3aed\n' +
+      '- Background mode: paper\n' +
+      '- Motion personality: playful';
+    let view = viewFromSnapshot(snapshot({ state: 'outlining', seq: 2 }));
+    expect(view.designDirective).toBeNull();
+
+    view = applyRunEvent(view, event(3, 'outline_design_directive', { data: directive }));
+    expect(view.designDirective).toBe(directive);
+
+    const ready = {
+      outlines: [outline(1)],
+      languageDirective: 'en',
+      taskEngineMode: false,
+      designDirective: directive,
+      revision: 1,
+    };
+    view = applyRunEvent(view, event(4, 'outline_ready', { revision: 1, outline: ready }));
+    expect(view.designDirective).toBe(directive);
+    expect(viewFromSnapshot(snapshot({ state: 'generating', seq: 8, outline: ready })).designDirective).toBe(directive);
+
+    // No directive streamed: the view keeps null instead of the placeholder.
+    const fresh = viewFromSnapshot(snapshot({ state: 'outlining', seq: 2 }));
+    expect(applyRunEvent(fresh, event(3, 'outline_design_directive', { data: null })).designDirective).toBeNull();
+  });
+
   it('ignores replayed frames at or below its seq', () => {
     let view = viewFromSnapshot(snapshot({ state: 'outlining', seq: 5 }));
     const replayed = applyRunEvent(

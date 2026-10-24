@@ -71,6 +71,12 @@ export interface RunView {
   outline: (GenerationRunOutline & { revision: number }) | null;
   /** When the run confirms the outline it waits on itself (ISO), unless held. */
   outlineAutoConfirmAt: string | null;
+  /**
+   * The design directive the outline stream inferred (its formatted prompt
+   * block): streams in before the outline is ready and stays from the
+   * snapshot outline once the run moves on.
+   */
+  designDirective: string | null;
   researchSources: Array<{ title: string; url: string }>;
   /** The generated roster (auto agents), for the agent cards. */
   generatedAgents: GeneratedAgentConfig[] | null;

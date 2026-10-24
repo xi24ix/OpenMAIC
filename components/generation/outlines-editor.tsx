@@ -43,6 +43,12 @@ interface OutlinesEditorProps {
   isLoading?: boolean;
   /** SSE is still pumping outlines into this editor — render read-only. */
   isStreaming?: boolean;
+  /**
+   * The course's design directive (its formatted prompt block): shown as a
+   * look-preview chip — palette swatches, concept, motion personality — while
+   * it streams and after the outline is ready.
+   */
+  designDirective?: string | null;
   /** Collapse the editor back to the preview surface (small streaming card / outline-ready). */
   onCollapse?: () => void;
 }
@@ -117,6 +123,7 @@ export function OutlinesEditor({
   onAlwaysReviewChange,
   isLoading = false,
   isStreaming = false,
+  designDirective,
   onCollapse,
 }: OutlinesEditorProps) {
   const { t } = useI18n();
@@ -228,6 +235,10 @@ export function OutlinesEditor({
     return t('generation.outlineEditorSummary', { count: outlines.length });
   }, [isStreaming, outlines.length, t]);
 
+  // The design directive is authored for scene prompts; the chip echoes only
+  // the parts worth seeing: concept line, palette hexes, motion personality.
+  const designEcho = useMemo(() => parseDesignDirectiveEcho(designDirective), [designDirective]);
+
   return (
     <motion.div
       layoutId="outline-review-surface"
@@ -267,6 +278,39 @@ export function OutlinesEditor({
             )}
             {headerSubtitle}
           </p>
+          {designEcho && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+              className="flex flex-wrap items-center gap-2 pt-1"
+            >
+              {designEcho.palette.length > 0 && (
+                <span
+                  aria-hidden
+                  className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-muted/50 px-2 py-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.5)] dark:shadow-none"
+                >
+                  {designEcho.palette.slice(0, 5).map((hex, paletteIndex) => (
+                    <span
+                      key={`${hex}-${paletteIndex}`}
+                      className="size-2.5 rounded-full ring-1 ring-inset ring-black/10"
+                      style={{ backgroundColor: hex }}
+                    />
+                  ))}
+                </span>
+              )}
+              {designEcho.concept && (
+                <span className="max-w-[36ch] truncate text-xs text-muted-foreground">
+                  {designEcho.concept}
+                </span>
+              )}
+              {designEcho.motionPersonality && (
+                <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-300">
+                  {designEcho.motionPersonality}
+                </span>
+              )}
+            </motion.div>
+          )}
         </div>
         {onCollapse && (
           <button
@@ -1521,4 +1565,38 @@ function useAutoResize(ref: React.RefObject<HTMLTextAreaElement | null>, value: 
 
 function capitalize(input: string): string {
   return input.charAt(0).toUpperCase() + input.slice(1);
+}
+
+/** The parts of a design directive the review chip echoes back to the learner. */
+interface DesignDirectiveEcho {
+  concept?: string;
+  palette: string[];
+  background?: string;
+  motionPersonality?: string;
+}
+
+/**
+ * Read the course look back out of a directive's formatted prompt block
+ * (`- Visual concept: ...`). Directives without a visual identity — the
+ * fallback text that asks the generator to invent one — produce nothing.
+ */
+function parseDesignDirectiveEcho(
+  directive: string | null | undefined,
+): DesignDirectiveEcho | null {
+  if (!directive) return null;
+  const concept = /^- Visual concept:\s*(.+)$/m.exec(directive)?.[1]?.trim();
+  const palette =
+    /^- Palette[^\n:]*:\s*(.+)$/m
+      .exec(directive)?.[1]?.match(/#[0-9a-fA-F]{6}/g) ?? [];
+  const background = /^- Background mode:\s*(\S+)$/m.exec(directive)?.[1]?.trim();
+  const motionPersonality = /^- Motion personality:\s*(\S+)$/m
+    .exec(directive)?.[1]?.trim() as DesignDirectiveEcho['motionPersonality'];
+  if (!concept && palette.length === 0) return null;
+  const echo: DesignDirectiveEcho = {
+    ...(concept ? { concept } : {}),
+    palette,
+    ...(background ? { background } : {}),
+    ...(motionPersonality ? { motionPersonality } : {}),
+  };
+  return echo;
 }
