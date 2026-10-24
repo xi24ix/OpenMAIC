@@ -1,0 +1,27 @@
+# Local operator notes may contain credentials; never commit them.
+/coolify-mcp.txt
+/opencode.jsonc
+/node_modules/
+/dist/
+/coverage/
+/.env
+/.env.*
+!/.env.example
+
+# Content corpus and generated/private operational artifacts live outside Git.
+/data/
+/data-*/
+/last-session.*
+/summery.md
+/.DS_Store
+/.smbdelete*
+/downloads/
+/extracted/
+/page-images/
+/backups/
+/logs/
+/tmp/
+__pycache__/
+*.pyc
+/scripts/bin/
+/staging/
