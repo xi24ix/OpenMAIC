@@ -52,7 +52,7 @@ function jsonBytes(value: unknown): number {
 }
 
 export type NormalizedOutlines =
-  | { ok: true; value: SceneOutline[] }
+  | { ok: true; value: SceneOutline[]; dropped: number }
   | { ok: false; message: string };
 
 /** How much of the model's mess the repair pass cleans. */
@@ -203,7 +203,7 @@ function hasTeachingContent(raw: Record<string, unknown>): boolean {
  * scene wrapper — rebuilt as the interactive scene it meant to be. The
  * title, which such a draft never carries, is the concept's first sentence
  * (the first beat when there is no concept), long enough to name the scene
- * and short enough to stay one.
+ * and short enough to stay one; a title the entry happens to carry wins.
  */
 function animationExplainerDraft(raw: Record<string, unknown>): Record<string, unknown> | null {
   const beats = texts(raw.keyBeats, { nonEmpty: true });
@@ -211,7 +211,8 @@ function animationExplainerDraft(raw: Record<string, unknown>): Record<string, u
   const concept = text(raw.concept)?.trim() || undefined;
   const mood = text(raw.mood)?.trim() || undefined;
   const source = (concept ?? beats[0] ?? '').trim();
-  const title = source.split(/[.!:؟?؛\n]/)[0]!.trim().slice(0, 60);
+  const derived = source.split(/[.!:؟?؛\n]/)[0]!.trim().slice(0, 60);
+  const title = text(raw.title)?.trim() || derived;
   return {
     ...raw,
     type: 'interactive',
@@ -222,23 +223,54 @@ function animationExplainerDraft(raw: Record<string, unknown>): Record<string, u
 }
 
 /**
+ * A MediaGeneration the model wrote into the outlines array as if it were a
+ * scene — `type: 'image' | 'video'` with a prompt and an element id, no
+ * teaching content and no scene type. Not a scene, the media request the
+ * scene was meant to carry: rebuilt as a `slide` holding that request, so
+ * the media pass generates what the model described and the content pass
+ * writes the teaching text around it, instead of the entry riding to a
+ * content step no `image` scene type exists for. The title is the prompt's
+ * first sentence (or the prompt itself when the entry carries none worth
+ * keeping) — the content pass rewrites it anyway.
+ */
+function mediaDirectiveDraft(raw: Record<string, unknown>): Record<string, unknown> | null {
+  const type = text(raw.type)?.trim();
+  if (!type || !['image', 'video'].includes(type)) return null;
+  const prompt = text(raw.prompt)?.trim();
+  const elementId = text(raw.elementId)?.trim();
+  if (!prompt || !elementId) return null;
+  const keptTitle = text(raw.title)?.trim();
+  const derived = (prompt.split(/[.!:؟?؛\n]/)[0] ?? '').trim().slice(0, 60) || prompt.slice(0, 60);
+  return {
+    ...raw,
+    type: 'slide',
+    ...(keptTitle ? {} : { title: derived }),
+    mediaGenerations: [raw],
+  };
+}
+
+/**
  * The scene object in `value`, as far as it can carry a usable `type`, or
  * null when it is a fragment to drop. A usable type passes through; a
  * missing, blank, over-long or non-string one is repaired by routing the
  * scene on what it does carry (`WIDGET_TYPES` → `interactive`, teaching
  * content → `slide`), and an entry with neither is not a scene. With
- * `lastResort` the unwrapped animation-explainer draft is rebuilt instead
- * of dropped.
+ * `lastResort` the repair is one step stronger: the unwrapped
+ * animation-explainer draft and the bare MediaGeneration are rebuilt as
+ * the scenes they meant to be instead of dropped or left to fail at a
+ * content step that does not exist for their kind.
  */
 function usableScene(value: unknown, lastResort: boolean): Record<string, unknown> | null {
   const raw = record(value);
   if (!raw) return null;
-  const type = text(raw.type);
-  if (type && type.trim() !== '' && type.length <= MAX_TYPE_CHARS) return raw;
   if (lastResort) {
     const draft = animationExplainerDraft(raw);
     if (draft) return draft;
+    const media = mediaDirectiveDraft(raw);
+    if (media) return media;
   }
+  const type = text(raw.type);
+  if (type && type.trim() !== '' && type.length <= MAX_TYPE_CHARS) return raw;
   return hasTeachingContent(raw) || oneOf(raw.widgetType, WIDGET_TYPES)
     ? { ...raw, type: oneOf(raw.widgetType, WIDGET_TYPES) ? 'interactive' : 'slide' }
     : null;
@@ -289,7 +321,11 @@ function sceneOutline(value: unknown, index: number): SceneOutline {
  * a scene without a usable id or order (ids and orders unique), or an
  * array whose every entry is a fragment the type repair dropped. With
  * `lastResort` the repair also rebuilds unwrapped animation-explainer
- * drafts — the call the model's last roll takes.
+ * drafts and bare MediaGeneration entries — the call the model's last
+ * roll takes. When entries were dropped on the way, `dropped` reports
+ * how many the strict pass discarded, so the caller can tell a clean
+ * outline from one where recoverable drift shapes were lost alongside
+ * the survivors.
  */
 export function normalizeSceneOutlines(
   value: unknown,
@@ -318,6 +354,7 @@ export function normalizeSceneOutlines(
     if (error instanceof OutlineRefused) return { ok: false, message: error.message };
     throw error;
   }
+  const dropped = value.length - outlines.length;
   if (outlines.length === 0) {
     return {
       ok: false,
@@ -333,5 +370,5 @@ export function normalizeSceneOutlines(
   // The normal form is measured too, so what normalizing yields always
   // normalizes again.
   if (jsonBytes(outlines) > MAX_OUTLINE_JSON_BYTES) return tooLarge;
-  return { ok: true, value: outlines };
+  return { ok: true, value: outlines, dropped };
 }

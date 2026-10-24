@@ -18,7 +18,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   instead of pausing the run, and the step now only ever commits the normal form; when every roll
   is spent it falls one step further and rebuilds an unwrapped animation-explainer draft (the
   model's `mood`/`concept`/`keyBeats` vocabulary with no scene wrapper) into its proper
-  `interactive` scene rather than refuse a run the model did try to write. The outline prompt now
+  `interactive` scene rather than refuse a run the model did try to write, and the same last-resort
+  pass reroutes a bare MediaGeneration the model dropped into the array (`type: 'image'` with a
+  prompt and an element id) into a `slide` carrying that media request, so the media pass still
+  generates what the model described instead of the run dying at a content step no image-scene
+  type exists for. The outline prompt now
   also orders the array to hold only complete scene objects, and names the wrapper-field
   violation the intro scene kept committing.
 

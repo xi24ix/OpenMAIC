@@ -336,6 +336,73 @@ describe('outline validation', () => {
     ).toBe(false);
   });
 
+  it('recovers the bare MediaGeneration and the mixed drift stream on the last resort', () => {
+    // The third live failure: the outline streamed the intro as the unwrapped
+    // draft and the explained scene as a bare MediaGeneration — type 'image'
+    // with a prompt and an element id. The strict pass kept the type-bearing
+    // entry (a scene type no content step exists for, so the run died at the
+    // first content step) and dropped the draft beside it: one usable scene,
+    // the outline committed, and the intro was lost.
+    const draft = {
+      id: 's1',
+      mood: 'فضولي، منعش، سماوي',
+      order: 1,
+      concept: 'قطرة ماء واحدة تتحرك في حلقة مغلقة: تصعد بخاراً، تتجمع سحاباً، ثم تعود مطراً',
+      keyBeats: ['قطرة تسقط في البحر ثم تتجمد الصورة وسط السؤال', 'الحلقة الكاملة تُرسم ذاتها'],
+    };
+    const media = {
+      id: 'm1',
+      type: 'image',
+      order: 2,
+      prompt:
+        'A clean educational diagram of the water cycle for children: ocean and a river at the bottom, sun rays causing evaporation.',
+      elementId: 'gen_img_1',
+      aspectRatio: '16:9',
+    };
+
+    const strictMix = normalizeSceneOutlines([draft, media]);
+    expect(strictMix.ok).toBe(true);
+    if (strictMix.ok) {
+      expect(strictMix.value.length).toBe(1);
+      expect(strictMix.value[0]!.type).toBe('image');
+      expect(strictMix.dropped).toBe(1);
+    }
+
+    // The last resort reroutes both drift shapes: the draft to the
+    // interactive scene it meant to be, the MediaGeneration to a slide
+    // carrying the media request the media pass then generates.
+    const salvaged = normalizeSceneOutlines([draft, media], { lastResort: true });
+    expect(salvaged.ok).toBe(true);
+    if (salvaged.ok) {
+      expect(salvaged.value.length).toBe(2);
+      expect(salvaged.value[1]!.type).toBe('slide');
+      expect(salvaged.value[1]!.title).toBe(
+        'A clean educational diagram of the water cycle for children',
+      );
+      expect(salvaged.value[1]!.mediaGenerations).toEqual([
+        { type: 'image', prompt: media.prompt, elementId: 'gen_img_1', aspectRatio: '16:9' },
+      ]);
+      expect(salvaged.value[0]!.type).toBe('interactive');
+      expect(salvaged.dropped).toBe(0);
+
+      // Salvage output is a strict fixed point: the confirm pass
+      // normalizes it unchanged.
+      expect(normalizeSceneOutlines(salvaged.value)).toEqual(salvaged);
+    }
+
+    // A MediaGeneration lacking its element id is left to the strict
+    // pass's judgement in both modes: recovering a media request no
+    // element can show would be a placeholder nothing displays.
+    const headless = { ...media, id: 'm2', elementId: '' };
+    const headlessStrict = normalizeSceneOutlines([headless]);
+    expect(headlessStrict.ok).toBe(true);
+    if (headlessStrict.ok) {
+      expect(headlessStrict.value.length).toBe(1);
+      expect(headlessStrict.value[0]!.type).toBe('image');
+      expect(headlessStrict.value[0]!.title).toBe('');
+    }
+  });
+
   it.each([
     ['a scene whose type and content are both absent', [{ id: 'o1', order: 1 }], /usable/],
     [

@@ -789,14 +789,26 @@ async function streamOutlines(
         // cap) is not one, so it is retried here with the empty-output
         // cadence instead of pausing the run on an unusable stream. The
         // repair pass keeps the usable scenes; what is left unusable a
-        // fresh attempt may write correctly.
+        // fresh attempt may write correctly. An attempt that dropped
+        // entries is retried for the same reason: usable scenes may have
+        // survived, but the streamed outline was still not the one the
+        // model meant — the drift shapes the strict pass discarded (an
+        // unwrapped intro draft, a bare MediaGeneration) signal a broken
+        // schema, and a fresh attempt may carry the scenes complete. When
+        // no roll remains, this step's final commit below recovers what
+        // the repair can.
         const check = normalizeSceneOutlines(parsedOutlines);
-        if (check.ok) {
+        if (check.ok && check.value.length === parsedOutlines.length) {
           parsedOutlines = check.value;
           break;
         }
-        lastError = `The generated outline is unusable: ${check.message}`;
-        log.warn(`Outlines attempt ${attempt}: ${lastError}`);
+        if (check.ok) {
+          lastError = `The generated outline kept ${check.value.length} of ${parsedOutlines.length} streamed entries; the missing ones were fragments`;
+          log.warn(`Outlines attempt ${attempt}: ${lastError}`);
+        } else {
+          lastError = `The generated outline is unusable: ${check.message}`;
+          log.warn(`Outlines attempt ${attempt}: ${lastError}`);
+        }
       }
 
       // Classify before treating anything as an "empty output": a
@@ -885,26 +897,36 @@ async function streamOutlines(
   }
 
   // The step's result is the normal form the run commits. Streams the loop
-  // accepted with a check guarantee it; a stream that can no longer be
-  // re-rolled (a content-filter finish, retries and fallback exhausted)
-  // gets the last-resort repair first — one reconstructed scene beats a
-  // run that never starts — and fails with why when that too yields
-  // nothing usable.
+  // accepted with a check guarantee it; a stream that reaches the commit
+  // bound (a content-filter finish, retries and fallback spent, or an
+  // attempt the rolls could not replace and whose strict pass dropped
+  // entries) falls one step further: the last-resort repair reroutes the
+  // drift shapes it can — the unwrapped animation-explainer draft, the
+  // bare MediaGeneration — into the scenes they meant to be, keeping
+  // everything the strict pass kept. One recovered intro beats a run that
+  // never starts; nothing recoverable fails with why.
   const strict = normalizeSceneOutlines(parsedOutlines);
-  if (!strict.ok) {
+  if (strict.ok && strict.value.length === parsedOutlines.length) {
+    parsedOutlines = strict.value;
+  } else {
     const salvaged = normalizeSceneOutlines(parsedOutlines, { lastResort: true });
-    if (!salvaged.ok) {
+    if (salvaged.ok) {
+      const streamed = parsedOutlines.length;
+      const strictKept = strict.ok ? strict.value.length : 0;
+      parsedOutlines = salvaged.value;
+      log.warn(
+        strict.ok
+          ? `Outline repair after the rolls: the last-resort repair kept ${salvaged.value.length} of ${streamed} streamed entries (the strict pass kept ${strictKept})`
+          : `Outline salvage after the last roll: the last-resort repair yielded ${salvaged.value.length} usable scene(s)`,
+      );
+    } else if (strict.ok) {
+      parsedOutlines = strict.value;
+    } else {
       log.error(`Outline generation failed: ${strict.message}`);
       throw new OutlineGenerationError(`The generated outline is unusable: ${strict.message}`, {
         cause: lastCause,
       });
     }
-    log.warn(
-      `Outline salvage after the last roll: the last-resort repair yielded ${salvaged.value.length} usable scene(s)`,
-    );
-    parsedOutlines = salvaged.value;
-  } else {
-    parsedOutlines = strict.value;
   }
 
   return {
