@@ -82,6 +82,8 @@ export interface GenerationRunInput {
   materialIds: string[];
   /** Built-in course-design skills to plan the outline under, by id or name. */
   skillIds?: string[];
+  /** Optional hard ceiling for focused generation flows such as curriculum lessons. */
+  maxScenes?: number;
   interactive: boolean;
   taskEngine: boolean;
   agents: GenerationRunAgents;

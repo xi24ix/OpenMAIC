@@ -66,7 +66,12 @@ import type {
 } from '@/lib/server/generation/steps/scene-actions';
 import type { SceneContentResult } from '@/lib/server/generation/steps/scene-content';
 import type { SpeechAction } from '@/lib/types/action';
-import type { ImageMapping, PdfImage, SceneOutline, UserRequirements } from '@/lib/types/generation';
+import type {
+  ImageMapping,
+  PdfImage,
+  SceneOutline,
+  UserRequirements,
+} from '@/lib/types/generation';
 import type { WidgetConfigBase } from '@openmaic/dsl';
 import { storeGeneratedAsset } from '@/lib/server/store-generated-asset';
 import { getGenerationRunHooks } from '@/lib/server/generation-run-hooks/registry';
@@ -937,7 +942,10 @@ async function executeClaimedRun(
     // per story beat + a title-card cover slide, so the classroom plays the
     // intro beat by beat (its play/stop, its transcript) instead of the
     // widget free-running all beats inside a single scene.
-    result = { ...result, outlines: explodeExplainerOutlines(normalized.value) };
+    result = {
+      ...result,
+      outlines: explodeExplainerOutlines(normalized.value).slice(0, input.maxScenes ?? 100),
+    };
     const confirmed: GenerationRunOutline = {
       outlines: result.outlines,
       languageDirective: result.languageDirective,

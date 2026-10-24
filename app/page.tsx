@@ -39,6 +39,7 @@ import { cn } from '@/lib/utils';
 import { SettingsDialog } from '@/components/settings';
 import { GenerationToolbar } from '@/components/generation/generation-toolbar';
 import { SkillPicker, type GenerationSkill } from '@/components/generation/skill-picker';
+import { CurriculumLessonPicker } from '@/components/curriculum/curriculum-lesson-picker';
 import { AgentBar } from '@/components/agent/agent-bar';
 import { useTheme } from '@/lib/hooks/use-theme';
 import {
@@ -559,15 +560,21 @@ function HomePage() {
     courseMaterials.remove(id);
   };
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (overrides?: {
+    requirement?: string;
+    skillIds?: readonly string[];
+    maxScenes?: number;
+    interactive?: boolean;
+  }): Promise<boolean> => {
     // No model/provider guard here: generation is gated by `canGenerate`
     // (requires a usable provider), and under the #580 invariant a usable
     // provider always has a concrete model. State A (no usable provider)
     // surfaces through the toolbar's single Configure-Provider affordance.
-    if (preparingGenerate) return;
-    if (!form.requirement.trim()) {
+    if (preparingGenerate) return false;
+    const requirement = overrides?.requirement ?? form.requirement;
+    if (!requirement.trim()) {
       setError(t('upload.requirementRequired'));
-      return;
+      return false;
     }
 
     setError(null);
@@ -588,14 +595,17 @@ function HomePage() {
         throw new Error(t('toolbar.materialUnavailable'));
       }
       const run = await startClassicRun({
-        requirement: form.requirement,
+        requirement,
         materialIds,
-        skillIds: selectedSkills.map((skill) => skill.id),
-        interactive: form.vocationalTestMode ? true : form.interactiveMode,
+        skillIds: [...(overrides?.skillIds ?? selectedSkills.map((skill) => skill.id))],
+        maxScenes: overrides?.maxScenes,
+        interactive:
+          overrides?.interactive ?? (form.vocationalTestMode ? true : form.interactiveMode),
         taskEngine: form.vocationalTestMode,
         capabilities,
       });
       router.push(`/generation-preview?run=${encodeURIComponent(run.id)}`);
+      return true;
     } catch (err) {
       log.error('Error starting generation:', err);
       // Only a definitive refusal says no run holds them: they stay attached.
@@ -610,6 +620,7 @@ function HomePage() {
       } else {
         setError(err instanceof Error ? err.message : t('upload.generateFailed'));
       }
+      return false;
     } finally {
       // Unfreeze the set once prep settles (navigation unmounts this page, so
       // this is normally a no-op on the way out).
@@ -901,7 +912,7 @@ function HomePage() {
 
               {/* Send button */}
               <button
-                onClick={handleGenerate}
+                onClick={() => void handleGenerate()}
                 disabled={!canGenerate || preparingGenerate}
                 className={cn(
                   'shrink-0 h-8 rounded-lg flex items-center justify-center gap-1.5 transition-all px-3',
@@ -922,6 +933,19 @@ function HomePage() {
             </div>
           </div>
         </div>
+
+        <CurriculumLessonPicker
+          disabled={preparingGenerate || !hasUsableProvider}
+          onGenerate={async ({ prepared }) => {
+            const started = await handleGenerate({
+              requirement: prepared.requirement,
+              skillIds: prepared.skillIds,
+              maxScenes: 3,
+              interactive: true,
+            });
+            if (!started) throw new Error(t('curriculum.generationFailed'));
+          }}
+        />
 
         {showVocationalTestUi && (
           <motion.div

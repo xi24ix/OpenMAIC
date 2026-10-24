@@ -22,6 +22,7 @@ const MAX_REQUIREMENT_CHARS = 20_000;
 const MAX_PROFILE_FIELD_CHARS = 2_000;
 const MAX_PRESET_AGENTS = 20;
 const MAX_SKILLS = 5;
+const MAX_REQUESTED_SCENES = 100;
 const AGENT_ID_PATTERN = /^[A-Za-z0-9_.:-]{1,128}$/;
 const PROVIDER_ID_PATTERN = /^[A-Za-z0-9_.:-]{1,64}$/;
 const MAX_VOICE_ID_CHARS = 256;
@@ -135,6 +136,22 @@ export function parseRunInput(raw: unknown): Parsed<GenerationRunInput> {
     skillIds = [...new Set(body.skillIds as string[])];
   }
 
+  let maxScenes: number | undefined;
+  if (body.maxScenes !== undefined) {
+    if (
+      typeof body.maxScenes !== 'number' ||
+      !Number.isInteger(body.maxScenes) ||
+      body.maxScenes < 1 ||
+      body.maxScenes > MAX_REQUESTED_SCENES
+    ) {
+      return {
+        ok: false,
+        message: `maxScenes must be an integer between 1 and ${MAX_REQUESTED_SCENES}`,
+      };
+    }
+    maxScenes = body.maxScenes;
+  }
+
   const interactive = optionalBoolean(body.interactive, 'interactive');
   if (!interactive.ok) return interactive;
   const taskEngine = optionalBoolean(body.taskEngine, 'taskEngine');
@@ -221,6 +238,7 @@ export function parseRunInput(raw: unknown): Parsed<GenerationRunInput> {
       requirement,
       materialIds,
       skillIds,
+      ...(maxScenes !== undefined ? { maxScenes } : {}),
       interactive: interactive.value,
       taskEngine: taskEngine.value,
       agents,

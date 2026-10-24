@@ -753,11 +753,24 @@
 }
 
 .aurora-stage-viewport {
+  /* The renderer supplies `h-full` for the editor canvas, but playback is a
+     16:9 lesson player. Let the aspect ratio win so a phone never turns the
+     slide into a tall portrait card with a tiny slide floating in the middle. */
+  width: 100%;
+  height: auto !important;
+  flex: 0 1 auto;
+  aspect-ratio: 16 / 9;
   border: 1px solid color-mix(in oklab, var(--aurora-ink) 14%, transparent);
   border-radius: 18px;
   box-shadow:
     0 34px 80px -34px rgba(0, 0, 0, 0.62),
     0 0 0 8px color-mix(in oklab, var(--aurora-ink) 3%, transparent);
+}
+
+.aurora-classroom.is-presenting .aurora-stage-viewport {
+  width: 100%;
+  height: 100% !important;
+  aspect-ratio: auto;
 }
 
 .aurora-chat {

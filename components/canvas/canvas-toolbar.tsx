@@ -129,7 +129,10 @@ export function CanvasToolbar({
   elementPickActive,
   onToggleElementPick,
 }: CanvasToolbarProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const isArabic = locale.toLowerCase().startsWith('ar');
+  const PreviousIcon = isArabic ? ChevronRight : ChevronLeft;
+  const NextIcon = isArabic ? ChevronLeft : ChevronRight;
   const remainingSoftCloseSeconds = useSoftCloseCountdown(softCloseDeadline);
   const canGoPrev = currentSceneIndex > 0;
   const canGoNext = currentSceneIndex < scenesCount - 1;
@@ -327,7 +330,7 @@ export function CanvasToolbar({
               )}
               aria-label="Previous scene"
             >
-              <ChevronLeft className="w-3.5 h-3.5" />
+              <PreviousIcon className="w-3.5 h-3.5" />
             </button>
           )}
 
@@ -399,7 +402,7 @@ export function CanvasToolbar({
               )}
               aria-label="Next scene"
             >
-              <ChevronRight className="w-3.5 h-3.5" />
+              <NextIcon className="w-3.5 h-3.5" />
             </button>
           )}
 

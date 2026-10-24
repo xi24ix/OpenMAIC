@@ -70,6 +70,8 @@ export async function startClassicRun(input: {
   materialIds: readonly string[];
   /** Course-design skills the learner attached to this run. */
   skillIds?: readonly string[];
+  /** Optional hard scene ceiling for focused curriculum generation. */
+  maxScenes?: number;
   interactive: boolean;
   taskEngine: boolean;
   capabilities: ModelCapabilities;
@@ -92,6 +94,7 @@ export async function startClassicRun(input: {
     requirement: input.requirement,
     materialIds,
     skillIds: [...(input.skillIds ?? [])],
+    ...(input.maxScenes !== undefined ? { maxScenes: input.maxScenes } : {}),
     interactive: input.interactive,
     taskEngine: input.taskEngine,
     agents,

@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { StageMode } from '@/lib/types/stage';
@@ -43,7 +43,8 @@ export function Header({
   hideGlobalControls,
   hideCourseActions,
 }: HeaderProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const isArabic = locale.toLowerCase().startsWith('ar');
   const router = useRouter();
   const searchParams = useSearchParams();
   const exitLabel = t(classroomExitLabelKey(searchParams));
@@ -63,7 +64,11 @@ export function Header({
                   title={exitLabel}
                   aria-label={exitLabel}
                 >
-                  <ArrowLeft className="w-5 h-5" />
+                  {isArabic ? (
+                    <ArrowRight className="w-5 h-5" />
+                  ) : (
+                    <ArrowLeft className="w-5 h-5" />
+                  )}
                 </button>
               ))}
           {/* Title block — hidden when `mode === 'edit'`. Header lives

@@ -13,6 +13,86 @@
     "slogan": "Generative Learning in Multi-Agent Interactive Classroom",
     "greetingWithName": "Hi, {{name}}"
   },
+  "curriculum": {
+    "openPicker": "Build from curriculum",
+    "title": "Choose a curriculum lesson",
+    "description": "Select a grade, subject, term and unit. Alostad will retrieve the selected unit from the curriculum knowledge base and prepare a focused lesson.",
+    "loading": "Loading curriculum...",
+    "loadFailed": "Couldn't load the curriculum catalog.",
+    "empty": "No curriculum courses are available yet.",
+    "prepareFailed": "Couldn't prepare this curriculum lesson.",
+    "generationFailed": "The lesson could not be started. Check the model setup and try again.",
+    "audienceLabel": "Who is this lesson for?",
+    "audiences": {
+      "student": "Student",
+      "parent": "Parent",
+      "teacher": "Teacher"
+    },
+    "audienceDescriptions": {
+      "student": "A direct, learner-facing lesson",
+      "parent": "A lesson with a short support note",
+      "teacher": "A lesson with classroom evidence"
+    },
+    "supportLabel": "Learning support needs",
+    "supportHint": "These options shape the teaching approach. They do not diagnose a condition or replace professional support.",
+    "supportProfiles": {
+      "none": "General support",
+      "autism": "Autism-informed support",
+      "adhd": "Attention and executive-function support",
+      "learning-difficulties": "Learning-difficulty support"
+    },
+    "supportDescriptions": {
+      "none": "Clear structure and universal design",
+      "autism": "Predictable steps and low-sensory presentation",
+      "adhd": "Short cycles, visible progress and active retrieval",
+      "learning-difficulties": "Explicit modelling and guided practice"
+    },
+    "gradeLabel": "Choose your grade",
+    "gradeHint": "Start with the school year you want to study.",
+    "gradeShort": "High school",
+    "trackLabel": "Choose a track",
+    "trackHint": "Choose the track that matches your book.",
+    "tracks": {
+      "general": "General",
+      "scientific": "Scientific",
+      "literary": "Literary"
+    },
+    "subjectLabel": "Choose a subject",
+    "chooseSubjectHint": "Pick a subject to see its available terms and books.",
+    "chooseTrack": "Show subjects available in this track",
+    "chooseSubject": "Open this subject's books",
+    "termLabel": "Choose a term",
+    "termHint": "Choose the term whose content you want to study.",
+    "term": "Term {{term}}",
+    "termDescription": "Books and units in this term",
+    "bookLabel": "Choose a book",
+    "bookHint": "Choose the book edition that should ground the lesson.",
+    "unitHint": "Choose the unit you want to turn into an interactive lesson.",
+    "unitLabel": "Choose a unit",
+    "lessonCount": "{{count}} lessons",
+    "unitCount": "{{count}} units",
+    "unitReady": "This unit will be retrieved from the knowledge base before generation.",
+    "preparing": "Preparing lesson...",
+    "generate": "Generate lesson",
+    "sceneLimitHint": "Focused generation: up to 3 scenes",
+    "progressLabel": "Lesson selection progress",
+    "steps": {
+      "grade": "Grade",
+      "track": "Track",
+      "subject": "Subject",
+      "term": "Term",
+      "book": "Book",
+      "unit": "Unit",
+      "support": "Support"
+    },
+    "optional": "Optional",
+    "motionLabel": "Animated lesson",
+    "motionHint": "Generation keeps the platform's interactive motion, graphics and visual pacing — not a return to static slide decks.",
+    "qualityHint": "Primary textbook content is used, with a clear error when a unit is incomplete or still unavailable for review.",
+    "readyStep": "Unit selected",
+    "stepHint": "Choose the path that matches your course",
+    "back": "Back"
+  },
   "toolbar": {
     "pdfParser": "Parser",
     "pdfUpload": "Upload PDF",

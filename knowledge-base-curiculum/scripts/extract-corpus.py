@@ -35,6 +35,15 @@ SUBJECT_SLUGS = {
     "الإحصاء": "statistics",
 }
 
+SUBJECT_ID_SLUGS = {
+    48: "arabic", 49: "arabic-grammar", 50: "rhetoric", 51: "chemistry",
+    52: "physics", 53: "mathematics", 54: "biology", 55: "english",
+    56: "information-technology", 57: "kuwait-studies", 58: "quran",
+    59: "islamic-education", 65: "geology", 71: "french", 72: "geography-economics",
+    73: "psychology-sociology", 74: "islamic-history", 77: "constitution-human-rights",
+    87: "modern-world-history", 91: "statistics", 152: "biology", 199: "arabic", 308: "statistics",
+}
+
 
 def norm(value: str) -> str:
     return re.sub(r"\s+", " ", value).strip()
@@ -42,7 +51,8 @@ def norm(value: str) -> str:
 
 def subject_slug(record: dict) -> str:
     label = record["scope"]["subjectLabel"]
-    return SUBJECT_SLUGS.get(label, f"subject-{record['scope']['subjectId']}")
+    subject_id = int(record["scope"]["subjectId"])
+    return SUBJECT_SLUGS.get(label) or SUBJECT_ID_SLUGS.get(subject_id, f"subject-{subject_id}")
 
 
 def infer_track(record: dict) -> str:
@@ -171,9 +181,12 @@ def main() -> None:
             print(f"  failed {book_id} exit {result.returncode}; see {log_path}", flush=True)
         write_progress(progress_path, progress)
 
-    summary["seconds"] = round(time.time() - started_at, 1)
-    summary["progress"] = str(progress_path)
-    print(json.dumps(summary, ensure_ascii=False, indent=2), flush=True)
+    final_summary = {
+        **summary,
+        "seconds": round(time.time() - started_at, 1),
+        "progress": str(progress_path),
+    }
+    print(json.dumps(final_summary, ensure_ascii=False, indent=2), flush=True)
 
 
 if __name__ == "__main__":

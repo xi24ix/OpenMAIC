@@ -61,6 +61,15 @@ describe('run input', () => {
     });
   });
 
+  it('accepts a bounded hard scene ceiling for focused lesson runs', () => {
+    expect(parseRunInput({ requirement: 'Teach fractions', maxScenes: 3 })).toMatchObject({
+      ok: true,
+      value: { maxScenes: 3 },
+    });
+    expect(parseRunInput({ requirement: 'Teach fractions', maxScenes: 0 }).ok).toBe(false);
+    expect(parseRunInput({ requirement: 'Teach fractions', maxScenes: 101 }).ok).toBe(false);
+  });
+
   it('keeps releaseMaterials only for a run with materials', () => {
     expect(
       parseRunInput({
@@ -277,7 +286,12 @@ describe('outline validation', () => {
     // mood/concept/keyBeats and no type, appended the design directive as
     // a scene (no teaching content to rebuild from), and once wrote a type
     // beyond the bounds. Every one rides in with usable neighbours.
-    const noType = { id: 's1', title: 'مراحل دورة الماء', keyPoints: ['التبخر', 'التكثف'], order: 1 };
+    const noType = {
+      id: 's1',
+      title: 'مراحل دورة الماء',
+      keyPoints: ['التبخر', 'التكثف'],
+      order: 1,
+    };
     const widgetTyped = {
       id: 's2',
       widgetType: 'animation-explainer',
@@ -305,8 +319,7 @@ describe('outline validation', () => {
       id: 's1',
       mood: 'فضولي، خفيف، متلألئ',
       order: 1,
-      concept:
-        'رحلة قطرة ماء واحدة تُرسم أمام العين: تتبخر بأشعة الشمس، ثم تعود إلى البحر',
+      concept: 'رحلة قطرة ماء واحدة تُرسم أمام العين: تتبخر بأشعة الشمس، ثم تعود إلى البحر',
       keyBeats: ['شمس تسخن البحر — قطرة تبدأ الصعود', 'أربع بطاقات: الشمس، البحر، السحاب'],
     };
     expect(parseOutlines([draft]).ok).toBe(false);

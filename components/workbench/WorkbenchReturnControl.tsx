@@ -7,12 +7,13 @@
  * the conversation back. Chat fold and panel state live in the store, so the
  * return restores them exactly.
  */
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import { useWorkbenchStore } from '@/lib/workbench/session-store';
 
 export function WorkbenchReturnControl() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const isArabic = locale.toLowerCase().startsWith('ar');
   const setPlaybackOn = useWorkbenchStore((s) => s.setPlaybackOn);
   return (
     <button
@@ -23,7 +24,7 @@ export function WorkbenchReturnControl() {
       aria-label={t('workbench.common.backToWorkspace')}
       className="inline-flex shrink-0 items-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
     >
-      <ArrowLeft className="size-4" />
+      {isArabic ? <ArrowRight className="size-4" /> : <ArrowLeft className="size-4" />}
     </button>
   );
 }
