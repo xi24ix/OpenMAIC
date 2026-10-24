@@ -454,11 +454,12 @@ Omit `scenarioRoleplay` and `scenarioBrief` entirely for ordinary build-an-artef
 
 **Scene-level rules:**
 
-4. `type` is one of `"slide"`, `"quiz"`, `"interactive"`, `"pbl"`.
-5. `quiz` scenes must include `quizConfig`.
-6. `interactive` scenes must include `widgetType` and `widgetOutline` (preferred). `interactiveConfig` is deprecated and only accepted for backwards compatibility.
-7. `pbl` scenes must include `pblConfig` with `projectTopic`, `projectDescription`, `targetSkills`, `issueCount`.
-8. **Scene 1 is always the `animation-explainer` intro** (see Intro Scene). Arrange the remaining scenes by inferred duration (typically 1-2 scenes per minute). Insert quizzes at appropriate points. Use other interactive scenes sparingly (max 1-2 per course).
-9. **Language**: Infer from the user's requirement text and context. Output all scene content in the inferred language.
-10. Regardless of information completeness, always output conforming JSON - do not ask questions or request more information
-11. **No teacher identity on slides**: Scene titles and keyPoints must be neutral and topic-focused. Never include the teacher's name or role (e.g., avoid "Teacher Wang's Tips", "Teacher's Wishes"). Use generic labels like "Tips", "Summary", "Key Takeaways" instead.
+4. The `outlines` array holds only complete scene objects: every element must have every ✅ field above, including a non-empty `type`. Never write a design-directive object (palette, background, concept, motionPersonality), a widget sub-object, or an unfinished scene draft into `outlines` — those belong in their own keys or nowhere. If a scene cannot be fully described, leave it out of the array entirely rather than emit a fragment.
+5. `type` is one of `"slide"`, `"quiz"`, `"interactive"`, `"pbl"`.
+6. `quiz` scenes must include `quizConfig`.
+7. `interactive` scenes must include `widgetType` and `widgetOutline` (preferred). `interactiveConfig` is deprecated and only accepted for backwards compatibility.
+8. `pbl` scenes must include `pblConfig` with `projectTopic`, `projectDescription`, `targetSkills`, `issueCount`.
+9. **Scene 1 is always the `animation-explainer` intro** (see Intro Scene). Arrange the remaining scenes by inferred duration (typically 1-2 scenes per minute). Insert quizzes at appropriate points. Use other interactive scenes sparingly (max 1-2 per course).
+10. **Language**: Infer from the user's requirement text and context. Output all scene content in the inferred language.
+11. Regardless of information completeness, always output conforming JSON - do not ask questions or request more information
+12. **No teacher identity on slides**: Scene titles and keyPoints must be neutral and topic-focused. Never include the teacher's name or role (e.g., avoid "Teacher Wang's Tips", "Teacher's Wishes"). Use generic labels like "Tips", "Summary", "Key Takeaways" instead.

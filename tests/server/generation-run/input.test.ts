@@ -271,16 +271,53 @@ describe('outline validation', () => {
     expect(parseOutlines(outlines)).toMatchObject({ ok: false, message: /bytes/ });
   });
 
+  it('repairs a scene whose type is unusable instead of refusing the outline', () => {
+    // Failures the live runs hit: the model wrote the intro scene with
+    // mood/concept/keyBeats and no type, appended the design directive as
+    // a scene (no teaching content to rebuild from), and once wrote a type
+    // beyond the bounds. Every one rides in with usable neighbours.
+    const noType = { id: 's1', title: 'مراحل دورة الماء', keyPoints: ['التبخر', 'التكثف'], order: 1 };
+    const widgetTyped = {
+      id: 's2',
+      widgetType: 'animation-explainer',
+      widgetOutline: { mood: 'فضولي' },
+      title: 'مقدمة متحركة',
+      keyPoints: ['a'],
+      order: 2,
+    };
+    const overlong = outline({ id: 's3', type: 't'.repeat(65), title: 'خلاصة', order: 3 });
+    const parsed = parseOutlines([noType, widgetTyped, overlong, 'junk']);
+    expect(parsed.ok && parsed.value.map((o) => [o.id, o.type])).toEqual([
+      ['s1', 'slide'],
+      ['s2', 'interactive'],
+      ['s3', 'slide'],
+    ]);
+    // The normal form is a fixed point: a repaired outline confirms unchanged.
+    expect(parseOutlines(parsed.ok && parsed.value)).toEqual(parsed);
+  });
+
   it.each([
-    ['a scene without a type', [outline({ type: '' })], /type/],
-    ['an overlong type', [outline({ type: 't'.repeat(65) })], /type/],
+    ['a scene whose type and content are both absent', [{ id: 'o1', order: 1 }], /usable/],
+    [
+      'an overlong type and no teaching content',
+      [{ id: 'o1', order: 1, type: 't'.repeat(65) }],
+      /usable/,
+    ],
+    [
+      'nothing but fragments',
+      [
+        { id: 'o1', order: 1, diagramType: 'flowchart' },
+        { id: 'o2', order: 2, concept: 'orbit', palette: ['#0B4F6C'] },
+        'junk',
+      ],
+      /usable/,
+    ],
     ['an order out of bounds', [outline({ order: 10_001 })], /order/],
     ['a fractional order', [outline({ order: 1.5 })], /order/],
     ['a missing order', [outline({ order: null })], /order/],
     ['a missing id', [outline({ id: null })], /id/],
     ['a repeated order', [outline(), outline({ id: 'o2' })], /repeat an order/],
     ['a repeated id', [outline(), outline({ order: 2 })], /repeat an id/],
-    ['a scene that is not an object', [outline(), 'scene'], /object/],
     ['no scenes', [], /1 to/],
     [
       'too many scenes',

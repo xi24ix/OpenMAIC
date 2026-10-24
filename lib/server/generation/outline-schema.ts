@@ -5,12 +5,22 @@
  *
  * It is lenient where a model is loose and strict only where the pipeline
  * depends on it: the number of scenes, the size, each scene's id and order,
- * and that a scene has a type. The type is not checked against the known
- * ones: as in the browser, a scene of a type no content path supports fails
- * at its own content step, not the outline. A `null` member is treated as absent; an optional member of the wrong
- * shape is dropped (and so are the items of a list that are not what the
- * list holds); members the schema does not know are not carried over.
- * Normalizing a normalized outline changes nothing.
+ * and that a scene has a type. That type check runs after a repair pass,
+ * because the outline stage's model sometimes writes a scene whose `type`
+ * is absent, blank or over-long, or drops a non-scene fragment (a
+ * design-directive object, an unfinished draft) into the `outlines` array;
+ * refusing the outline such an entry rides in would kill a good one. The
+ * repair routes a scene by what it carries — a recognised `widgetType`
+ * makes it `interactive`, teaching content (title, description, keyPoints)
+ * makes it a `slide`, an entry with neither is a fragment the outline
+ * drops — and if that drops every entry the outline is still refused.
+ *
+ * The type is still not checked against the known ones: as in the browser,
+ * a scene of a type no content path supports fails at its own content step,
+ * not the outline. A `null` member is treated as absent; an optional member
+ * of the wrong shape is dropped (and so are the items of a list that are
+ * not what the list holds); members the schema does not know are not
+ * carried over. Normalizing a normalized outline changes nothing.
  */
 import { WIDGET_TYPES } from '@openmaic/dsl';
 
@@ -160,6 +170,32 @@ function pblConfig(value: unknown): SceneOutline['pblConfig'] {
 
 class OutlineRefused extends Error {}
 
+/**
+ * Teaching content a routed scene can be generated from. The evidence a
+ * type-less scene needs for the repair to keep it.
+ */
+function hasTeachingContent(raw: Record<string, unknown>): boolean {
+  const title = text(raw.title)?.trim();
+  const description = text(raw.description)?.trim();
+  return !!title || !!description || (texts(raw.keyPoints, { nonEmpty: true })?.length ?? 0) > 0;
+}
+
+/**
+ * The scene object in `value`, as far as it can carry a usable `type`, or
+ * null when it is a fragment to drop. A usable type passes through; a
+ * missing, blank, over-long or non-string one is repaired by routing the
+ * scene on what it does carry (`WIDGET_TYPES` → `interactive`, teaching
+ * content → `slide`), and an entry with neither is not a scene.
+ */
+function usableScene(value: unknown): Record<string, unknown> | null {
+  const raw = record(value);
+  if (!raw) return null;
+  const type = text(raw.type);
+  if (type && type.trim() !== '' && type.length <= MAX_TYPE_CHARS) return raw;
+  const repaired = { ...raw, type: oneOf(raw.widgetType, WIDGET_TYPES) ? 'interactive' : 'slide' };
+  return hasTeachingContent(repaired) ? repaired : null;
+}
+
 function sceneOutline(value: unknown, index: number): SceneOutline {
   const at = `outlines[${index}]`;
   const raw = record(value);
@@ -202,7 +238,8 @@ function sceneOutline(value: unknown, index: number): SceneOutline {
 /**
  * The outline in its normal form, or why it cannot be one: not 1 to
  * {@link MAX_OUTLINE_SCENES} scenes, over {@link MAX_OUTLINE_JSON_BYTES},
- * or a scene without a usable id, type or order (ids and orders unique).
+ * a scene without a usable id or order (ids and orders unique), or an
+ * array whose every entry is a fragment the type repair dropped.
  */
 export function normalizeSceneOutlines(value: unknown): NormalizedOutlines {
   if (!Array.isArray(value) || value.length === 0 || value.length > MAX_OUTLINE_SCENES) {
@@ -218,10 +255,21 @@ export function normalizeSceneOutlines(value: unknown): NormalizedOutlines {
   if (jsonBytes(value) > MAX_OUTLINE_JSON_BYTES) return tooLarge;
   let outlines: SceneOutline[];
   try {
-    outlines = value.map(sceneOutline);
+    // Index positions are the raw array's, used directly in a refusal's
+    // location, so a dropped fragment never renumbers another entry.
+    outlines = value.flatMap((item, index) => {
+      const scene = usableScene(item);
+      return scene ? [sceneOutline(scene, index)] : [];
+    });
   } catch (error) {
     if (error instanceof OutlineRefused) return { ok: false, message: error.message };
     throw error;
+  }
+  if (outlines.length === 0) {
+    return {
+      ok: false,
+      message: 'outlines holds no usable scene: every entry is a fragment (no type, no teaching content) or not a scene object',
+    };
   }
   if (new Set(outlines.map((outline) => outline.id)).size !== outlines.length) {
     return { ok: false, message: 'outlines must not repeat an id' };

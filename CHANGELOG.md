@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Bug Fixes
+
+- Generation runs no longer die on a scene outline the outline model mis-wrote. The outline
+  normalizer repairs before refusing: a scene whose `type` is missing, blank or over-long is routed
+  by what it does carry (a known `widgetType` makes it `interactive`, teaching content makes it a
+  `slide`), and a fragment the model dropped into the `outlines` array (a stray design-directive
+  object, an unfinished draft) is discarded instead of failing the whole outline; an outline
+  reduced to nothing by the drop is still refused. The outline prompt now also orders the array to
+  hold only complete scene objects.
+
 ### Added
 
 - Motion-graphic course intros. Generated courses open with an `animation-explainer` scene: a deterministic GSAP timeline (HOOK → TEASE → SPARK → TITLE, ~30s) grounded in the course topic, king-of-the-trailer kinetic typography distilled into a new `animation-explainer-content` prompt template. The teacher can nudge it phase-by-phase through narration (`{"phase": …}`) and replay it; it publishes its phase via the standard observation contract and does not consume the interactive-scene budget.
