@@ -6,6 +6,19 @@ services:
       - .env
     networks:
       - coolify
+    labels:
+      traefik.enable: "true"
+      traefik.http.middlewares.kwdb-redirect.redirectscheme.scheme: https
+      traefik.http.routers.kwdb-http.entrypoints: http
+      traefik.http.routers.kwdb-http.rule: Host(`kwdb.zobeidi.com`)
+      traefik.http.routers.kwdb-http.middlewares: kwdb-redirect
+      traefik.http.routers.kwdb-http.service: kwdb
+      traefik.http.routers.kwdb.entrypoints: https
+      traefik.http.routers.kwdb.rule: Host(`kwdb.zobeidi.com`)
+      traefik.http.routers.kwdb.tls: "true"
+      traefik.http.routers.kwdb.tls.certresolver: letsencrypt
+      traefik.http.routers.kwdb.service: kwdb
+      traefik.http.services.kwdb.loadbalancer.server.port: "3000"
     volumes:
       - curriculum-kb-data:/app/data
     healthcheck:
