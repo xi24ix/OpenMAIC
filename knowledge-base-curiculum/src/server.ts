@@ -1,19 +1,26 @@
 import { createServer as createHttpServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
-import { realpath, readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { createWriteStream } from 'node:fs';
+import { mkdir, mkdtemp, realpath, readFile, rm } from 'node:fs/promises';
+import { Transform } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
 import path from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { z } from 'zod';
+import { importBundleInto } from './bootstrap.js';
 import { courseSchema, contextRequestSchema, unitContextRequestSchema, type Course } from './contracts.js';
 import { CurriculumRepository } from './repository.js';
 
 const MAX_BODY_BYTES = 1_000_000;
+const MAX_BUNDLE_BYTES = 8 * 1024 ** 3;
 const DEFAULT_PAGE_SIZE = 50;
 
 export interface CurriculumServerOptions {
   repository: CurriculumRepository;
   assetRoot: string;
   apiToken?: string;
+  importToken?: string;
 }
 
 function jsonResponse(response: ServerResponse, status: number, value: unknown): void {
@@ -69,6 +76,22 @@ function parseBoundedInteger(value: string | null, fallback: number, minimum: nu
   const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed < minimum || parsed > maximum) throw new Error(`Query value must be an integer between ${minimum} and ${maximum}`);
   return parsed;
+}
+
+async function saveBundle(request: IncomingMessage, directory: string, expectedSha256: string): Promise<string> {
+  const archive = path.join(directory, 'bundle.ndjson.gz');
+  const digest = createHash('sha256');
+  let bytes = 0;
+  await pipeline(request, new Transform({
+    transform(chunk, _encoding, callback) {
+      bytes += chunk.length;
+      if (bytes > MAX_BUNDLE_BYTES) { callback(new Error('Bundle is too large')); return; }
+      digest.update(chunk);
+      callback(null, chunk);
+    },
+  }), createWriteStream(archive, { flags: 'wx', mode: 0o600 }));
+  if (digest.digest('hex') !== expectedSha256) throw new Error('Bundle checksum mismatch');
+  return archive;
 }
 
 async function confinedAssetPath(root: string, objectKey: string): Promise<string> {
@@ -226,6 +249,26 @@ export function createCurriculumServer(options: CurriculumServerOptions): Server
       const url = new URL(request.url ?? '/', 'http://localhost');
       if (url.pathname === '/mcp') {
         await handleMcp(request, response, options.repository);
+        return;
+      }
+      if (url.pathname === '/v1/admin/import-bundle' && request.method === 'POST') {
+        const importToken = request.headers['x-import-token'];
+        if (!options.importToken || importToken !== options.importToken) {
+          errorResponse(response, 404, 'Route not found');
+          return;
+        }
+        const expectedSha256 = request.headers['x-bundle-sha256'];
+        if (typeof expectedSha256 !== 'string' || !/^[a-f0-9]{64}$/.test(expectedSha256)) {
+          errorResponse(response, 400, 'x-bundle-sha256 is required');
+          return;
+        }
+        const temporary = await mkdtemp(path.join('/tmp', 'curriculum-kb-import-'));
+        try {
+          const archive = await saveBundle(request, temporary, expectedSha256);
+          jsonResponse(response, 200, await importBundleInto({ archive, repository: options.repository, assetRoot: options.assetRoot }));
+        } finally {
+          await rm(temporary, { recursive: true, force: true });
+        }
         return;
       }
       if (url.pathname === '/healthz' && request.method === 'GET') {

@@ -104,7 +104,7 @@ async function main(): Promise<void> {
     const database = await openDatabase({ databaseUrl: process.env.KB_DATABASE_URL, dataDir });
     const repository = new CurriculumRepository(database);
     await repository.initialize();
-    const server = createCurriculumServer({ repository, assetRoot, apiToken: process.env.KB_API_TOKEN });
+    const server = createCurriculumServer({ repository, assetRoot, apiToken: process.env.KB_API_TOKEN, importToken: process.env.KB_IMPORT_TOKEN });
     const close = async () => { await new Promise<void>((resolve) => server.close(() => resolve())); await database.close(); };
     process.once('SIGINT', () => { void close().then(() => process.exit(0)); });
     process.once('SIGTERM', () => { void close().then(() => process.exit(0)); });
