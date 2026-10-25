@@ -70,6 +70,42 @@ describe('run input', () => {
     expect(parseRunInput({ requirement: 'Teach fractions', maxScenes: 101 }).ok).toBe(false);
   });
 
+  it('accepts only safe authenticated curriculum visual references', () => {
+    expect(
+      parseRunInput({
+        requirement: 'Teach the selected textbook lesson',
+        sourceVisuals: [
+          {
+            id: 'p15-fig1',
+            assetPath: '/v1/assets/course%3Aasset%3Ap15-fig1',
+            page: 15,
+            kind: 'illustration',
+            caption: 'Textbook visual',
+          },
+        ],
+      }),
+    ).toMatchObject({
+      ok: true,
+      value: {
+        sourceVisuals: [expect.objectContaining({ id: 'p15-fig1', page: 15 })],
+      },
+    });
+    expect(
+      parseRunInput({
+        requirement: 'x',
+        sourceVisuals: [
+          {
+            id: 'visual',
+            assetPath: 'https://evil.example/image.png',
+            page: 1,
+            kind: 'image',
+            caption: 'unsafe',
+          },
+        ],
+      }),
+    ).toMatchObject({ ok: false, message: /sourceVisuals/ });
+  });
+
   it('keeps releaseMaterials only for a run with materials', () => {
     expect(
       parseRunInput({

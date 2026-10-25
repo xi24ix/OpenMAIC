@@ -57,6 +57,7 @@ import { findSkill, isOutlineSkill, skillOutlineContext } from '@/lib/server/age
 import { BUILT_IN_AGENTS } from '@/lib/orchestration/registry/built-in';
 import type { AgentConfig } from '@/lib/orchestration/registry/types';
 import { generateClassroomId } from '@/lib/server/classroom-persistence';
+import { curriculumVisualAsset } from '@/lib/server/curriculum-kb';
 import { normalizeSceneOutlines } from '@/lib/server/generation/outline-schema';
 import type { StepContext } from '@/lib/server/generation/steps/context';
 import type { OutlineEvent, OutlineResult } from '@/lib/server/generation/steps/outline';
@@ -153,6 +154,7 @@ import type {
   GenerationRunAgentsResult,
   GenerationRunCustomAgent,
   GenerationRunInput,
+  GenerationSourceVisual,
   GenerationRunMediaCheckpoint,
   GenerationRunOutline,
   NewGenerationRunEvent,
@@ -506,6 +508,45 @@ async function executeClaimedRun(
     return { pdfImages, imageMapping };
   };
 
+  /** Download selected textbook visuals through the authenticated KB and keep them in the run's asset pool. */
+  const storeCurriculumImages = async (
+    stageId: string,
+    visuals: GenerationSourceVisual[],
+  ): Promise<Pick<MaterialOutput, 'pdfImages' | 'imageMapping'>> => {
+    const pdfImages: PdfImage[] = [];
+    const imageMapping: ImageMapping = {};
+    const allocated: string[] = [];
+    try {
+      for (const visual of visuals) {
+        const downloaded = await curriculumVisualAsset(visual.assetPath);
+        const stored = await storeGeneratedAsset({
+          ownerId: owner,
+          stageId,
+          bytes: downloaded.bytes,
+          mimeType: downloaded.mimeType,
+          kind: 'image',
+          fence: (tx) => fenceGenerationRunWriteIn(tx, lease),
+        });
+        if (stored.status === 'refused') {
+          throw new Error('Asset storage is full; the curriculum visuals could not be stored');
+        }
+        allocated.push(stored.assetId);
+        pdfImages.push({
+          id: visual.id,
+          src: '',
+          assetId: stored.assetId,
+          pageNumber: visual.page,
+          description: `${visual.kind}: ${visual.caption}`,
+        });
+        imageMapping[visual.id] = stored.assetId;
+      }
+    } catch (error) {
+      await services.releaseAssets(owner, allocated, stepContext);
+      throw error;
+    }
+    return { pdfImages, imageMapping };
+  };
+
   // ── Scene content, possibly generated ahead ──
   // Exploded intro groups share ONE content generation: the group's anchor
   // beat calls the model once, and every sibling scene copies the same HTML,
@@ -691,38 +732,65 @@ async function executeClaimedRun(
 
     switch (step.kind) {
       case 'material-analysis': {
+        const curriculumVisuals = input.sourceVisuals ?? [];
         // Materials are extracted since their upload. Only a run that waits
         // for an extraction tells the preview what it waits on (the kind of
         // material it names); one whose materials are all ready reads their
         // results and shows no analysis.
-        if (!(await services.materialsReady(owner, input.materialIds))) {
+        if (
+          input.materialIds.length > 0 &&
+          !(await services.materialsReady(owner, input.materialIds))
+        ) {
           const kinds = await services.materialKinds(owner, input.materialIds);
           await commit({ events: [{ type: 'material_kinds', data: { kinds } }] });
         }
         // No step deadline around the wait: a material queued behind other
         // extractions waits its turn, and each extraction has the step's
         // budget once a worker runs it (awaitOwnerMaterialExtractions).
-        const analyzed = await services.analyzeMaterials(owner, input.materialIds, {
-          log,
-          signal,
-        });
+        const analyzed =
+          input.materialIds.length > 0
+            ? await services.analyzeMaterials(owner, input.materialIds, { log, signal })
+            : { text: '', images: [], truncated: undefined };
         // What the outline will not see in full, as the preview warns about it.
         const warnings = analyzed.truncated
           ? { events: [{ type: 'material_truncated' as const, data: { ...analyzed.truncated } }] }
           : {};
-        if (analyzed.images.length === 0) {
+        if (analyzed.images.length === 0 && curriculumVisuals.length === 0) {
           return done({ pdfText: analyzed.text } satisfies MaterialOutput, warnings);
         }
         // The images become assets of the course, whose id is minted now.
         const stageId = generateClassroomId();
-        return done(
-          {
-            pdfText: analyzed.text,
-            ...(await storeMaterialImages(stageId, analyzed.images)),
-            stageId,
-          } satisfies MaterialOutput,
-          warnings,
-        );
+        let uploadedImages: Pick<MaterialOutput, 'pdfImages' | 'imageMapping'> = {};
+        try {
+          uploadedImages =
+            analyzed.images.length > 0 ? await storeMaterialImages(stageId, analyzed.images) : {};
+          const curriculumImages =
+            curriculumVisuals.length > 0
+              ? await storeCurriculumImages(stageId, curriculumVisuals)
+              : {};
+          return done(
+            {
+              pdfText: analyzed.text,
+              pdfImages: [
+                ...(uploadedImages.pdfImages ?? []),
+                ...(curriculumImages.pdfImages ?? []),
+              ],
+              imageMapping: {
+                ...(uploadedImages.imageMapping ?? {}),
+                ...(curriculumImages.imageMapping ?? {}),
+              },
+              stageId,
+            } satisfies MaterialOutput,
+            warnings,
+          );
+        } catch (error) {
+          await services.releaseAssets(
+            owner,
+            Object.values(uploadedImages.imageMapping ?? {}),
+            stepContext,
+          );
+          throw error;
+        }
       }
 
       case 'research': {

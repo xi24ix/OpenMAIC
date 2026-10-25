@@ -16,11 +16,28 @@ import {
 
 const noMaterials = { materialIds: [] };
 const withMaterials = { materialIds: ['mat_00000000000000000000000000'] };
+const withSourceVisuals = {
+  materialIds: [],
+  sourceVisuals: [
+    {
+      id: 'visual-1',
+      assetPath: '/v1/assets/visual-1',
+      page: 22,
+      kind: 'diagram',
+      caption: 'A labelled triangle',
+    },
+  ],
+};
 
 describe('generation run plan', () => {
   it('prepares in the browser order: material analysis only with materials, then research and the outline', () => {
     expect(preparationSteps(noMaterials).map((step) => step.id)).toEqual(['research', 'outline']);
     expect(preparationSteps(withMaterials).map((step) => step.id)).toEqual([
+      'material-analysis',
+      'research',
+      'outline',
+    ]);
+    expect(preparationSteps(withSourceVisuals).map((step) => step.id)).toEqual([
       'material-analysis',
       'research',
       'outline',

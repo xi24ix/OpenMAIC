@@ -72,6 +72,15 @@ export type GenerationRunAgents =
    */
   | { mode: 'preset'; agentIds: string[] };
 
+/** A server-side textbook visual the curriculum flow may reuse in generation. */
+export interface GenerationSourceVisual {
+  id: string;
+  assetPath: string;
+  page: number;
+  kind: string;
+  caption: string;
+}
+
 /**
  * What a run generates from. No keys and no models: every model and provider
  * resolves through the owner's capability slots.
@@ -84,6 +93,8 @@ export interface GenerationRunInput {
   skillIds?: string[];
   /** Optional hard ceiling for focused generation flows such as curriculum lessons. */
   maxScenes?: number;
+  /** Authenticated curriculum visuals to attach to the outline/content vision prompts. */
+  sourceVisuals?: GenerationSourceVisual[];
   interactive: boolean;
   taskEngine: boolean;
   agents: GenerationRunAgents;

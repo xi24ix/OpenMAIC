@@ -43,9 +43,11 @@ export function parseStepId(id: string): RunStep | null {
 }
 
 /** The steps before the outline is confirmed. */
-export function preparationSteps(input: Pick<GenerationRunInput, 'materialIds'>): RunStep[] {
+export function preparationSteps(
+  input: Pick<GenerationRunInput, 'materialIds' | 'sourceVisuals'>,
+): RunStep[] {
   return [
-    ...(input.materialIds.length > 0
+    ...(input.materialIds.length > 0 || (input.sourceVisuals?.length ?? 0) > 0
       ? [{ id: 'material-analysis', kind: 'material-analysis' } as const]
       : []),
     { id: 'research', kind: 'research' },
@@ -85,7 +87,7 @@ export type RunAdvance =
  */
 export function advanceRun(input: {
   state: GenerationRunState;
-  runInput: Pick<GenerationRunInput, 'materialIds'>;
+  runInput: Pick<GenerationRunInput, 'materialIds' | 'sourceVisuals'>;
   completed: ReadonlySet<string>;
   sceneCount: number;
 }): RunAdvance {

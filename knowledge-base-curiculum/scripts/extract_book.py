@@ -32,11 +32,11 @@ ARABIC_RE = re.compile(r"[\u0600-\u06ff]")
 DIACRITICS_RE = re.compile(r"[\u0610-\u061a\u064b-\u065f\u0670\u06d6-\u06ed]")
 TATWEEL_RE = re.compile(r"\u0640")
 CONTROL_CHARS_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
-PAGE_NUMBER_RE = re.compile(r"^\d{1,4}$")
+PAGE_NUMBER_RE = re.compile(r"^[^\d]*\d{1,4}[^\d]*$")
 LESSON_CODE_RE = re.compile(r"(?:الدرس\s*)?(?<!\d)\(?(\d{1,2})\s*[-–]\s*(\d{1,2})\)?(?!\d)\s*:?\s*(.*)$")
 LESSON_CODE_ANY_RE = re.compile(r"(?<!\d)\(?\d{1,2}\s*[-–]\s*\d{1,2}\)?(?!\d)")
 UNIT_RE = re.compile(r"(?:الوحدة|Unit)\s*(?:الأولى|الثانية|الثالثة|الرابعة|الخامسة|السادسة|السابعة|الثامنة|التاسعة|العاشرة|\d+)?", re.I)
-TOC_RE = re.compile(r"(?:المحتوى|المحتويات|الفهرس|Contents)", re.I)
+TOC_RE = re.compile(r"(?:المحتو|الفهرس|Contents)", re.I)
 HEADING_STOP_RE = re.compile(r"(?:الفصل|الوحدة|الباب|مراجعة|المراجع|من وطني|المحتوى)", re.I)
 TITLE_JUNK_RE = re.compile(r"^[\s:،.\-–—|/]+$")
 ARABIC_RE = re.compile(r"[\u0600-\u06FF]")
@@ -55,6 +55,12 @@ def norm(value: str) -> str:
 
 def clean(value: str) -> str:
     return re.sub(r"\s+", " ", norm(value)).strip()
+
+
+def page_number_value(value: str) -> int | None:
+    """Return a printed page number even when OCR adds punctuation."""
+    match = re.fullmatch(r"[^\d]*(\d{1,4})[^\d]*", clean(value))
+    return int(match.group(1)) if match else None
 
 
 def match_key(value: str) -> str:
@@ -337,10 +343,14 @@ def parse_toc_page(lines: list[OcrLine]) -> list[tuple[str, str, list[tuple[str,
             flush_unit()
             head = clean(unit_hit.group(0))
             pending_unit_title = head
-            title_parts: list[str] = []
+            unit_title_parts: list[str] = []
             for candidate in row:
-                if candidate.x0 > 0.25 and not PAGE_NUMBER_RE.match(candidate.text) and not UNIT_RE.search(candidate.text) and not TITLE_JUNK_RE.match(candidate.text):
-                    title_parts.append(candidate.text)
+                if candidate.x0 <= 0.25 or page_number_value(candidate.text) is not None:
+                    continue
+                remainder = UNIT_RE.sub("", candidate.text, count=1)
+                remainder = re.sub(r"^[\s:：,،.\-–—|/]+", "", remainder)
+                if remainder and not TITLE_JUNK_RE.match(remainder):
+                    unit_title_parts.append(remainder)
             previous_center = sum((candidate.y0 + candidate.y1) / 2 for candidate in row) / len(row)
             extra = index + 1
             while extra < len(rows) and extra <= index + 4:
@@ -351,13 +361,21 @@ def parse_toc_page(lines: list[OcrLine]) -> list[tuple[str, str, list[tuple[str,
                     break
                 if abs(next_center - previous_center) > 0.055:
                     break
-                arabic = [candidate for candidate in next_row if candidate.x0 > 0.25 and not PAGE_NUMBER_RE.match(candidate.text) and not UNIT_RE.search(candidate.text)]
+                arabic = [
+                    candidate
+                    for candidate in next_row
+                    if candidate.x0 > 0.25
+                    and page_number_value(candidate.text) is None
+                    and not UNIT_RE.search(candidate.text)
+                ]
                 if not arabic:
                     break
-                title_parts.extend(candidate.text for candidate in arabic if not TITLE_JUNK_RE.match(candidate.text))
+                unit_title_parts.extend(
+                    candidate.text for candidate in arabic if not TITLE_JUNK_RE.match(candidate.text)
+                )
                 previous_center = next_center
                 extra += 1
-            current_title = clean(" ".join(title_parts))
+            current_title = clean(" ".join(unit_title_parts)) or head
             index = extra
             continue
 
@@ -378,8 +396,9 @@ def parse_toc_page(lines: list[OcrLine]) -> list[tuple[str, str, list[tuple[str,
             for other in row:
                 if other is item:
                     continue
-                if PAGE_NUMBER_RE.match(other.text):
-                    page_number = int(other.text)
+                parsed_page = page_number_value(other.text)
+                if parsed_page is not None:
+                    page_number = parsed_page
                 elif "الصفحة" not in other.text and not LESSON_CODE_ANY_RE.fullmatch(other.text):
                     title_parts.append((other.y0, other.text))
             # Continuation rows: title text below/above the code row before the
@@ -394,17 +413,18 @@ def parse_toc_page(lines: list[OcrLine]) -> list[tuple[str, str, list[tuple[str,
                     break
                 if abs(next_center - previous_center) > 0.055:
                     break
-                if PAGE_NUMBER_RE.match(next_text):
+                if page_number_value(next_text) is not None:
                     break
                 for candidate in next_row:
-                    if PAGE_NUMBER_RE.match(candidate.text):
+                    parsed_page = page_number_value(candidate.text)
+                    if parsed_page is not None:
                         if page_number is None:
-                            page_number = int(candidate.text)
+                            page_number = parsed_page
                     elif "الصفحة" not in candidate.text and not TITLE_JUNK_RE.match(candidate.text):
                         title_parts.append((candidate.y0, candidate.text))
                 previous_center = next_center
                 extra += 1
-            title = order_title([part for part in title_parts if part[1]])
+            title = re.sub(r"\s*[.…]+$", "", order_title([part for part in title_parts if part[1]])).strip()
             if title and page_number is not None:
                 current.append((code, title, page_number))
             index = max(index + 1, extra)
@@ -419,7 +439,7 @@ def build_toc(ocr: dict[int, list[OcrLine]], page_count: int) -> tuple[list[Unit
     parsed: list[tuple[int, list[tuple[str, str, list[tuple[str, str, int | None]]]]]] = []
     for page in sorted(ocr):
         text = " ".join(line.text for line in ocr[page])
-        code_count = sum(1 for line in ocr[page] if LESSON_CODE_ANY_RE.search(line.text))
+        code_count = sum(len(LESSON_CODE_ANY_RE.findall(line.text)) for line in ocr[page])
         header = "الصفحة" in text or TOC_RE.search(text)
         if code_count >= 2 and header:
             toc_pages.append(page)
@@ -451,10 +471,10 @@ def page_number_pairs(ocr: dict[int, list[OcrLine]]) -> list[tuple[int, int]]:
     pairs: list[tuple[int, int]] = []
     for page, lines in ocr.items():
         for line in lines:
-            if not PAGE_NUMBER_RE.match(line.text):
+            value = page_number_value(line.text)
+            if value is None:
                 continue
             if line.y0 >= 0.84 or line.y1 <= 0.12:
-                value = int(line.text)
                 if 1 <= value <= 999:
                     pairs.append((page, value))
                     break

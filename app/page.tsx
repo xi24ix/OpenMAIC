@@ -70,6 +70,7 @@ import {
   type CourseRunStatus,
 } from '@/lib/generation-run-client/course-card';
 import type { RunSnapshot } from '@/lib/generation-run-client/types';
+import type { GenerationSourceVisual } from '@/lib/server/generation/run/types';
 import { CourseRunStatusLabel } from '@/components/generation/course-run-status-label';
 import { useModelCapabilities } from '@/lib/model-settings/use-model-settings';
 import { useUserProfileStore, AVATAR_OPTIONS } from '@/lib/store/user-profile';
@@ -564,6 +565,7 @@ function HomePage() {
     requirement?: string;
     skillIds?: readonly string[];
     maxScenes?: number;
+    sourceVisuals?: readonly GenerationSourceVisual[];
     interactive?: boolean;
   }): Promise<boolean> => {
     // No model/provider guard here: generation is gated by `canGenerate`
@@ -599,6 +601,7 @@ function HomePage() {
         materialIds,
         skillIds: [...(overrides?.skillIds ?? selectedSkills.map((skill) => skill.id))],
         maxScenes: overrides?.maxScenes,
+        sourceVisuals: overrides?.sourceVisuals,
         interactive:
           overrides?.interactive ?? (form.vocationalTestMode ? true : form.interactiveMode),
         taskEngine: form.vocationalTestMode,
@@ -941,6 +944,7 @@ function HomePage() {
               requirement: prepared.requirement,
               skillIds: prepared.skillIds,
               maxScenes: 3,
+              sourceVisuals: prepared.visuals,
               interactive: true,
             });
             if (!started) throw new Error(t('curriculum.generationFailed'));

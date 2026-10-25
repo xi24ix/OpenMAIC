@@ -81,6 +81,7 @@ describe('curriculum lesson preparation', () => {
             kind: 'diagram',
             caption: 'A labelled triangle',
             purpose: 'Use it to compare the sides.',
+            assetPath: '/v1/assets/visual-1',
           },
         ],
       },
@@ -89,6 +90,15 @@ describe('curriculum lesson preparation', () => {
 
     expect(prepared.requirement).toContain('Worked example from the workbook.');
     expect(prepared.requirement).toContain('A labelled triangle');
+    expect(prepared.visuals).toEqual([
+      {
+        id: 'visual-1',
+        assetPath: '/v1/assets/visual-1',
+        page: 22,
+        kind: 'diagram',
+        caption: 'A labelled triangle',
+      },
+    ]);
   });
 
   it('adds only the selected learner-support skill and keeps the adaptation non-diagnostic', () => {

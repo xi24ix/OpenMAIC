@@ -12,6 +12,7 @@ import { useUserProfileStore } from '@/lib/store/user-profile';
 
 import { RunApiError, startGenerationRun, type StartRunInput } from './api';
 import type { RunSnapshot } from './types';
+import type { GenerationSourceVisual } from '@/lib/server/generation/run/types';
 
 /** A start refused before anything was submitted; `reason` is the translation key that says why. */
 export class RunStartRefusedError extends Error {
@@ -72,6 +73,8 @@ export async function startClassicRun(input: {
   skillIds?: readonly string[];
   /** Optional hard scene ceiling for focused curriculum generation. */
   maxScenes?: number;
+  /** Authenticated textbook visuals to reuse in the generation vision prompts. */
+  sourceVisuals?: readonly GenerationSourceVisual[];
   interactive: boolean;
   taskEngine: boolean;
   capabilities: ModelCapabilities;
@@ -95,6 +98,7 @@ export async function startClassicRun(input: {
     materialIds,
     skillIds: [...(input.skillIds ?? [])],
     ...(input.maxScenes !== undefined ? { maxScenes: input.maxScenes } : {}),
+    ...(input.sourceVisuals?.length ? { sourceVisuals: [...input.sourceVisuals] } : {}),
     interactive: input.interactive,
     taskEngine: input.taskEngine,
     agents,

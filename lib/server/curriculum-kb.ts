@@ -92,6 +92,13 @@ export interface CurriculumGenerationPreparation {
   warnings: string[];
   status: CurriculumUnitContext['status'];
   skillIds: string[];
+  visuals?: Array<{
+    id: string;
+    assetPath: string;
+    page: number;
+    kind: string;
+    caption: string;
+  }>;
 }
 
 const DEFAULT_KB_URL = 'https://kwdb.zobeidi.com';
@@ -169,6 +176,40 @@ async function requestKb<T>(pathname: string, init?: RequestInit): Promise<T> {
       'The curriculum knowledge base returned invalid data.',
     );
   }
+}
+
+/** Download one authenticated textbook visual without exposing the KB token to the browser. */
+export async function curriculumVisualAsset(
+  assetPath: string,
+): Promise<{ bytes: Uint8Array; mimeType: string }> {
+  if (!assetPath.startsWith('/v1/assets/') || assetPath.includes('..')) {
+    throw new CurriculumKbError('invalid_response', 'The curriculum visual path is invalid.');
+  }
+  const { baseUrl, token } = kbConfig();
+  let response: Response;
+  try {
+    response = await fetch(`${baseUrl}${assetPath}`, {
+      cache: 'no-store',
+      headers: { authorization: `Bearer ${token}` },
+    });
+  } catch {
+    throw new CurriculumKbError('unavailable', 'The curriculum visual could not be downloaded.');
+  }
+  if (!response.ok) {
+    throw new CurriculumKbError(
+      'unavailable',
+      `The curriculum visual service returned HTTP ${response.status}.`,
+    );
+  }
+  const declared = response.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase();
+  if (declared && !declared.startsWith('image/')) {
+    throw new CurriculumKbError('invalid_response', 'The curriculum visual is not an image.');
+  }
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  if (bytes.byteLength > 8 * 1024 * 1024) {
+    throw new CurriculumKbError('invalid_response', 'The curriculum visual is too large.');
+  }
+  return { bytes, mimeType: declared || 'image/png' };
 }
 
 export async function curriculumCatalog(): Promise<CurriculumCatalogResponse> {
@@ -322,6 +363,16 @@ export function formatCurriculumGenerationPreparation(
       (visual) => `- ${visual.kind}: ${visual.caption} (page ${visual.page}) — ${visual.purpose}`,
     )
     .join('\n');
+  const visuals = (context.visuals ?? [])
+    .filter((visual): visual is typeof visual & { assetPath: string } => Boolean(visual.assetPath))
+    .slice(0, 8)
+    .map((visual) => ({
+      id: visual.id,
+      assetPath: visual.assetPath,
+      page: visual.page,
+      kind: visual.kind,
+      caption: visual.caption,
+    }));
   const warnings = [...context.warnings];
   const requirement = [
     'Generate a curriculum-grounded high-school lesson from the authenticated Kuwait Curriculum Knowledge Base context below.',
@@ -363,6 +414,7 @@ export function formatCurriculumGenerationPreparation(
     warnings,
     status: context.status,
     skillIds,
+    visuals,
   };
 }
 

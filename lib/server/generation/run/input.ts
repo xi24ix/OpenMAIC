@@ -23,6 +23,10 @@ const MAX_PROFILE_FIELD_CHARS = 2_000;
 const MAX_PRESET_AGENTS = 20;
 const MAX_SKILLS = 5;
 const MAX_REQUESTED_SCENES = 100;
+const MAX_SOURCE_VISUALS = 8;
+const MAX_SOURCE_VISUAL_ID_CHARS = 128;
+const MAX_SOURCE_VISUAL_PATH_CHARS = 512;
+const MAX_SOURCE_VISUAL_TEXT_CHARS = 500;
 const AGENT_ID_PATTERN = /^[A-Za-z0-9_.:-]{1,128}$/;
 const PROVIDER_ID_PATTERN = /^[A-Za-z0-9_.:-]{1,64}$/;
 const MAX_VOICE_ID_CHARS = 256;
@@ -94,6 +98,52 @@ function agentIdList(value: unknown, name: string, minimum: number): Parsed<stri
   return { ok: true, value: [...new Set(value as string[])] };
 }
 
+function sourceVisuals(value: unknown): Parsed<GenerationRunInput['sourceVisuals']> {
+  if (value === undefined) return { ok: true, value: undefined };
+  if (!Array.isArray(value) || value.length > MAX_SOURCE_VISUALS) {
+    return {
+      ok: false,
+      message: `sourceVisuals must be an array of at most ${MAX_SOURCE_VISUALS} visuals`,
+    };
+  }
+  const parsed: NonNullable<GenerationRunInput['sourceVisuals']> = [];
+  for (const [index, item] of value.entries()) {
+    const visual = record(item);
+    const id = visual?.id;
+    const assetPath = visual?.assetPath;
+    const page = visual?.page;
+    const kind = visual?.kind;
+    const caption = visual?.caption;
+    if (
+      !visual ||
+      typeof id !== 'string' ||
+      id.length < 1 ||
+      id.length > MAX_SOURCE_VISUAL_ID_CHARS ||
+      !/^[A-Za-z0-9_.:-]+$/.test(id) ||
+      typeof assetPath !== 'string' ||
+      assetPath.length > MAX_SOURCE_VISUAL_PATH_CHARS ||
+      !assetPath.startsWith('/v1/assets/') ||
+      assetPath.includes('..') ||
+      assetPath.includes('?') ||
+      assetPath.includes('#') ||
+      typeof page !== 'number' ||
+      !Number.isInteger(page) ||
+      page < 1 ||
+      typeof kind !== 'string' ||
+      kind.length > MAX_SOURCE_VISUAL_TEXT_CHARS ||
+      typeof caption !== 'string' ||
+      caption.length > MAX_SOURCE_VISUAL_TEXT_CHARS
+    ) {
+      return {
+        ok: false,
+        message: `sourceVisuals[${index}] must contain a safe assetPath, page, kind and caption`,
+      };
+    }
+    parsed.push({ id, assetPath, page, kind, caption });
+  }
+  return { ok: true, value: parsed.length > 0 ? parsed : undefined };
+}
+
 export function parseRunInput(raw: unknown): Parsed<GenerationRunInput> {
   const body = record(raw);
   if (!body) return { ok: false, message: 'The body must be a JSON object' };
@@ -151,6 +201,9 @@ export function parseRunInput(raw: unknown): Parsed<GenerationRunInput> {
     }
     maxScenes = body.maxScenes;
   }
+
+  const sourceVisualsResult = sourceVisuals(body.sourceVisuals);
+  if (!sourceVisualsResult.ok) return sourceVisualsResult;
 
   const interactive = optionalBoolean(body.interactive, 'interactive');
   if (!interactive.ok) return interactive;
@@ -239,6 +292,7 @@ export function parseRunInput(raw: unknown): Parsed<GenerationRunInput> {
       materialIds,
       skillIds,
       ...(maxScenes !== undefined ? { maxScenes } : {}),
+      ...(sourceVisualsResult.value ? { sourceVisuals: sourceVisualsResult.value } : {}),
       interactive: interactive.value,
       taskEngine: taskEngine.value,
       agents,

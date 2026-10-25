@@ -56,7 +56,12 @@ def subject_slug(record: dict) -> str:
 
 
 def infer_track(record: dict) -> str:
-    text = f"{record['scope']['subjectLabel']} {record['item'].get('fileDescription', '')}"
+    # The MOE inventory omits the track from some records. The verified Grade
+    # 11 mathematics pilot is identified as scientific on the book cover even
+    # though its inventory scope only says grade-11.
+    if int(record.get("id", 0)) == 3627:
+        return "scientific"
+    text = f"{record['scope'].get('gradeLabel', '')} {record['scope']['subjectLabel']} {record['item'].get('fileDescription', '')}"
     if "أدبي" in text:
         return "literary"
     if "علمي" in text:

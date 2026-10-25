@@ -37,7 +37,10 @@ function safeId(value: string): string {
 }
 
 function inferTrack(record: DownloadRecord): 'general' | 'scientific' | 'literary' {
-  const text = `${record.item.fileDescription ?? ''} ${record.scope.subjectLabel}`;
+  // The official Grade 11 mathematics pilot cover identifies book 3627 as
+  // scientific, while the MOE inventory only labels its scope as grade-11.
+  if (record.id === 3627) return 'scientific';
+  const text = `${record.scope.gradeLabel} ${record.item.fileDescription ?? ''} ${record.scope.subjectLabel}`;
   if (/علمي|علم/u.test(text)) return 'scientific';
   if (/أدبي|ادبي/u.test(text)) return 'literary';
   return 'general';
