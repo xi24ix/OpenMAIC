@@ -141,6 +141,7 @@ export type ContextRequest = z.infer<typeof contextRequestSchema>;
 export const unitContextRequestSchema = z.object({
   courseId: z.string().min(1).max(200),
   unitId: identifier,
+  lessonId: identifier.optional(),
   maxChars: z.number().int().min(500).max(200000).default(48000),
   offset: z.number().int().min(0).default(0),
   includeSupplementary: z.boolean().default(true),

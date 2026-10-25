@@ -49,6 +49,11 @@ test('HTTP routes, auth, asset confinement, and MCP smoke flow', async () => {
     const contextResponse = await fetch(`${base}/v1/lesson-context`, { method: 'POST', headers: { ...headers, 'content-type': 'application/json' }, body: JSON.stringify({ courseId: imported.courseId, lessonId: 'l1' }) });
     assert.equal(contextResponse.status, 200);
     assert.equal((await contextResponse.json() as { primaryContent: Array<{ text: string }> }).primaryContent[0].text, 'Lesson text');
+    const unitContextResponse = await fetch(`${base}/v1/unit-context`, { method: 'POST', headers: { ...headers, 'content-type': 'application/json' }, body: JSON.stringify({ courseId: imported.courseId, unitId: 'u1', lessonId: 'l1', allowUnverified: false }) });
+    assert.equal(unitContextResponse.status, 200);
+    const unitContext = await unitContextResponse.json() as { lessons: Array<{ id: string }>; primaryContent: Array<{ lessonId?: string }> };
+    assert.deepEqual(unitContext.lessons.map((lesson) => lesson.id), ['l1']);
+    assert.equal(unitContext.primaryContent[0].lessonId, 'l1');
     const searchResponse = await fetch(`${base}/v1/search`, { method: 'POST', headers: { ...headers, 'content-type': 'application/json' }, body: JSON.stringify({ query: 'Lesson text', courseId: imported.courseId }) });
     assert.equal(searchResponse.status, 200);
     assert.equal((await searchResponse.json() as { total: number }).total, 1);
@@ -62,6 +67,12 @@ test('HTTP routes, auth, asset confinement, and MCP smoke flow', async () => {
     assert.equal(mcpResponse.status, 200);
     const mcpBody = await mcpResponse.json() as { result: { tools: Array<{ name: string }> } };
     assert.ok(mcpBody.result.tools.some((tool) => tool.name === 'kw_lesson_context_get'));
+    assert.ok(mcpBody.result.tools.some((tool) => tool.name === 'kw_unit_context_get'));
+    const mcpUnitResponse = await fetch(`${base}/mcp`, { method: 'POST', headers: { ...headers, accept: 'application/json, text/event-stream', 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'kw_unit_context_get', arguments: { courseId: imported.courseId, unitId: 'u1', lessonId: 'l1' } } }) });
+    assert.equal(mcpUnitResponse.status, 200);
+    const mcpUnitBody = await mcpUnitResponse.json() as { result: { content: Array<{ text: string }> } };
+    const mcpUnitContext = JSON.parse(mcpUnitBody.result.content[0].text) as { lessons: Array<{ id: string }> };
+    assert.deepEqual(mcpUnitContext.lessons.map((lesson) => lesson.id), ['l1']);
   } finally {
     await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
     await database.close();

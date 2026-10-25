@@ -467,12 +467,13 @@ curl -sS -X POST \
   -d '{
     "courseId": "course-6cb122bcc9c6b2666ff82753348ded0021739878",
     "unitId": "u1",
+    "lessonId": "u1-l1",
     "maxChars": 48000,
     "allowUnverified": true
   }'
 ```
 
-The response groups blocks by lesson and includes citations and visual metadata. A `partial` status is expected for unverified or incomplete extraction data. Do not interpret `partial` as a successful publication-ready lesson.
+`lessonId` is optional. Omit it to retrieve the complete selected unit; provide it to retrieve only that lesson's content and linked visual assets. Both paths use the normalized `(course_id, unit_id, lesson_id)` tables and indexed lookups—no text search is required. The response groups blocks by lesson and includes citations and visual metadata. A `partial` status is expected for unverified or incomplete extraction data. Do not interpret `partial` as a successful publication-ready lesson.
 
 ### Search
 
@@ -563,6 +564,7 @@ curl -sS -X POST \
       "arguments": {
         "courseId": "course-6cb122bcc9c6b2666ff82753348ded0021739878",
         "unitId": "u1",
+        "lessonId": "u1-l1",
         "allowUnverified": true,
         "maxChars": 48000
       }

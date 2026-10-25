@@ -186,6 +186,10 @@ test('accepts OCR text as ready and serves unit context grouped by lesson', asyn
     assert.equal(unit.primaryContent[0].lessonId, 'l1');
     assert.equal(unit.primaryContent[0].textStatus, 'ocr');
     assert.equal(unit.visuals[0].lessonIds[0], 'l1');
+    const lessonScoped = await repository.getUnitContext({ courseId: imported.courseId, unitId: 'u1', lessonId: 'l1', maxChars: 500, offset: 0, includeSupplementary: false, allowUnverified: false });
+    assert.equal(lessonScoped.lessons.length, 1);
+    assert.equal(lessonScoped.lessons[0].id, 'l1');
+    assert.equal(lessonScoped.primaryContent[0].lessonId, 'l1');
     const coverage = await repository.getCoverage();
     assert.equal(coverage.contentBlocks, 1);
     assert.equal(coverage.readyLessons, 1);

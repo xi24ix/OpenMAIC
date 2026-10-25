@@ -152,6 +152,7 @@ export function createMcpServer(repository: CurriculumRepository): McpServer {
     description: 'Get grounded, cited context for every lesson in a course unit, grouped by lesson.',
     inputSchema: {
       courseId: z.string().min(1).max(200), unitId: z.string().min(1).max(96),
+      lessonId: z.string().min(1).max(96).optional(),
       maxChars: z.number().int().min(500).max(200_000).optional(), offset: z.number().int().min(0).optional(),
       includeSupplementary: z.boolean().optional(), allowUnverified: z.boolean().optional(),
     },

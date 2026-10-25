@@ -79,6 +79,7 @@ export interface CurriculumUnitContext {
 export interface CurriculumGenerationRequest {
   courseId: string;
   unitId: string;
+  lessonId?: string;
   audience: 'student' | 'parent' | 'teacher';
   supportProfile: 'none' | 'autism' | 'adhd' | 'learning-difficulties';
 }
@@ -184,23 +185,34 @@ export async function curriculumCatalog(): Promise<CurriculumCatalogResponse> {
 export async function curriculumUnitContext(
   courseId: string,
   unitId: string,
+  lessonId?: string,
 ): Promise<CurriculumUnitContext> {
-  const context = await requestKb<CurriculumUnitContext>('/v1/unit-context', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      courseId,
-      unitId,
-      maxChars: 16_000,
-      offset: 0,
-      includeSupplementary: true,
-      // The deployed corpus is intentionally still private-reference material.
-      // This app is the owner-operated private evaluation surface; the warning
-      // is preserved and shown in the preparation result instead of silently
-      // presenting the text as curriculum-verified.
-      allowUnverified: true,
-    }),
-  });
+  const baseRequest = {
+    courseId,
+    unitId,
+    ...(lessonId ? { lessonId } : {}),
+    maxChars: 200_000,
+    includeSupplementary: true,
+    // The deployed corpus is intentionally still private-reference material.
+    // This app is the owner-operated private evaluation surface; the warning
+    // is preserved and shown in the preparation result instead of silently
+    // presenting the text as curriculum-verified.
+    allowUnverified: true,
+  };
+  const pages: CurriculumUnitContext[] = [];
+  let offset = 0;
+  for (let pageNumber = 0; pageNumber < 20; pageNumber += 1) {
+    const context = await requestKb<CurriculumUnitContext>('/v1/unit-context', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ ...baseRequest, offset }),
+    });
+    pages.push(context);
+    const nextOffset = context.pagination?.nextOffset ?? null;
+    if (nextOffset === null || nextOffset <= offset) break;
+    offset = nextOffset;
+  }
+  const context = pages[0];
   if (
     !context ||
     typeof context !== 'object' ||
@@ -214,7 +226,42 @@ export async function curriculumUnitContext(
       'The curriculum knowledge base returned an incomplete unit context.',
     );
   }
-  return context;
+  if (pages.length === 1) return context;
+
+  const primaryContent = pages.flatMap((page) => page.primaryContent);
+  const supportingMaterial = pages.flatMap((page) => page.supportingMaterial);
+  const visuals = [
+    ...new Map(
+      pages.flatMap((page) => page.visuals ?? []).map((visual) => [visual.id, visual]),
+    ).values(),
+  ];
+  const warnings = [...new Set(pages.flatMap((page) => page.warnings))];
+  const truncated = pages.at(-1)?.pagination.nextOffset !== null;
+  if (truncated)
+    warnings.push(
+      'The selected unit exceeded the maximum context retrieval window; generation uses the retrieved pages without text search.',
+    );
+  const status = pages.some((page) => page.status === 'not_available')
+    ? 'not_available'
+    : pages.some((page) => page.status === 'partial')
+      ? 'partial'
+      : 'ready';
+  return {
+    ...context,
+    bundleId: `bundle-${pages.map((page) => page.bundleId).join(':')}`,
+    status,
+    primaryContent,
+    supportingMaterial,
+    visuals,
+    warnings,
+    pagination: {
+      offset: 0,
+      nextOffset: truncated ? (pages.at(-1)?.pagination.nextOffset ?? null) : null,
+      totalBlocks:
+        pages[0]?.pagination.totalBlocks ?? primaryContent.length + supportingMaterial.length,
+      truncated,
+    },
+  };
 }
 
 function audienceInstruction(audience: CurriculumGenerationRequest['audience']): string {
@@ -282,6 +329,9 @@ export function formatCurriculumGenerationPreparation(
     'Use the source-grounded content as the authority. Do not invent textbook facts, unit titles, lesson boundaries, page references, or citations. If the context is partial, say so in the teacher-facing notes and keep claims within the supplied evidence.',
     `Curriculum selection: ${curriculumIdentity}.`,
     `Selected unit: ${unit?.title ?? 'unknown unit'}.`,
+    request.lessonId
+      ? `Selected lesson: ${lessons.find((lesson) => lesson.id === request.lessonId)?.title ?? request.lessonId}. Focus the lesson on this selected lesson while staying within its retrieved unit evidence.`
+      : 'Lesson scope: use the retrieved content across the selected unit and preserve the unit lesson order.',
     'Unit lessons and objectives:',
     lessonList,
     audienceInstruction(request.audience),

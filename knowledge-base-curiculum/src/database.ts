@@ -95,7 +95,7 @@ async function migrationSql(name: string): Promise<string> {
 
 export async function applyInitialMigration(database: Database): Promise<void> {
   await database.query('CREATE TABLE IF NOT EXISTS schema_migrations (version TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP)');
-  for (const version of ['001_initial.sql', '002_hardening.sql']) {
+  for (const version of ['001_initial.sql', '002_hardening.sql', '003_unit_lookup.sql']) {
     const applied = await database.query<{ version: string }>('SELECT version FROM schema_migrations WHERE version=$1', [version]);
     if (applied.rows.length) continue;
     const sql = await migrationSql(version);

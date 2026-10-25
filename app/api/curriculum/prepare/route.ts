@@ -24,6 +24,9 @@ function parseRequest(value: unknown): CurriculumGenerationRequest {
   if (typeof input.courseId !== 'string' || typeof input.unitId !== 'string') {
     throw new CurriculumRequestError('courseId and unitId are required');
   }
+  if (input.lessonId !== undefined && typeof input.lessonId !== 'string') {
+    throw new CurriculumRequestError('lessonId is invalid');
+  }
   const audience = input.audience;
   const supportProfile = input.supportProfile;
   if (!['student', 'parent', 'teacher'].includes(String(audience))) {
@@ -35,6 +38,7 @@ function parseRequest(value: unknown): CurriculumGenerationRequest {
   return {
     courseId: input.courseId,
     unitId: input.unitId,
+    ...(typeof input.lessonId === 'string' ? { lessonId: input.lessonId } : {}),
     audience: audience as CurriculumGenerationRequest['audience'],
     supportProfile: supportProfile as CurriculumGenerationRequest['supportProfile'],
   };
@@ -43,7 +47,7 @@ function parseRequest(value: unknown): CurriculumGenerationRequest {
 export async function POST(request: NextRequest) {
   try {
     const input = parseRequest(await request.json());
-    const context = await curriculumUnitContext(input.courseId, input.unitId);
+    const context = await curriculumUnitContext(input.courseId, input.unitId, input.lessonId);
     if (context.status === 'not_available' || context.primaryContent.length === 0) {
       return NextResponse.json(
         {

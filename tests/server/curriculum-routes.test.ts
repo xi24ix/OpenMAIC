@@ -29,6 +29,7 @@ function prepareRequest(body: unknown): NextRequest {
 const requestBody = {
   courseId: 'course-11-math',
   unitId: 'unit-3',
+  lessonId: 'lesson-3-1',
   audience: 'student',
   supportProfile: 'autism',
 } as const;
@@ -84,7 +85,11 @@ describe('curriculum preparation route', () => {
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual(prepared);
-    expect(mocks.curriculumUnitContext).toHaveBeenCalledWith('course-11-math', 'unit-3');
+    expect(mocks.curriculumUnitContext).toHaveBeenCalledWith(
+      'course-11-math',
+      'unit-3',
+      'lesson-3-1',
+    );
     expect(mocks.formatCurriculumGenerationPreparation).toHaveBeenCalledWith(context, requestBody);
   });
 

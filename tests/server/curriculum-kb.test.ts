@@ -98,4 +98,15 @@ describe('curriculum lesson preparation', () => {
     expect(prepared.requirement).toContain('Do not infer or claim a diagnosis');
     expect(prepared.requirement).toContain('predictable structure');
   });
+
+  it('keeps a selected lesson scoped inside the selected unit', () => {
+    const prepared = formatCurriculumGenerationPreparation(context, {
+      ...request('none'),
+      lessonId: 'lesson-1',
+    });
+
+    expect(prepared.requirement).toContain('Selected lesson: Lesson 1');
+    expect(prepared.requirement).toContain('Focus the lesson on this selected lesson');
+    expect(prepared.requirement).toContain('Source-grounded mathematics content.');
+  });
 });

@@ -40,7 +40,7 @@ import type {
 } from '@/lib/server/curriculum-kb';
 
 type SubjectIcon = typeof Calculator;
-type PickerStep = 'grade' | 'track' | 'subject' | 'term' | 'book' | 'unit' | 'support';
+type PickerStep = 'grade' | 'track' | 'subject' | 'term' | 'book' | 'unit' | 'lesson' | 'support';
 
 const SUBJECT_META: Record<string, { label: string; ar: string; icon: SubjectIcon }> = {
   arabic: { label: 'Arabic language', ar: 'اللغة العربية', icon: Languages },
@@ -134,7 +134,16 @@ const SUPPORT_PROFILES: Array<{
   { id: 'learning-difficulties', icon: BookOpen },
 ];
 
-const STEP_ORDER: PickerStep[] = ['grade', 'track', 'subject', 'term', 'book', 'unit', 'support'];
+const STEP_ORDER: PickerStep[] = [
+  'grade',
+  'track',
+  'subject',
+  'term',
+  'book',
+  'unit',
+  'lesson',
+  'support',
+];
 
 function canonicalSubject(subject: string): string {
   return SUBJECT_ID_META[subject] ?? subject;
@@ -206,6 +215,7 @@ export function CurriculumLessonPicker({
   const [semester, setSemester] = useState<1 | 2>(1);
   const [courseId, setCourseId] = useState<string | null>(null);
   const [unitId, setUnitId] = useState<string | null>(null);
+  const [lessonId, setLessonId] = useState<string | null>(null);
   const [audience, setAudience] = useState<CurriculumGenerationRequest['audience']>('student');
   const [supportProfile, setSupportProfile] =
     useState<CurriculumGenerationRequest['supportProfile']>('none');
@@ -277,22 +287,24 @@ export function CurriculumLessonPicker({
   );
   const units = useMemo(() => selectedCourse?.units ?? [], [selectedCourse]);
   const selectedUnit = units.find((unit) => unit.id === unitId) ?? null;
+  const selectedLesson = selectedUnit?.lessons.find((lesson) => lesson.id === lessonId) ?? null;
   const preparationRequest = useMemo<CurriculumGenerationRequest | null>(
     () =>
       selectedCourse && selectedUnit
         ? {
             courseId: selectedCourse.courseId,
             unitId: selectedUnit.id,
+            ...(selectedLesson ? { lessonId: selectedLesson.id } : {}),
             audience,
             supportProfile,
           }
         : null,
-    [audience, selectedCourse, selectedUnit, supportProfile],
+    [audience, selectedCourse, selectedLesson, selectedUnit, supportProfile],
   );
   const preparationKey = useMemo(
     () =>
       preparationRequest
-        ? `${preparationRequest.courseId}:${preparationRequest.unitId}:${preparationRequest.audience}:${preparationRequest.supportProfile}`
+        ? `${preparationRequest.courseId}:${preparationRequest.unitId}:${preparationRequest.lessonId ?? 'unit'}:${preparationRequest.audience}:${preparationRequest.supportProfile}`
         : null,
     [preparationRequest],
   );
@@ -306,6 +318,7 @@ export function CurriculumLessonPicker({
       setSubject(null);
       setCourseId(null);
       setUnitId(null);
+      setLessonId(null);
     }
   }, [subject, subjects]);
 
@@ -317,12 +330,19 @@ export function CurriculumLessonPicker({
     if (courseId && !books.some((course) => course.courseId === courseId)) {
       setCourseId(null);
       setUnitId(null);
+      setLessonId(null);
     }
   }, [books, courseId]);
 
   useEffect(() => {
-    if (unitId && !units.some((unit) => unit.id === unitId)) setUnitId(null);
-  }, [unitId, units]);
+    if (unitId && !units.some((unit) => unit.id === unitId)) {
+      setUnitId(null);
+      setLessonId(null);
+    }
+    if (lessonId && !selectedUnit?.lessons.some((lesson) => lesson.id === lessonId)) {
+      setLessonId(null);
+    }
+  }, [lessonId, selectedUnit, unitId, units]);
 
   const loadPreparation = useCallback(
     async (request: CurriculumGenerationRequest): Promise<CurriculumGenerationPreparation> => {
@@ -390,6 +410,7 @@ export function CurriculumLessonPicker({
     setSemester(1);
     setCourseId(null);
     setUnitId(null);
+    setLessonId(null);
     setAudience('student');
     setSupportProfile('none');
     setPreparingPreview(false);
@@ -408,6 +429,7 @@ export function CurriculumLessonPicker({
       const request = preparationRequest ?? {
         courseId: selectedCourse.courseId,
         unitId: selectedUnit.id,
+        ...(selectedLesson ? { lessonId: selectedLesson.id } : {}),
         audience,
         supportProfile,
       };
@@ -432,8 +454,9 @@ export function CurriculumLessonPicker({
   const stepLabel = t(`curriculum.steps.${step}`);
   const canGoBack = step !== 'grade';
   const goBack = () => {
-    if (step === 'support') setStep('unit');
-    else if (step === 'unit') setStep('book');
+    if (step === 'support') setStep('lesson');
+    else if (step === 'lesson') setStep('unit');
+    else if (step === 'unit') setStep(books.length > 1 ? 'book' : 'term');
     else if (step === 'book') setStep('term');
     else if (step === 'term') setStep('subject');
     else if (step === 'subject') setStep(tracks.length > 1 ? 'track' : 'grade');
@@ -554,6 +577,7 @@ export function CurriculumLessonPicker({
                             setSubject(null);
                             setCourseId(null);
                             setUnitId(null);
+                            setLessonId(null);
                             setStep(nextTracks.length > 1 ? 'track' : 'subject');
                           }}
                           className={cn(
@@ -626,6 +650,7 @@ export function CurriculumLessonPicker({
                               setSubject(value);
                               setCourseId(null);
                               setUnitId(null);
+                              setLessonId(null);
                               setStep('term');
                             }}
                             icon={<Icon className="size-5" aria-hidden="true" />}
@@ -647,10 +672,20 @@ export function CurriculumLessonPicker({
                           data-testid={`curriculum-term-${value}`}
                           selected={semester === value}
                           onClick={() => {
-                            setSemester(value as 1 | 2);
+                            const nextSemester = value as 1 | 2;
+                            const nextBooks = subjectOptions.filter(
+                              (course) => course.semester === nextSemester,
+                            );
+                            setSemester(nextSemester);
                             setCourseId(null);
                             setUnitId(null);
-                            setStep('book');
+                            setLessonId(null);
+                            if (nextBooks.length === 1) {
+                              setCourseId(nextBooks[0]?.courseId ?? null);
+                              setStep('unit');
+                            } else {
+                              setStep('book');
+                            }
                           }}
                           icon={<BookMarked className="size-5" aria-hidden="true" />}
                           title={t('curriculum.term', { term: value })}
@@ -672,6 +707,7 @@ export function CurriculumLessonPicker({
                           onClick={() => {
                             setCourseId(course.courseId);
                             setUnitId(null);
+                            setLessonId(null);
                             setStep('unit');
                           }}
                           icon={<BookMarked className="size-5" aria-hidden="true" />}
@@ -694,10 +730,46 @@ export function CurriculumLessonPicker({
                           selected={unitId === unit.id}
                           onClick={() => {
                             setUnitId(unit.id);
-                            setStep('support');
+                            setLessonId(null);
+                            setStep(unit.lessons.length > 0 ? 'lesson' : 'support');
                           }}
                           locale={locale}
                           t={t}
+                        />
+                      ))}
+                    </div>
+                  </SelectionStep>
+                ) : null}
+
+                {step === 'lesson' && selectedUnit ? (
+                  <SelectionStep
+                    title={t('curriculum.lessonLabel')}
+                    hint={t('curriculum.lessonHint')}
+                  >
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <ChoiceCard
+                        data-testid="curriculum-lesson-whole-unit"
+                        selected={lessonId === null}
+                        onClick={() => {
+                          setLessonId(null);
+                          setStep('support');
+                        }}
+                        icon={<BookOpen className="size-5" aria-hidden="true" />}
+                        title={t('curriculum.wholeUnit')}
+                        description={t('curriculum.wholeUnitDescription')}
+                      />
+                      {selectedUnit.lessons.map((lesson) => (
+                        <ChoiceCard
+                          key={lesson.id}
+                          data-testid={`curriculum-lesson-${lesson.id}`}
+                          selected={lessonId === lesson.id}
+                          onClick={() => {
+                            setLessonId(lesson.id);
+                            setStep('support');
+                          }}
+                          icon={<BookOpen className="size-5" aria-hidden="true" />}
+                          title={lesson.title}
+                          description={lesson.objectives[0] ?? t('curriculum.lessonDescription')}
                         />
                       ))}
                     </div>
@@ -712,11 +784,15 @@ export function CurriculumLessonPicker({
                           <Sparkles className="size-5" aria-hidden="true" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-bold">{selectedUnit.title}</p>
+                          <p className="text-sm font-bold">
+                            {selectedLesson?.title ?? selectedUnit.title}
+                          </p>
                           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                             {subjectLabel(selectedCourse.subject, locale)} ·{' '}
                             {t('curriculum.term', { term: selectedCourse.semester })} ·{' '}
-                            {t('curriculum.unitReady', { count: selectedUnit.lessons.length })}
+                            {selectedLesson
+                              ? t('curriculum.selectedLessonReady')
+                              : t('curriculum.unitReady', { count: selectedUnit.lessons.length })}
                           </p>
                         </div>
                       </div>

@@ -28,6 +28,11 @@ const translations: Record<string, string> = {
   'curriculum.bookHint': 'Choose a book',
   'curriculum.unitLabel': 'Choose a unit',
   'curriculum.unitHint': 'Choose a unit',
+  'curriculum.lessonLabel': 'Choose a lesson',
+  'curriculum.lessonHint': 'Choose the whole unit or one lesson',
+  'curriculum.lessonDescription': 'Retrieved lesson evidence',
+  'curriculum.wholeUnit': 'Use the entire unit',
+  'curriculum.wholeUnitDescription': 'Use all unit content',
   'curriculum.unitReady': 'This unit is ready',
   'curriculum.audienceLabel': 'Who is this lesson for?',
   'curriculum.audiences.student': 'Student',
@@ -60,6 +65,8 @@ const translations: Record<string, string> = {
   'curriculum.sourceReady': 'Curriculum source is ready',
   'curriculum.sourcePartial': 'Curriculum source is partial',
   'curriculum.sourceWarning': 'The lesson will stay within the retrieved textbook evidence.',
+  'curriculum.selectedLessonReady': 'This lesson is ready',
+  'curriculum.steps.lesson': 'Lesson',
 };
 
 const translate = (key: string, options?: Record<string, unknown>) => {
@@ -219,7 +226,14 @@ describe('CurriculumLessonPicker', () => {
               semester: 1,
               edition: 'Ministry curriculum book',
               language: 'ar',
-              units: [{ id: 'unit-3', title: 'Unit 3', order: 3, lessons: [] }],
+              units: [
+                {
+                  id: 'unit-3',
+                  title: 'Unit 3',
+                  order: 3,
+                  lessons: [{ id: 'lesson-3-1', title: 'Lesson 3.1', order: 1, objectives: [] }],
+                },
+              ],
             },
           ],
         });
@@ -243,8 +257,8 @@ describe('CurriculumLessonPicker', () => {
     await click('[data-testid="curriculum-grade-11"]');
     await click('[data-testid="curriculum-subject-mathematics"]');
     await click('[data-testid="curriculum-term-1"]');
-    await click('[data-testid="curriculum-course-course-11-math"]');
     await click('[data-testid="curriculum-unit-unit-3"]');
+    await click('[data-testid="curriculum-lesson-lesson-3-1"]');
     await settle();
 
     expect(
@@ -265,7 +279,7 @@ describe('CurriculumLessonPicker', () => {
     expect(onGenerate).toHaveBeenCalledTimes(1);
     expect(onGenerate).toHaveBeenCalledWith(
       expect.objectContaining({
-        request: expect.objectContaining({ supportProfile: 'autism' }),
+        request: expect.objectContaining({ supportProfile: 'autism', lessonId: 'lesson-3-1' }),
         prepared,
       }),
     );

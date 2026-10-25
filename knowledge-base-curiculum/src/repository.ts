@@ -349,8 +349,9 @@ export class CurriculumRepository {
     if (!unitRows.rows.length) return this.emptyUnitContext(request, 'Unit is not available', rowCourse(courseRow));
     const unitRow = unitRows.rows[0];
     const unit = { id: unitRow.unit_id as string, title: unitRow.title as string, order: Number(unitRow.unit_order) };
-    const lessonRows = await this.database.query<DbRow>('SELECT * FROM lessons WHERE course_id=$1 AND unit_id=$2 ORDER BY lesson_order', [request.courseId, request.unitId]);
+    const lessonRows = await this.database.query<DbRow>(`SELECT * FROM lessons WHERE course_id=$1 AND unit_id=$2${request.lessonId ? ' AND lesson_id=$3' : ''} ORDER BY lesson_order`, request.lessonId ? [request.courseId, request.unitId, request.lessonId] : [request.courseId, request.unitId]);
     const lessons = lessonRows.rows.map((row) => ({ id: row.lesson_id as string, title: row.title as string, objectives: parseJson<string[]>(row.objectives, []) }));
+    if (request.lessonId && lessons.length === 0) return this.emptyUnitContext(request, 'Lesson is not available in this unit', rowCourse(courseRow), unit, [], 'not_available');
     const activeAll = await this.database.query<DbRow>(
       `SELECT rv.*,r.kind FROM resource_versions rv JOIN resources r ON r.resource_id=rv.resource_id WHERE rv.course_id=$1 AND rv.is_active=TRUE`, [request.courseId]);
     const activePrimary = activeAll.rows.filter((row) => row.kind === 'student_book');
@@ -362,9 +363,9 @@ export class CurriculumRepository {
        JOIN lessons l ON l.course_id=cb.course_id AND l.unit_id=cb.unit_id AND l.lesson_id=cb.lesson_id
        JOIN resource_versions rv ON rv.resource_version_id=cb.resource_version_id AND rv.course_id=cb.course_id AND rv.is_active=TRUE
        JOIN resources r ON r.resource_id=rv.resource_id
-       WHERE cb.course_id=$1 AND cb.unit_id=$2${versionFilter}
+       WHERE cb.course_id=$1 AND cb.unit_id=$2${request.lessonId ? ' AND cb.lesson_id=$3' : ''}${versionFilter}
        ORDER BY l.lesson_order, CASE WHEN r.kind='student_book' THEN 0 ELSE 1 END, r.kind, r.resource_id, cb.block_order`,
-      [request.courseId, request.unitId],
+       request.lessonId ? [request.courseId, request.unitId, request.lessonId] : [request.courseId, request.unitId],
     );
     const primaryRows = blocks.rows.filter((row) => row.resource_kind === 'student_book');
     const supportingRows = blocks.rows.filter((row) => row.resource_kind !== 'student_book' && request.includeSupplementary);
@@ -398,7 +399,7 @@ export class CurriculumRepository {
     const visuals = await this.unitVisuals(request.courseId, request.unitId, selectedLessonIds, selected, request.allowUnverified);
     const ready = primaryRows.length > 0 && primaryRows.every((row) => (row.text_status === 'native' || row.text_status === 'ocr') && row.curriculum_verified && row.content_verified) && !request.allowUnverified;
     const status: UnitContext['status'] = ready ? 'ready' : primaryRows.length === 0 ? 'not_available' : 'partial';
-    const bundleId = `bundle-${hash(json([request.courseId, request.unitId, request.maxChars, request.offset, request.includeSupplementary, request.allowUnverified, [...selectedIds]]))}`;
+    const bundleId = `bundle-${hash(json([request.courseId, request.unitId, request.lessonId, request.maxChars, request.offset, request.includeSupplementary, request.allowUnverified, [...selectedIds]]))}`;
     return { schemaVersion: 1, bundleId, status, course: rowCourse(courseRow), unit, lessons, primaryContent, supportingMaterial, visuals, warnings, pagination: { offset, nextOffset, totalBlocks, truncated: nextOffset !== null } };
   }
 
@@ -430,7 +431,7 @@ export class CurriculumRepository {
   }
 
   private emptyUnitContext(request: UnitContextRequest, warning: string, course: Course | null = null, unit: UnitContext['unit'] = null, lessons: UnitContext['lessons'] = [], status: UnitContext['status'] = 'not_available'): UnitContext {
-    return { schemaVersion: 1, bundleId: `bundle-${hash(json([request.courseId, request.unitId, request.offset]))}`, status, course, unit, lessons, primaryContent: [], supportingMaterial: [], visuals: [], warnings: [warning], pagination: { offset: request.offset, nextOffset: null, totalBlocks: 0, truncated: false } };
+    return { schemaVersion: 1, bundleId: `bundle-${hash(json([request.courseId, request.unitId, request.lessonId, request.offset]))}`, status, course, unit, lessons, primaryContent: [], supportingMaterial: [], visuals: [], warnings: [warning], pagination: { offset: request.offset, nextOffset: null, totalBlocks: 0, truncated: false } };
   }
 
   private async contextVisuals(courseId: string, lessonId: string, selected: DbRow[], allowUnverified: boolean): Promise<ContextVisual[]> {
