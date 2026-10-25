@@ -243,9 +243,23 @@
        to forcing overflow-y: scroll as well. */
     scrollbar-gutter: stable;
     overflow-y: scroll;
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
   }
   body {
     @apply bg-background text-foreground;
+    overscroll-behavior: none;
+  }
+  button,
+  a,
+  [role='button'] {
+    touch-action: manipulation;
+  }
+  input,
+  textarea,
+  select {
+    font-size: 16px;
   }
   /* Radix modal overlays wrap with `react-remove-scroll`, which compensates
      for the removed page scrollbar by adding right-side body spacing. This
@@ -259,6 +273,24 @@
     margin-right: 0 !important;
   }
 }
+
+/* Curriculum picker: keep the dismiss control comfortable on touch devices
+   and keep the modal's bottom action clear of the iOS home indicator. */
+.curriculum-lesson-picker [data-slot='dialog-close'] {
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  touch-action: manipulation;
+}
+
+@media (max-width: 640px) {
+  .curriculum-lesson-picker {
+    max-height: calc(
+      100dvh - max(1rem, env(safe-area-inset-top, 0px)) -
+        max(1rem, env(safe-area-inset-bottom, 0px))
+    );
+  }
+}
+
 /* ProseMirror Editor Styles */
 .prosemirror-editor {
   cursor: text;

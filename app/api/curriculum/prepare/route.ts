@@ -9,19 +9,28 @@ import {
 
 export const runtime = 'nodejs';
 
+class CurriculumRequestError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'CurriculumRequestError';
+  }
+}
+
 function parseRequest(value: unknown): CurriculumGenerationRequest {
-  if (!value || typeof value !== 'object') throw new Error('Invalid curriculum request');
+  if (!value || typeof value !== 'object') {
+    throw new CurriculumRequestError('Invalid curriculum request');
+  }
   const input = value as Record<string, unknown>;
   if (typeof input.courseId !== 'string' || typeof input.unitId !== 'string') {
-    throw new Error('courseId and unitId are required');
+    throw new CurriculumRequestError('courseId and unitId are required');
   }
   const audience = input.audience;
   const supportProfile = input.supportProfile;
   if (!['student', 'parent', 'teacher'].includes(String(audience))) {
-    throw new Error('audience is invalid');
+    throw new CurriculumRequestError('audience is invalid');
   }
   if (!['none', 'autism', 'adhd', 'learning-difficulties'].includes(String(supportProfile))) {
-    throw new Error('supportProfile is invalid');
+    throw new CurriculumRequestError('supportProfile is invalid');
   }
   return {
     courseId: input.courseId,
@@ -47,13 +56,14 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json(formatCurriculumGenerationPreparation(context, input));
   } catch (error) {
-    if (error instanceof Error && !(error instanceof SyntaxError)) {
-      if (error.message.includes('required') || error.message.includes('invalid')) {
-        return NextResponse.json(
-          { error: error.message, code: 'invalid_request' },
-          { status: 400 },
-        );
-      }
+    if (error instanceof CurriculumRequestError) {
+      return NextResponse.json({ error: error.message, code: 'invalid_request' }, { status: 400 });
+    }
+    if (error instanceof SyntaxError) {
+      return NextResponse.json(
+        { error: 'Invalid JSON body', code: 'invalid_request' },
+        { status: 400 },
+      );
     }
     return curriculumErrorResponse(error);
   }

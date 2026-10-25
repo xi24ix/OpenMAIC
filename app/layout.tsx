@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import './globals.css';
@@ -42,6 +42,17 @@ export const metadata: Metadata = {
   title: 'Alostad الأستاذ',
   description:
     'Alostad الأستاذ — the AI interactive classroom. منصة تعليمية بالذكاء الاصطناعي: upload a lesson and generate an immersive, multi-agent learning experience.',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  interactiveWidget: 'resizes-content',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f1f2fd' },
+    { media: '(prefers-color-scheme: dark)', color: '#080b18' },
+  ],
 };
 
 export default function RootLayout({

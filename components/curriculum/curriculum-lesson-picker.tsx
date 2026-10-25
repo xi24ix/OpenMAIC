@@ -173,6 +173,16 @@ function apiErrorMessage(body: unknown, fallback: string): string {
   return fallback;
 }
 
+function apiWarnings(body: unknown): string[] {
+  if (!body || typeof body !== 'object') return [];
+  const warnings = (body as { warnings?: unknown }).warnings;
+  return Array.isArray(warnings)
+    ? warnings.filter((warning): warning is string => typeof warning === 'string')
+    : [];
+}
+
+type PreparationError = Error & { warnings?: string[] };
+
 export function CurriculumLessonPicker({
   disabled = false,
   onGenerate,
@@ -200,6 +210,13 @@ export function CurriculumLessonPicker({
   const [supportProfile, setSupportProfile] =
     useState<CurriculumGenerationRequest['supportProfile']>('none');
   const [preparing, setPreparing] = useState(false);
+  const [preparingPreview, setPreparingPreview] = useState(false);
+  const [preparedPreview, setPreparedPreview] = useState<CurriculumGenerationPreparation | null>(
+    null,
+  );
+  const [preparedPreviewKey, setPreparedPreviewKey] = useState<string | null>(null);
+  const [preparationWarnings, setPreparationWarnings] = useState<string[]>([]);
+  const [preparationError, setPreparationError] = useState<string | null>(null);
   const [generationError, setGenerationError] = useState<string | null>(null);
 
   const loadCatalog = useCallback(async () => {
@@ -260,6 +277,25 @@ export function CurriculumLessonPicker({
   );
   const units = useMemo(() => selectedCourse?.units ?? [], [selectedCourse]);
   const selectedUnit = units.find((unit) => unit.id === unitId) ?? null;
+  const preparationRequest = useMemo<CurriculumGenerationRequest | null>(
+    () =>
+      selectedCourse && selectedUnit
+        ? {
+            courseId: selectedCourse.courseId,
+            unitId: selectedUnit.id,
+            audience,
+            supportProfile,
+          }
+        : null,
+    [audience, selectedCourse, selectedUnit, supportProfile],
+  );
+  const preparationKey = useMemo(
+    () =>
+      preparationRequest
+        ? `${preparationRequest.courseId}:${preparationRequest.unitId}:${preparationRequest.audience}:${preparationRequest.supportProfile}`
+        : null,
+    [preparationRequest],
+  );
 
   useEffect(() => {
     if (!tracks.includes(track)) setTrack(tracks[0] ?? 'general');
@@ -288,6 +324,64 @@ export function CurriculumLessonPicker({
     if (unitId && !units.some((unit) => unit.id === unitId)) setUnitId(null);
   }, [unitId, units]);
 
+  const loadPreparation = useCallback(
+    async (request: CurriculumGenerationRequest): Promise<CurriculumGenerationPreparation> => {
+      const response = await fetch('/api/curriculum/prepare', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(request),
+      });
+      const body = await response.json().catch(() => null);
+      if (!response.ok || !body || !('requirement' in body)) {
+        const error = new Error(
+          apiErrorMessage(body, t('curriculum.prepareFailed')),
+        ) as PreparationError;
+        error.warnings = apiWarnings(body);
+        throw error;
+      }
+      return body as CurriculumGenerationPreparation;
+    },
+    [t],
+  );
+
+  useEffect(() => {
+    if (step !== 'support' || !preparationRequest || !preparationKey) {
+      setPreparingPreview((current) => (current ? false : current));
+      setPreparedPreview((current) => (current ? null : current));
+      setPreparedPreviewKey((current) => (current ? null : current));
+      setPreparationWarnings((current) => (current.length > 0 ? [] : current));
+      setPreparationError((current) => (current ? null : current));
+      return;
+    }
+
+    let cancelled = false;
+    setPreparingPreview(true);
+    setPreparedPreview(null);
+    setPreparedPreviewKey(null);
+    setPreparationWarnings([]);
+    setPreparationError(null);
+
+    void loadPreparation(preparationRequest)
+      .then((prepared) => {
+        if (cancelled) return;
+        setPreparedPreview(prepared);
+        setPreparedPreviewKey(preparationKey);
+        setPreparationWarnings(prepared.warnings);
+      })
+      .catch((error: PreparationError) => {
+        if (cancelled) return;
+        setPreparationError(error.message);
+        setPreparationWarnings(error.warnings ?? []);
+      })
+      .finally(() => {
+        if (!cancelled) setPreparingPreview(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loadPreparation, preparationKey, preparationRequest, step]);
+
   const reset = () => {
     setStep('grade');
     setGrade(null);
@@ -298,6 +392,11 @@ export function CurriculumLessonPicker({
     setUnitId(null);
     setAudience('student');
     setSupportProfile('none');
+    setPreparingPreview(false);
+    setPreparedPreview(null);
+    setPreparedPreviewKey(null);
+    setPreparationWarnings([]);
+    setPreparationError(null);
     setGenerationError(null);
   };
 
@@ -306,25 +405,24 @@ export function CurriculumLessonPicker({
     setPreparing(true);
     setGenerationError(null);
     try {
-      const request: CurriculumGenerationRequest = {
+      const request = preparationRequest ?? {
         courseId: selectedCourse.courseId,
         unitId: selectedUnit.id,
         audience,
         supportProfile,
       };
-      const response = await fetch('/api/curriculum/prepare', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(request),
-      });
-      const body = await response.json().catch(() => null);
-      if (!response.ok || !body || !('requirement' in body)) {
-        throw new Error(apiErrorMessage(body, t('curriculum.prepareFailed')));
-      }
-      await onGenerate({ request, prepared: body as CurriculumGenerationPreparation });
+      const prepared =
+        preparedPreview && preparedPreviewKey === preparationKey
+          ? preparedPreview
+          : await loadPreparation(request);
+      await onGenerate({ request, prepared });
       setOpen(false);
     } catch (error) {
+      const preparationFailure = error as PreparationError;
       setGenerationError(error instanceof Error ? error.message : t('curriculum.prepareFailed'));
+      if (preparationFailure.warnings?.length) {
+        setPreparationWarnings(preparationFailure.warnings);
+      }
     } finally {
       setPreparing(false);
     }
@@ -357,7 +455,7 @@ export function CurriculumLessonPicker({
           disabled={disabled}
           data-testid="curriculum-lesson-launcher"
           className={cn(
-            'mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-semibold transition-all sm:w-auto',
+            'mt-3 inline-flex min-h-11 w-full touch-manipulation select-none items-center justify-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-semibold transition-all active:scale-[0.99] sm:w-auto',
             disabled
               ? 'cursor-not-allowed border-border/50 bg-muted/40 text-muted-foreground/50'
               : 'border-primary/20 bg-primary/8 text-primary hover:-translate-y-0.5 hover:bg-primary/14 hover:shadow-lg hover:shadow-primary/10',
@@ -369,13 +467,13 @@ export function CurriculumLessonPicker({
       </DialogTrigger>
       <DialogContent
         data-testid="curriculum-lesson-picker"
-        className="max-w-[min(820px,calc(100vw-24px))] overflow-hidden rounded-[28px] border-primary/10 p-0"
+        className="curriculum-lesson-picker !flex max-h-[calc(100dvh-1rem)] max-w-[calc(100vw-16px)] flex-col overflow-hidden rounded-[24px] border-primary/10 p-0 sm:max-w-[min(820px,calc(100vw-24px))] sm:rounded-[28px]"
       >
-        <DialogHeader className="relative overflow-hidden border-b border-border/60 px-5 pb-5 pt-6 sm:px-7">
+        <DialogHeader className="relative shrink-0 overflow-hidden border-b border-border/60 px-4 pb-4 pt-5 sm:px-7 sm:pb-5 sm:pt-6">
           <div className="pointer-events-none absolute -right-20 -top-24 size-56 rounded-full bg-primary/10 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-20 left-20 size-40 rounded-full bg-orange-400/10 blur-3xl" />
           <div className="relative">
-            <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <DialogTitle className="flex items-center gap-2 pr-10 text-base sm:text-lg">
               <span className="flex size-9 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <GraduationCap className="size-5" aria-hidden="true" />
               </span>
@@ -385,7 +483,7 @@ export function CurriculumLessonPicker({
               {t('curriculum.description')}
             </DialogDescription>
             <div
-              className="mt-5 flex items-center gap-1.5 overflow-x-auto pb-1"
+              className="scrollbar-hide -mx-1 mt-5 flex items-center gap-1.5 overflow-x-auto px-1 pb-1"
               aria-label={t('curriculum.progressLabel')}
             >
               {STEP_ORDER.map((item, index) => (
@@ -400,7 +498,7 @@ export function CurriculumLessonPicker({
           </div>
         </DialogHeader>
 
-        <div className="max-h-[min(68vh,700px)] overflow-y-auto px-5 py-5 sm:px-7">
+        <div className="min-h-0 flex-1 overscroll-contain overflow-y-auto px-4 py-4 sm:px-7 sm:py-5">
           {loadingCatalog && catalog === null ? (
             <div
               className="flex min-h-60 items-center justify-center gap-2 text-sm text-muted-foreground"
@@ -440,6 +538,7 @@ export function CurriculumLessonPicker({
                         <button
                           key={value}
                           type="button"
+                          data-testid={`curriculum-grade-${value}`}
                           aria-pressed={grade === value}
                           onClick={() => {
                             setGrade(value);
@@ -458,7 +557,7 @@ export function CurriculumLessonPicker({
                             setStep(nextTracks.length > 1 ? 'track' : 'subject');
                           }}
                           className={cn(
-                            'group relative min-h-28 overflow-hidden rounded-3xl border p-4 text-start transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10',
+                            'group relative min-h-28 touch-manipulation select-none overflow-hidden rounded-3xl border p-4 text-start transition-all active:scale-[0.99] hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10',
                             grade === value
                               ? 'border-primary bg-primary/8 text-primary shadow-lg shadow-primary/10'
                               : 'border-border/60 bg-background hover:border-primary/30',
@@ -495,6 +594,7 @@ export function CurriculumLessonPicker({
                       {tracks.map((value) => (
                         <ChoiceCard
                           key={value}
+                          data-testid={`curriculum-track-${value}`}
                           selected={track === value}
                           onClick={() => {
                             setTrack(value);
@@ -520,6 +620,7 @@ export function CurriculumLessonPicker({
                         return (
                           <ChoiceCard
                             key={value}
+                            data-testid={`curriculum-subject-${canonicalSubject(value)}`}
                             selected={subject === value}
                             onClick={() => {
                               setSubject(value);
@@ -543,6 +644,7 @@ export function CurriculumLessonPicker({
                       {semesters.map((value) => (
                         <ChoiceCard
                           key={value}
+                          data-testid={`curriculum-term-${value}`}
                           selected={semester === value}
                           onClick={() => {
                             setSemester(value as 1 | 2);
@@ -565,6 +667,7 @@ export function CurriculumLessonPicker({
                       {books.map((course) => (
                         <ChoiceCard
                           key={course.courseId}
+                          data-testid={`curriculum-course-${course.courseId}`}
                           selected={courseId === course.courseId}
                           onClick={() => {
                             setCourseId(course.courseId);
@@ -586,6 +689,7 @@ export function CurriculumLessonPicker({
                       {units.map((unit) => (
                         <UnitCard
                           key={unit.id}
+                          data-testid={`curriculum-unit-${unit.id}`}
                           unit={unit}
                           selected={unitId === unit.id}
                           onClick={() => {
@@ -602,7 +706,7 @@ export function CurriculumLessonPicker({
 
                 {step === 'support' && selectedCourse && selectedUnit ? (
                   <div className="space-y-6">
-                    <div className="rounded-3xl border border-primary/15 bg-primary/5 p-4 sm:p-5">
+                    <div className="rounded-3xl border border-primary/15 bg-primary/5 p-4 break-words sm:p-5">
                       <div className="flex items-start gap-3">
                         <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                           <Sparkles className="size-5" aria-hidden="true" />
@@ -617,6 +721,49 @@ export function CurriculumLessonPicker({
                         </div>
                       </div>
                     </div>
+                    {preparingPreview ? (
+                      <div
+                        className="flex items-center gap-2 rounded-2xl border border-border/60 bg-muted/25 p-3 text-xs text-muted-foreground"
+                        data-testid="curriculum-source-status"
+                        role="status"
+                      >
+                        <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                        {t('curriculum.checkingSource')}
+                      </div>
+                    ) : preparationError ? (
+                      <div
+                        className="rounded-2xl border border-destructive/20 bg-destructive/6 p-3 text-xs break-words text-destructive"
+                        data-testid="curriculum-source-status"
+                        role="alert"
+                      >
+                        <p className="font-semibold">{preparationError}</p>
+                        {preparationWarnings.length > 0 ? (
+                          <WarningList warnings={preparationWarnings} />
+                        ) : null}
+                      </div>
+                    ) : preparedPreview ? (
+                      <div
+                        className={cn(
+                          'rounded-2xl border p-3 text-xs leading-relaxed break-words',
+                          preparedPreview.status === 'partial'
+                            ? 'border-amber-500/25 bg-amber-500/8 text-amber-900 dark:text-amber-100'
+                            : 'border-emerald-500/25 bg-emerald-500/8 text-emerald-900 dark:text-emerald-100',
+                        )}
+                        data-testid="curriculum-source-status"
+                        role="status"
+                      >
+                        <p className="font-semibold">
+                          {preparedPreview.status === 'partial'
+                            ? t('curriculum.sourcePartial')
+                            : t('curriculum.sourceReady')}
+                        </p>
+                        {preparationWarnings.length > 0 ? (
+                          <WarningList warnings={preparationWarnings} />
+                        ) : (
+                          <p className="mt-1">{t('curriculum.sourceWarning')}</p>
+                        )}
+                      </div>
+                    ) : null}
                     <section aria-labelledby="curriculum-audience-heading">
                       <SectionHeading
                         id="curriculum-audience-heading"
@@ -626,6 +773,7 @@ export function CurriculumLessonPicker({
                         {AUDIENCES.map(({ id, icon: Icon }) => (
                           <ChoiceCard
                             key={id}
+                            data-testid={`curriculum-audience-${id}`}
                             selected={audience === id}
                             onClick={() => setAudience(id)}
                             icon={<Icon className="size-5" aria-hidden="true" />}
@@ -652,6 +800,7 @@ export function CurriculumLessonPicker({
                         {SUPPORT_PROFILES.map(({ id, icon: Icon }) => (
                           <ChoiceCard
                             key={id}
+                            data-testid={`curriculum-support-${id}`}
                             selected={supportProfile === id}
                             onClick={() => setSupportProfile(id)}
                             icon={<Icon className="size-5" aria-hidden="true" />}
@@ -663,7 +812,7 @@ export function CurriculumLessonPicker({
                     </section>
                     {generationError ? (
                       <p
-                        className="rounded-2xl border border-destructive/20 bg-destructive/6 p-3 text-xs text-destructive"
+                        className="rounded-2xl border border-destructive/20 bg-destructive/6 p-3 text-xs break-words text-destructive"
                         role="alert"
                       >
                         {generationError}
@@ -681,9 +830,9 @@ export function CurriculumLessonPicker({
                     <button
                       type="button"
                       onClick={() => void generate()}
-                      disabled={preparing}
+                      disabled={preparing || preparingPreview || !preparedPreview}
                       data-testid="curriculum-generate-button"
-                      className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:opacity-95 disabled:cursor-wait disabled:opacity-60"
+                      className="inline-flex min-h-12 w-full touch-manipulation select-none items-center justify-center gap-2 rounded-2xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all active:scale-[0.99] hover:-translate-y-0.5 hover:opacity-95 disabled:cursor-wait disabled:opacity-60"
                     >
                       {preparing ? (
                         <Loader2 className="size-4 animate-spin" aria-hidden="true" />
@@ -702,13 +851,15 @@ export function CurriculumLessonPicker({
           )}
         </div>
 
-        <div className="flex items-center justify-between border-t border-border/60 px-5 py-3 sm:px-7">
-          <span className="text-xs text-muted-foreground">{stepLabel}</span>
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-border/60 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:px-7">
+          <span className="min-w-0 max-w-[55%] truncate text-xs text-muted-foreground">
+            {stepLabel}
+          </span>
           {canGoBack ? (
             <button
               type="button"
               onClick={goBack}
-              className="inline-flex min-h-10 items-center gap-1 rounded-full px-3 text-xs font-semibold text-primary transition-colors hover:bg-primary/8"
+              className="inline-flex min-h-10 touch-manipulation select-none items-center gap-1 rounded-full px-3 text-xs font-semibold text-primary transition-colors active:bg-primary/8 hover:bg-primary/8"
             >
               {isArabic ? (
                 <ArrowRight className="size-3.5" aria-hidden="true" />
@@ -779,13 +930,25 @@ function SectionHeading({ id, label }: { id: string; label: string }) {
   );
 }
 
+function WarningList({ warnings }: { warnings: string[] }) {
+  return (
+    <ul className="mt-2 list-disc space-y-1 ps-4">
+      {warnings.map((warning) => (
+        <li key={warning}>{warning}</li>
+      ))}
+    </ul>
+  );
+}
+
 function ChoiceCard({
+  'data-testid': testId,
   selected,
   onClick,
   icon,
   title,
   description,
 }: {
+  'data-testid'?: string;
   selected: boolean;
   onClick: () => void;
   icon?: ReactNode;
@@ -795,10 +958,11 @@ function ChoiceCard({
   return (
     <button
       type="button"
+      data-testid={testId}
       aria-pressed={selected}
       onClick={onClick}
       className={cn(
-        'group flex min-h-24 items-start gap-3 rounded-3xl border p-4 text-start transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/8',
+        'group flex min-h-24 touch-manipulation select-none items-start gap-3 rounded-3xl border p-4 text-start transition-all active:scale-[0.99] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/8',
         selected
           ? 'border-primary bg-primary/8 text-primary shadow-md shadow-primary/10'
           : 'border-border/60 bg-background hover:border-primary/30',
@@ -815,7 +979,7 @@ function ChoiceCard({
         {selected ? <Check className="size-4" aria-hidden="true" /> : icon}
       </span>
       <span className="min-w-0">
-        <span className="block text-sm font-bold leading-snug">{title}</span>
+        <span className="block break-words text-sm font-bold leading-snug">{title}</span>
         <span className="mt-1 block text-[11px] leading-relaxed text-muted-foreground">
           {description}
         </span>
@@ -825,12 +989,14 @@ function ChoiceCard({
 }
 
 function UnitCard({
+  'data-testid': testId,
   unit,
   selected,
   onClick,
   locale,
   t,
 }: {
+  'data-testid'?: string;
   unit: CurriculumUnitSummary;
   selected: boolean;
   onClick: () => void;
@@ -841,10 +1007,11 @@ function UnitCard({
   return (
     <button
       type="button"
+      data-testid={testId}
       aria-pressed={selected}
       onClick={onClick}
       className={cn(
-        'group flex min-h-28 items-start gap-3 rounded-3xl border p-4 text-start transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/8',
+        'group flex min-h-28 touch-manipulation select-none items-start gap-3 rounded-3xl border p-4 text-start transition-all active:scale-[0.99] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/8',
         selected
           ? 'border-primary bg-primary/8 text-primary shadow-md shadow-primary/10'
           : 'border-border/60 bg-background hover:border-primary/30',
@@ -860,7 +1027,7 @@ function UnitCard({
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2 text-sm font-bold">
-          <span className="min-w-0 flex-1">{unit.title}</span>
+          <span className="min-w-0 flex-1 break-words">{unit.title}</span>
           {isArabic ? (
             <ChevronLeft
               className="size-4 shrink-0 text-primary/60 transition-transform group-hover:-translate-x-1"

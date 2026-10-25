@@ -1208,6 +1208,32 @@
      delete / rename buttons so a tap opens the lesson instead of
      raising a floating button the next tap then triggers. */
   @media (hover: none) {
+    .aurora-utilities button:hover {
+      color: var(--aurora-ink-soft);
+      background: transparent;
+    }
+
+    .aurora-lesson:hover .aurora-cover {
+      border-color: var(--aurora-line);
+      box-shadow: var(--aurora-shadow-soft);
+    }
+
+    .aurora-classroom-header .aurora-controls button:hover,
+    .aurora-back:hover,
+    .aurora-plan-collapse:hover {
+      color: var(--aurora-ink-soft);
+      background: transparent;
+    }
+
+    .aurora-stage-wrap .aurora-plan-item:hover {
+      background: transparent;
+    }
+
+    .aurora-chat [data-scene-id] button:hover {
+      color: var(--aurora-ink-soft);
+      background: transparent;
+    }
+
     .aurora-home [class*='group-hover:opacity-100'] {
       display: none;
     }
