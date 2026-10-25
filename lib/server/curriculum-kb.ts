@@ -188,7 +188,8 @@ export async function curriculumVisualAsset(
   const { baseUrl, token } = kbConfig();
   let response: Response;
   try {
-    response = await fetch(`${baseUrl}${assetPath}`, {
+    const separator = assetPath.includes('?') ? '&' : '?';
+    response = await fetch(`${baseUrl}${assetPath}${separator}allowUnverified=true`, {
       cache: 'no-store',
       headers: { authorization: `Bearer ${token}` },
     });

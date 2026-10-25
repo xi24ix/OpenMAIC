@@ -455,10 +455,10 @@ export class CurriculumRepository {
     return { schemaVersion: 1, bundleId: `bundle-${hash(json([request.courseId, request.lessonId, request.offset]))}`, status, course, lesson, primaryContent: [], supportingMaterial: [], visuals: [], warnings: [warning], pagination: { offset: request.offset, nextOffset: null, totalBlocks: 0, truncated: false } };
   }
 
-  async getAsset(id: string): Promise<(VisualAsset & { source: Citation & { verified: boolean }; sourceMetadata: Citation & { verified: boolean } }) | null> {
+  async getAsset(id: string, allowUnverified = false): Promise<(VisualAsset & { source: Citation & { verified: boolean }; sourceMetadata: Citation & { verified: boolean } }) | null> {
     const rows = await this.database.query<DbRow>(
        `SELECT va.*,r.resource_id,r.title AS resource_title,r.kind AS resource_kind,r.source_url,r.publication_year,r.rights_note,rv.source_sha256,rv.curriculum_verified,rv.content_verified
-        FROM visual_assets va JOIN resource_versions rv ON rv.resource_version_id=va.resource_version_id AND rv.course_id=va.course_id AND rv.is_active=TRUE AND rv.curriculum_verified=TRUE AND rv.content_verified=TRUE
+        FROM visual_assets va JOIN resource_versions rv ON rv.resource_version_id=va.resource_version_id AND rv.course_id=va.course_id AND rv.is_active=TRUE${allowUnverified ? '' : ' AND rv.curriculum_verified=TRUE AND rv.content_verified=TRUE'}
        JOIN resources r ON r.resource_id=rv.resource_id WHERE va.asset_id=$1`, [id]);
     if (!rows.rows.length) return null;
     const row = rows.rows[0];

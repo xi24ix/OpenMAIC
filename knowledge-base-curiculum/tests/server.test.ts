@@ -63,6 +63,11 @@ test('HTTP routes, auth, asset confinement, and MCP smoke flow', async () => {
     const assetResponse = await fetch(`${base}/v1/assets/${encodeURIComponent(`${imported.resourceVersionId}:asset:v1`)}`, { headers });
     assert.equal(assetResponse.status, 200);
     assert.equal(assetResponse.headers.get('content-type'), 'image/png');
+    const unverifiedImported = await repository.importResource({ ...fixture().manifest, resource: { ...fixture().manifest.resource, id: 'unverified-book' }, review: { curriculumVerified: false, contentVerified: false } }, { ...fixture().extraction, versionId: 'extract-unverified', sourceSha256: 'c'.repeat(64) });
+    const hiddenUnverifiedAsset = await fetch(`${base}/v1/assets/${encodeURIComponent(`${unverifiedImported.resourceVersionId}:asset:v1`)}`, { headers });
+    assert.equal(hiddenUnverifiedAsset.status, 404);
+    const evaluationAsset = await fetch(`${base}/v1/assets/${encodeURIComponent(`${unverifiedImported.resourceVersionId}:asset:v1`)}?allowUnverified=true`, { headers });
+    assert.equal(evaluationAsset.status, 200);
     const mcpResponse = await fetch(`${base}/mcp`, { method: 'POST', headers: { ...headers, accept: 'application/json, text/event-stream', 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} }) });
     assert.equal(mcpResponse.status, 200);
     const mcpBody = await mcpResponse.json() as { result: { tools: Array<{ name: string }> } };

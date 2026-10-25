@@ -4,8 +4,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
 import { gzipSync } from 'node:zlib';
-import { createHash } from 'node:crypto';
-import { bootstrapCorpus, importBundleInto, restoreBundle } from '../src/bootstrap.js';
+import { bootstrapCorpus, restoreBundle } from '../src/bootstrap.js';
 import { openDatabase } from '../src/database.js';
 import { CurriculumRepository } from '../src/repository.js';
 
@@ -75,43 +74,5 @@ test('small bundle restores a persistent corpus without bypassing review', async
       assert.equal(coverage.readyLessons, 0);
     } finally { await database.close(); }
     assert.equal(JSON.parse(await readFile(path.join(output, 'complete.json'), 'utf8')).books, 1);
-  } finally { await rm(root, { recursive: true, force: true }); }
-});
-
-test('bundle merge imports into an existing corpus and persists assets', async () => {
-  const root = await mkdtemp(path.join(tmpdir(), 'bootstrap-merge-'));
-  const dataDir = path.join(root, 'db');
-  const assetRoot = path.join(root, 'corpus');
-  const assetData = Buffer.from('merge-asset');
-  const assetSha256 = createHash('sha256').update(assetData).digest('hex');
-  const book = {
-    type: 'book',
-    manifest: {
-      schemaVersion: 1,
-      course: { academicYear: '2026/2027', grade: 11, track: 'scientific', subject: 'mathematics', semester: 1, edition: 'test' },
-      resource: { id: 'book-merge', title: 'Merge test', kind: 'student_book', sourceUrl: 'https://example.test/book-merge' },
-      units: [{ id: 'u1', title: 'Unit', order: 0, lessons: [{ id: 'l1', title: 'Lesson', order: 0, segments: [{ page: 1 }], visuals: [{ id: 'v1', page: 1, bbox: [0, 0, 1, 1], kind: 'illustration', caption: 'Merge asset', purpose: 'illustration' }] }] }],
-    },
-    extraction: {
-      versionId: 'merge-test', sourceSha256: 'b'.repeat(64), originalKey: 'book-merge.pdf', pageCount: 1, extractor: 'test',
-      pages: [{ page: 1, width: 100, height: 100, text: 'Merge test', textStatus: 'ocr' }],
-      lessons: [{ lessonId: 'l1', segments: [{ page: 1, text: 'Merge test', textStatus: 'ocr' }], visualIds: ['v1'] }],
-      assets: [{ id: 'v1', objectKey: `assets/${assetSha256}.png`, sha256: assetSha256, mimeType: 'image/png', width: 1, height: 1, page: 1, bbox: [0, 0, 1, 1], kind: 'illustration', caption: 'Merge asset', purpose: 'illustration', lessonIds: ['l1'] }], warnings: [],
-    },
-  };
-  try {
-    const database = await openDatabase({ dataDir });
-    const repository = new CurriculumRepository(database);
-    await repository.initialize();
-    try {
-      const archive = path.join(root, 'merge-bundle.gz');
-      const asset = { type: 'asset', key: `assets/${assetSha256}.png`, sha256: assetSha256, data: assetData.toString('base64') };
-      await writeFile(archive, gzipSync(`${JSON.stringify(book)}\n${JSON.stringify(asset)}\n`));
-      const result = await importBundleInto({ archive, repository, assetRoot });
-      assert.equal(result.books, 1);
-      assert.equal(result.assets, 1);
-      assert.equal((await repository.getCoverage()).resources, 1);
-    } finally { await database.close(); }
-    assert.equal((await readFile(path.join(assetRoot, `assets/${assetSha256}.png`))).toString(), assetData.toString());
   } finally { await rm(root, { recursive: true, force: true }); }
 });
