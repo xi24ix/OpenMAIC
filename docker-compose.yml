@@ -21,6 +21,8 @@ services:
         - NEXT_PUBLIC_VIDEO_EXPORT_CTA_DESTINATION=${NEXT_PUBLIC_VIDEO_EXPORT_CTA_DESTINATION:-}
         - NEXT_PUBLIC_ENABLE_PPTX_IMPORT=${NEXT_PUBLIC_ENABLE_PPTX_IMPORT:-}
         - NEXT_PUBLIC_PRO_WORKBENCH_ENABLED=${NEXT_PUBLIC_PRO_WORKBENCH_ENABLED:-}
+        - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL:-}
+        - NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:-}
     # Published on loopback by default: the single-user owner (see
     # docker-compose.defaults.env) serves one course library to every request,
     # so only this machine should reach it. To publish on the network, set

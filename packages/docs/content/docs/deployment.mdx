@@ -48,6 +48,11 @@ docker compose --profile video-export up --build
 
 Other client-side feature flags can be passed in the same way. When using `docker build`, use the corresponding `--build-arg` options instead.
 
+The built-in Supabase Auth integration also needs `NEXT_PUBLIC_SUPABASE_URL` and
+`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` at image-build time for the browser bundle,
+and at runtime for server-side session verification. In Coolify, provide both as
+build variables/build arguments and runtime variables, then rebuild the image.
+
 To use `openmaic.yml`, mount it at the app's working directory, or anywhere else with `OPENMAIC_CONFIG` pointing at it:
 
 ```yaml
@@ -86,6 +91,21 @@ Run it under a process manager (systemd, pm2, a container) that keeps it running
 | Models | `openmaic.yml` or **Settings → Models** | the same |
 
 **Identity mode** decides who owns a course. Without one, every browser is its own anonymous owner and a second browser sees an empty library. Set `OWNER_SINGLE_USER=true` for a personal installation, `PERSISTENCE_SHARED_OWNER_ID` together with `ACCESS_CODE` for one team sharing one library, or register owner auth methods for real accounts; see [Owner identity](./hosting.mdx#owner-identity) and `.env.example`.
+
+For the built-in Supabase Auth integration, leave `OWNER_SINGLE_USER` and
+`OWNER_SINGLE_USER_ID` unset: Supabase Auth registers `supabaseAuth` as the
+owner method, while the single-user built-in is a separate catch-all method.
+Also set `OWNER_ANONYMOUS_PREMINT=false` so unauthenticated page responses do
+not mint unused anonymous-owner cookies.
+
+For a Coolify deployment, keep Supabase for Auth and point `DATABASE_URL` at a
+Coolify PostgreSQL service with a persistent volume. OpenMAIC stores course
+documents, generation state and asset bytes in that database by default; this
+avoids using Supabase Storage for large lesson assets. Set `ADMIN_EMAILS` to a
+comma-separated list of verified administrator email addresses to enable the
+read-only platform course index at `/admin/library`. The admin route is still
+owner-authenticated and does not grant ordinary users access to other owners'
+courses.
 
 In anonymous mode the owner cookie carries `Secure` in production, and so does the `ACCESS_CODE` cookie. Browsers keep a `Secure` cookie only over HTTPS or on `http://localhost` (Safari not even there), so a deployment served over plain HTTP must set `COOKIE_SECURE=0` (exactly `0`): otherwise every request becomes a new owner, writes fail with `403`, and the access code is asked for again. Without TLS the cookies travel in the clear, so do this only on a trusted network.
 

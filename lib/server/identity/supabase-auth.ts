@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { getSupabaseConfig } from '@/lib/supabase/config';
 
 import type { OwnerAuthMethod, OwnerAuthMethodResult, OwnerAuthRequest } from './types';
+import { OWNER_ROLES } from './types';
 
 const SUPABASE_OWNER_PREFIX = 'supabase:';
 const SUPABASE_OWNER_ID =
@@ -37,6 +38,27 @@ function hasSupabaseAuthCookie(cookies: Array<{ name: string; value: string }>):
   return cookies.some((cookie) => /^sb-.+-auth-token(?:\.\d+)?$/.test(cookie.name));
 }
 
+function configuredAdminEmails(): ReadonlySet<string> {
+  return new Set(
+    (process.env.ADMIN_EMAILS ?? '')
+      .split(',')
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean),
+  );
+}
+
+function supabaseAdminUser(user: {
+  email?: string;
+  app_metadata?: Record<string, unknown>;
+}): boolean {
+  const metadata = user.app_metadata ?? {};
+  return (
+    metadata.admin === true ||
+    metadata.role === OWNER_ROLES.admin ||
+    configuredAdminEmails().has(user.email?.trim().toLowerCase() ?? '')
+  );
+}
+
 async function authenticate(request: OwnerAuthRequest): Promise<OwnerAuthMethodResult> {
   const config = getSupabaseConfig();
   if (!config) return { status: 'not-applicable' };
@@ -61,12 +83,15 @@ async function authenticate(request: OwnerAuthRequest): Promise<OwnerAuthMethodR
     return { status: 'invalid', reason: error?.message ?? 'Supabase session has no user' };
   }
 
+  const roles = new Set<string>();
+  if (supabaseAdminUser(data.user)) roles.add(OWNER_ROLES.admin);
+
   return {
     status: 'authenticated',
     principal: {
       ownerId: `${SUPABASE_OWNER_PREFIX}${data.user.id}`,
       kind: 'user',
-      roles: new Set<string>(),
+      roles,
       assurance: 'verified',
       channel: 'supabase-email-otp',
     },

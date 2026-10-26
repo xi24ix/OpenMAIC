@@ -1,6 +1,7 @@
 'use client';
 
-import { LogOut, UserRound } from 'lucide-react';
+import { LogOut, ShieldCheck, UserRound } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
@@ -55,6 +56,15 @@ export function AccountMenu() {
               {email}
             </p>
           </div>
+          <Link
+            href="/admin/library"
+            role="menuitem"
+            className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            onClick={() => setOpen(false)}
+          >
+            <ShieldCheck className="size-4" aria-hidden="true" />
+            Admin library
+          </Link>
           <button
             type="button"
             role="menuitem"
