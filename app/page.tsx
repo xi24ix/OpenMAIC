@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowUp,
+  Bookmark,
   Check,
   ChevronDown,
   ChevronRight,
@@ -13,6 +14,7 @@ import {
   Folder,
   FolderPlus,
   ImagePlus,
+  Eye,
   Pencil,
   Trash2,
   Search,
@@ -697,7 +699,12 @@ function HomePage() {
           {/* Language Selector */}
           <LanguageSwitcher onOpen={() => setThemeOpen(false)} />
 
-          <AccountMenu />
+          <AccountMenu
+            onOpenUsage={() => {
+              setSettingsSection('general');
+              setSettingsOpen(true);
+            }}
+          />
 
           <div className="aurora-div w-[1px] h-4" />
 
@@ -1379,11 +1386,129 @@ function HomePage() {
         onCreate={handleCreateFolder}
       />
 
+      <SampleLessons
+        onSelect={(requirement) => {
+          setForm((current) => ({ ...current, requirement }));
+          requestAnimationFrame(() => textareaRef.current?.focus());
+        }}
+      />
+
       {/* Footer — flows with content, at the very end */}
       <div className="aurora-footer mt-auto pt-12 pb-4 text-center text-xs text-muted-foreground/40">
         Alostad الأستاذ
       </div>
     </div>
+  );
+}
+
+const SAMPLE_LESSONS = [
+  {
+    title: 'What is Photosynthesis?',
+    description: 'Explore how plants turn light into energy.',
+    prompt:
+      'Create an interactive lesson explaining photosynthesis, its inputs and outputs, with a simple visual experiment.',
+    gradient:
+      'from-emerald-200 via-green-100 to-lime-100 dark:from-emerald-950 dark:via-green-950 dark:to-lime-950',
+    icon: '🌱',
+    views: '6.7k',
+    saves: '43',
+  },
+  {
+    title: 'Understanding Fractions',
+    description: 'Learn fractions through a pizza adventure.',
+    prompt:
+      'Create a friendly third-grade interactive lesson that teaches fractions with pizza examples and a short quiz.',
+    gradient:
+      'from-orange-100 via-amber-50 to-rose-100 dark:from-orange-950 dark:via-amber-950 dark:to-rose-950',
+    icon: '🍕',
+    views: '2k',
+    saves: '28',
+  },
+  {
+    title: 'Python Loops',
+    description: 'Master repetition with clear visual examples.',
+    prompt:
+      'Create an interactive beginner lesson explaining Python for-loops and while-loops with examples and practice questions.',
+    gradient:
+      'from-blue-100 via-sky-50 to-indigo-100 dark:from-blue-950 dark:via-sky-950 dark:to-indigo-950',
+    icon: '🐍',
+    views: '2.6k',
+    saves: '189',
+  },
+  {
+    title: 'The Magic of Light',
+    description: 'Discover lenses, images and optical illusions.',
+    prompt:
+      'Create an interactive physics lesson about convex lenses, image formation and focal length with a visual simulation.',
+    gradient:
+      'from-violet-100 via-fuchsia-50 to-blue-100 dark:from-violet-950 dark:via-fuchsia-950 dark:to-blue-950',
+    icon: '🔍',
+    views: '10.6k',
+    saves: '182',
+  },
+] as const;
+
+function SampleLessons({ onSelect }: { onSelect: (requirement: string) => void }) {
+  return (
+    <section
+      className="relative z-10 mt-14 w-full max-w-6xl"
+      aria-labelledby="sample-lessons-title"
+    >
+      <div className="mb-5 flex items-end justify-between gap-4 px-1">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/70">
+            Discover
+          </p>
+          <h2 id="sample-lessons-title" className="mt-1 text-xl font-semibold tracking-tight">
+            Sample lessons
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Start with an example and make it your own.
+          </p>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {SAMPLE_LESSONS.map((lesson) => (
+          <button
+            key={lesson.title}
+            type="button"
+            onClick={() => onSelect(lesson.prompt)}
+            className="group text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-4 focus-visible:ring-offset-background"
+            aria-label={`Use sample lesson: ${lesson.title}`}
+          >
+            <div
+              className={cn(
+                'relative aspect-[16/10] overflow-hidden rounded-2xl bg-gradient-to-br p-5 shadow-sm transition duration-200 group-hover:-translate-y-1 group-hover:shadow-lg',
+                lesson.gradient,
+              )}
+            >
+              <div className="absolute -bottom-8 -right-5 text-[96px] opacity-25 grayscale transition duration-300 group-hover:scale-110 group-hover:grayscale-0">
+                {lesson.icon}
+              </div>
+              <div className="relative flex h-full flex-col justify-between">
+                <span className="w-fit rounded-full bg-white/60 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-700 backdrop-blur dark:bg-black/20 dark:text-white/80">
+                  Sample
+                </span>
+                <div className="flex items-center justify-between rounded-xl bg-black/45 px-2.5 py-2 text-xs text-white backdrop-blur-sm">
+                  <span className="flex items-center gap-1">
+                    <Eye className="size-3.5" />
+                    {lesson.views}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Bookmark className="size-3.5" />
+                    {lesson.saves}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <h3 className="mt-3 truncate text-sm font-semibold text-foreground">{lesson.title}</h3>
+            <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">
+              {lesson.description}
+            </p>
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }
 

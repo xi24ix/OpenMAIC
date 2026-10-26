@@ -1,6 +1,6 @@
 'use client';
 
-import { LogOut, ShieldCheck, UserRound } from 'lucide-react';
+import { BarChart3, LogOut, ShieldCheck, UserRound } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -9,7 +9,7 @@ import { useI18n } from '@/lib/hooks/use-i18n';
 
 import { useAuth } from './auth-provider';
 
-export function AccountMenu() {
+export function AccountMenu({ onOpenUsage }: { onOpenUsage?: () => void }) {
   const { t } = useI18n();
   const router = useRouter();
   const { user, supabase } = useAuth();
@@ -28,8 +28,6 @@ export function AccountMenu() {
   if (!user) return null;
 
   const email = user.email ?? 'Alostad account';
-  const initial = email.slice(0, 1).toUpperCase();
-
   return (
     <div ref={rootRef} className="relative">
       <button
@@ -40,7 +38,7 @@ export function AccountMenu() {
         aria-label={`${t('auth.account')}: ${email}`}
         className="inline-flex size-8 items-center justify-center rounded-full border border-primary/15 bg-primary/8 text-xs font-semibold text-primary transition-colors hover:bg-primary/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
       >
-        {initial || <UserRound className="size-4" aria-hidden="true" />}
+        <UserRound className="size-4" aria-hidden="true" />
       </button>
       {open && (
         <div
@@ -56,6 +54,18 @@ export function AccountMenu() {
               {email}
             </p>
           </div>
+          <button
+            type="button"
+            role="menuitem"
+            className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            onClick={() => {
+              setOpen(false);
+              onOpenUsage?.();
+            }}
+          >
+            <BarChart3 className="size-4" aria-hidden="true" />
+            Usage
+          </button>
           <Link
             href="/admin/library"
             role="menuitem"
