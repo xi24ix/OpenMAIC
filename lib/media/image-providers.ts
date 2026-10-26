@@ -13,6 +13,7 @@ import { generateWithSeedream, testSeedreamConnectivity } from './adapters/seedr
 import {
   generateWithOpenAIImage,
   testOpenAIImageConnectivity,
+  testLogfareImageConnectivity,
 } from './adapters/openai-image-adapter';
 import { generateWithQwenImage, testQwenImageConnectivity } from './adapters/qwen-image-adapter';
 import { generateWithNanoBanana, testNanoBananaConnectivity } from './adapters/nano-banana-adapter';
@@ -190,6 +191,22 @@ export const IMAGE_PROVIDERS: Record<ImageProviderId, ImageProviderConfig> = {
     ],
     supportedAspectRatios: ['16:9', '4:3', '1:1', '9:16'],
   },
+  'logfare-image': {
+    id: 'logfare-image',
+    name: 'Logfare',
+    requiresApiKey: true,
+    defaultBaseUrl: 'https://logfare.ai/v1',
+    models: [
+      { id: 'flux-1-schnell', name: 'FLUX.1 Schnell' },
+      { id: 'phoenix-1.0', name: 'Phoenix 1.0' },
+      { id: 'sdxl-lightning', name: 'SDXL Lightning' },
+      { id: 'flux-2-klein-4b', name: 'FLUX.2 Klein 4B' },
+      { id: 'flux-2-klein-9b', name: 'FLUX.2 Klein 9B' },
+      { id: 'flux-2-dev', name: 'FLUX.2 Dev' },
+      { id: 'lucid-origin', name: 'Lucid Origin' },
+    ],
+    supportedAspectRatios: ['16:9', '4:3', '1:1', '9:16'],
+  },
 };
 
 export async function testImageConnectivity(
@@ -200,6 +217,8 @@ export async function testImageConnectivity(
       return testSeedreamConnectivity(config);
     case 'openai-image':
       return testOpenAIImageConnectivity(config);
+    case 'logfare-image':
+      return testLogfareImageConnectivity(config);
     case 'qwen-image':
       return testQwenImageConnectivity(config);
     case 'nano-banana':
@@ -232,6 +251,7 @@ export async function generateImage(
     case 'seedream':
       return generateWithSeedream(config, options);
     case 'openai-image':
+    case 'logfare-image':
       return generateWithOpenAIImage(config, options);
     case 'qwen-image':
       return generateWithQwenImage(config, options);

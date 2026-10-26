@@ -70,35 +70,35 @@ export const REGISTRY_INFO: Record<SlotCapability, RegistryInfo> = {
   },
   image: {
     ids: Object.keys(IMAGE_PROVIDERS),
-    name: (id, t) =>
-      translated(
-        t,
-        `settings.${(IMAGE_PROVIDER_NAMES as Record<string, string>)[id]}`,
-        entryOf(IMAGE_PROVIDERS, id)?.name ?? id,
-      ),
+    name: (id, t) => {
+      const nameKey = IMAGE_PROVIDER_NAMES[id as keyof typeof IMAGE_PROVIDER_NAMES];
+      return nameKey
+        ? translated(t, `settings.${nameKey}`, entryOf(IMAGE_PROVIDERS, id)?.name ?? id)
+        : (entryOf(IMAGE_PROVIDERS, id)?.name ?? id);
+    },
     icon: (id) => IMAGE_PROVIDER_ICONS[id],
     requiresApiKey: (id) => entryOf(IMAGE_PROVIDERS, id)?.requiresApiKey !== false,
   },
   video: {
     ids: Object.keys(VIDEO_PROVIDERS),
-    name: (id, t) =>
-      translated(
-        t,
-        `settings.${(VIDEO_PROVIDER_NAMES as Record<string, string>)[id]}`,
-        entryOf(VIDEO_PROVIDERS, id)?.name ?? id,
-      ),
+    name: (id, t) => {
+      const nameKey = VIDEO_PROVIDER_NAMES[id as keyof typeof VIDEO_PROVIDER_NAMES];
+      return nameKey
+        ? translated(t, `settings.${nameKey}`, entryOf(VIDEO_PROVIDERS, id)?.name ?? id)
+        : (entryOf(VIDEO_PROVIDERS, id)?.name ?? id);
+    },
     icon: (id) => VIDEO_PROVIDER_ICONS[id],
     requiresApiKey: (id) => entryOf(VIDEO_PROVIDERS, id)?.requiresApiKey !== false,
   },
   tts: {
     ids: Object.keys(TTS_PROVIDERS),
-    name: (id, t) => resolveTTSProviderName(id, t),
+    name: (id, t) => resolveTTSProviderName(id, t, entryOf(TTS_PROVIDERS, id)?.name),
     icon: (id) => entryOf(TTS_PROVIDERS, id)?.icon,
     requiresApiKey: (id) => entryOf(TTS_PROVIDERS, id)?.requiresApiKey !== false,
   },
   asr: {
     ids: Object.keys(ASR_PROVIDERS),
-    name: (id, t) => resolveASRProviderName(id, t),
+    name: (id, t) => resolveASRProviderName(id, t, entryOf(ASR_PROVIDERS, id)?.name),
     icon: (id) => entryOf(ASR_PROVIDERS, id)?.icon,
     requiresApiKey: (id) => entryOf(ASR_PROVIDERS, id)?.requiresApiKey !== false,
   },

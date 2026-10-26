@@ -31,6 +31,10 @@ import {
   OPENROUTER_DEFAULT_BASE_URL,
   openRouterBaseUrl,
 } from './adapters/openrouter-image-adapter';
+import {
+  generateWithLogfareVideo,
+  testLogfareVideoConnectivity,
+} from './adapters/logfare-video-adapter';
 
 export const VIDEO_PROVIDERS: Record<VideoProviderId, VideoProviderConfig> = {
   seedance: {
@@ -152,6 +156,15 @@ export const VIDEO_PROVIDERS: Record<VideoProviderId, VideoProviderConfig> = {
     supportedResolutions: ['480p', '720p', '1080p'],
     maxDuration: 10,
   },
+  'logfare-video': {
+    id: 'logfare-video',
+    name: 'Logfare',
+    requiresApiKey: true,
+    defaultBaseUrl: 'https://logfare.ai/v1',
+    // Logfare's live /models catalogue currently advertises no video models.
+    models: [],
+    supportedAspectRatios: ['16:9', '9:16', '1:1'],
+  },
 };
 
 export async function testVideoConnectivity(
@@ -172,6 +185,8 @@ export async function testVideoConnectivity(
       return testHappyHorseConnectivity(config);
     case 'openrouter-video':
       return testOpenRouterVideoConnectivity(config);
+    case 'logfare-video':
+      return testLogfareVideoConnectivity(config);
     default:
       return {
         success: false,
@@ -263,6 +278,8 @@ export async function generateVideo(
       return generateWithHappyHorse(config, options, control);
     case 'openrouter-video':
       return generateWithOpenRouterVideo(config, options, control);
+    case 'logfare-video':
+      return generateWithLogfareVideo(config, options);
     default:
       throw new Error(`Unsupported video provider: ${config.providerId}`);
   }

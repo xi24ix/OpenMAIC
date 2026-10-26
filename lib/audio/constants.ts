@@ -1321,6 +1321,17 @@ export const TTS_PROVIDERS: Record<BuiltInTTSProviderId, TTSProviderConfig> = {
     supportedFormats: ['wav'],
     speedRange: { min: 0.25, max: 4.0, default: 1.0 },
   },
+  'logfare-tts': {
+    id: 'logfare-tts',
+    name: 'Logfare',
+    requiresApiKey: true,
+    defaultBaseUrl: 'https://logfare.ai/v1',
+    models: [{ id: 'aura-2-en', name: 'Aura-2 English' }],
+    defaultModelId: 'aura-2-en',
+    voices: [],
+    supportedFormats: ['mp3', 'wav'],
+    supportsSpeed: false,
+  },
 };
 
 /**
@@ -1406,6 +1417,19 @@ export const ASR_PROVIDERS: Record<BuiltInASRProviderId, ASRProviderConfig> = {
       'vi', // Vietnamese
       'cy', // Welsh
     ],
+    supportedFormats: ['mp3', 'mp4', 'mpeg', 'mpga', 'm4a', 'wav', 'webm'],
+  },
+  'logfare-asr': {
+    id: 'logfare-asr',
+    name: 'Logfare',
+    requiresApiKey: true,
+    defaultBaseUrl: 'https://logfare.ai/v1',
+    models: [
+      { id: 'nova-3', name: 'Nova-3' },
+      { id: 'whisper-large-v3-turbo', name: 'Whisper Large V3 Turbo' },
+    ],
+    defaultModelId: 'whisper-large-v3-turbo',
+    supportedLanguages: [...CUSTOM_ASR_DEFAULT_LANGUAGES],
     supportedFormats: ['mp3', 'mp4', 'mpeg', 'mpga', 'm4a', 'wav', 'webm'],
   },
 
@@ -1600,6 +1624,7 @@ export const DEFAULT_TTS_VOICES: Record<BuiltInTTSProviderId, string> = {
   'lemonade-tts': 'af_heart',
   'fish-tts': 'default',
   'browser-native-tts': 'default',
+  'logfare-tts': 'default',
 };
 
 export const DEFAULT_TTS_MODELS: Record<BuiltInTTSProviderId, string> = {
@@ -1615,6 +1640,7 @@ export const DEFAULT_TTS_MODELS: Record<BuiltInTTSProviderId, string> = {
   'lemonade-tts': 'kokoro-v1',
   'fish-tts': 's2.1-pro',
   'browser-native-tts': '',
+  'logfare-tts': 'aura-2-en',
 };
 
 /**

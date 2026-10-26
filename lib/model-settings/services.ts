@@ -103,7 +103,16 @@ export function serviceEntries(
       });
       continue;
     }
-    if (view.providers.some((provider) => provider.preset === presetId || provider.id === presetId))
+    const suppliedByPlan = view.providers.some((provider) => {
+      const plan = presetOf(provider);
+      return (
+        plan?.kind === 'token-plan' && provider.capabilities[capability]?.registryId === registryId
+      );
+    });
+    if (
+      suppliedByPlan ||
+      view.providers.some((provider) => provider.preset === presetId || provider.id === presetId)
+    )
       continue;
     const preset = view.presets.find(
       (entry) => entry.id === presetId && entry.capabilities[capability],
@@ -162,7 +171,7 @@ export function assignmentsForNewProvider(
     const root = ROOT_SLOT[capability];
     if (!isFillable(findSlot(view, root))) continue;
     const first = offered.models[0]?.id;
-    if (capability === 'chat' && !first) continue;
+    if ((capability === 'chat' || capability === 'video') && !first) continue;
     set[root] = modelRef(providerId, first);
   }
   return set;

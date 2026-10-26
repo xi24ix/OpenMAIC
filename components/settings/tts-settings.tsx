@@ -99,6 +99,7 @@ function DoubaoKeyFields({ onSave }: { onSave: (key: string) => Promise<unknown>
 export function ttsEndpointPath(providerId: string): string {
   switch (providerId) {
     case 'openai-tts':
+    case 'logfare-tts':
     case 'glm-tts':
     case 'lemonade-tts':
       return '/audio/speech';

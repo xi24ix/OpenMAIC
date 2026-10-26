@@ -46,6 +46,31 @@ describe('serviceEntries', () => {
     ]);
   });
 
+  it('does not list a token-plan service twice under its registry id', () => {
+    const plan: PresetView = {
+      id: 'logfare',
+      name: 'Logfare',
+      kind: 'token-plan',
+      capabilities: { video: { registryId: 'logfare-video', models: [] } },
+      requiresBaseUrl: false,
+      customEndpoint: false,
+      recommended: {},
+    };
+    const single: PresetView = {
+      ...plan,
+      id: 'logfare-video',
+      kind: 'single',
+    };
+    const view = makeView({
+      presets: [chatPreset, plan, single],
+      providers: [workspaceProvider('logfare', plan)],
+    });
+
+    expect(serviceEntries(view, 'video', ['logfare-video']).map(({ id }) => id)).toEqual([
+      'logfare',
+    ]);
+  });
+
   it('counts a key the server can no longer read as not configured', () => {
     const view = makeView({
       providers: [{ ...workspaceProvider('acme'), key: { set: true, unreadable: true } }],
@@ -62,6 +87,21 @@ describe('assignmentsForNewProvider', () => {
       tts: { locked: true },
     });
     expect(assignmentsForNewProvider(view, 'acme')).toEqual({ webSearch: 'acme' });
+  });
+
+  it('does not assign a video provider until it has a selectable model', () => {
+    const video: PresetView = {
+      id: 'logfare-video',
+      name: 'Logfare Video',
+      kind: 'single',
+      capabilities: { video: { models: [] } },
+      requiresBaseUrl: false,
+      customEndpoint: false,
+      recommended: {},
+    };
+    const view = makeView({ providers: [workspaceProvider('logfare-video', video)] });
+
+    expect(assignmentsForNewProvider(view, 'logfare-video')).toEqual({});
   });
 });
 

@@ -25,6 +25,7 @@ import {
   Image as ImageIcon,
   Video,
   Volume2,
+  Mic,
   Search,
   type LucideIcon,
 } from 'lucide-react';
@@ -72,6 +73,7 @@ const MODALITY_LABEL_KEYS: Record<TokenPlanModality, string> = {
   image: 'settings.imageSettings',
   video: 'settings.videoSettings',
   tts: 'settings.ttsSettings',
+  asr: 'settings.asrSettings',
   webSearch: 'settings.webSearchSettings',
 };
 
@@ -80,6 +82,7 @@ const MODALITY_ICONS: Record<TokenPlanModality, LucideIcon> = {
   image: ImageIcon,
   video: Video,
   tts: Volume2,
+  asr: Mic,
   webSearch: Search,
 };
 
@@ -118,6 +121,7 @@ const MODEL_PLAN_CAPABILITY_LABEL_KEYS: Record<TokenPlanModality, string> = {
   image: 'settings.tokenPlan.capImage',
   video: 'settings.tokenPlan.capVideo',
   tts: 'settings.tokenPlan.capTts',
+  asr: 'settings.asrSettings',
   webSearch: 'settings.tokenPlan.capWebSearch',
 };
 
@@ -130,7 +134,7 @@ function modelPlanItems(preset: TokenPlanPreset): ModelPlanItem[] {
       items.push({ capability: 'llm', stageId, model });
     }
   }
-  for (const capability of ['image', 'video', 'tts'] as const) {
+  for (const capability of ['image', 'video', 'tts', 'asr'] as const) {
     const target = preset.modalities[capability];
     if (target) {
       items.push({
@@ -170,6 +174,7 @@ function modalityModels(preset: TokenPlanPreset, m: TokenPlanModality): string[]
   if (!target) return [];
   if (target.defaultModels?.length) return target.defaultModels;
   if (target.defaultModelId) return [target.defaultModelId];
+  if (m === 'video') return [];
   return [target.providerId];
 }
 

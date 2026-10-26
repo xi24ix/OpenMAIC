@@ -92,7 +92,8 @@ export type BuiltInTTSProviderId =
   | 'google-tts'
   | 'lemonade-tts'
   | 'fish-tts'
-  | 'browser-native-tts';
+  | 'browser-native-tts'
+  | 'logfare-tts';
 
 export type TTSProviderId = BuiltInTTSProviderId | `custom-tts-${string}`;
 
@@ -207,7 +208,8 @@ export type BuiltInASRProviderId =
   | 'qwen-asr'
   | 'funasr-asr'
   | 'lemonade-asr'
-  | 'azure-asr';
+  | 'azure-asr'
+  | 'logfare-asr';
 
 export type ASRProviderId = BuiltInASRProviderId | `custom-asr-${string}`;
 

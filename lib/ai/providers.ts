@@ -1844,6 +1844,33 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
       },
     ],
   },
+
+  /*
+   * Logfare model ids change frequently. Keep this seed catalogue aligned with
+   * the public /models response, while the settings probe can discover private
+   * or newly-added models for a user's key.
+   */
+  logfare: {
+    id: 'logfare',
+    name: 'Logfare',
+    type: 'openai',
+    defaultBaseUrl: 'https://logfare.ai/v1',
+    requiresApiKey: true,
+    models: [
+      { id: 'logfare/auto', name: 'Logfare Auto' },
+      { id: 'deepseek-v4-flash-0731', name: 'DeepSeek V4 Flash 0731' },
+      { id: 'deepseek-v4-pro-0813', name: 'DeepSeek V4 Pro 0813' },
+      { id: 'gemma-4-26b', name: 'Gemma 4 26B' },
+      { id: 'glm-5.2', name: 'GLM 5.2' },
+      { id: 'glm-5.3', name: 'GLM 5.3' },
+      { id: 'glm-5.3-flash', name: 'GLM 5.3 Flash' },
+      { id: 'kimi-k2.7-code', name: 'Kimi K2.7 Code' },
+      { id: 'kiro-auto', name: 'Kiro Auto' },
+      { id: 'minimax-m3', name: 'MiniMax M3' },
+      { id: 'moondream3.1', name: 'Moondream 3.1 9B' },
+      { id: 'qwen-3.8-27b', name: 'Qwen 3.8 27B' },
+    ],
+  },
 };
 
 applyModelMetadata(PROVIDERS);

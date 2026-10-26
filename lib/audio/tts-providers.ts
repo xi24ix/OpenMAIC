@@ -309,6 +309,9 @@ export async function generateTTS(
       case 'openai-tts':
         return await generateOpenAITTS(config, text, signal);
 
+      case 'logfare-tts':
+        return await generateLogfareTTS(config, text, signal);
+
       case 'azure-tts':
         return await generateAzureTTS(config, text, signal);
 
@@ -407,6 +410,35 @@ async function generateOpenAITTS(
   }
 
   return await validateTTSAudioResponse(response, 'OpenAI');
+}
+
+async function generateLogfareTTS(
+  config: TTSModelConfig,
+  text: string,
+  signal: AbortSignal,
+): Promise<TTSGenerationResult> {
+  const baseUrl = config.baseUrl || TTS_PROVIDERS['logfare-tts'].defaultBaseUrl!;
+  const voice = config.voice && config.voice !== 'default' ? { voice: config.voice } : {};
+  const response = await ttsFetch(config, `${baseUrl}/audio/speech`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${config.apiKey}`,
+      'Content-Type': 'application/json; charset=utf-8',
+    },
+    body: JSON.stringify({
+      model: config.modelId || TTS_PROVIDERS['logfare-tts'].defaultModelId,
+      input: text,
+      ...voice,
+    }),
+    signal,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: response.statusText }));
+    throw new Error(`Logfare TTS API error: ${error.error?.message || response.statusText}`);
+  }
+
+  return await validateTTSAudioResponse(response, 'Logfare');
 }
 
 /**
@@ -1390,7 +1422,9 @@ async function generateFishAudioTTS(
   if (!response.ok) {
     throwIfTtsRateLimited('Fish Audio', response.status, response.headers?.get('retry-after'));
     const errorText = await response.text().catch(() => response.statusText);
-    throw new Error(`Fish Audio TTS API error (${response.status}): ${errorText || response.statusText}`);
+    throw new Error(
+      `Fish Audio TTS API error (${response.status}): ${errorText || response.statusText}`,
+    );
   }
 
   return await validateTTSAudioResponse(response, 'Fish Audio', requestedFormat);

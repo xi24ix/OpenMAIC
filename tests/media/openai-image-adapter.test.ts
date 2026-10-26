@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import {
   generateWithOpenAIImage,
+  testLogfareImageConnectivity,
   testOpenAIImageConnectivity,
 } from '@/lib/media/adapters/openai-image-adapter';
 
@@ -105,5 +106,51 @@ describe('openai-image-adapter', () => {
     });
     expect(result.success).toBe(false);
     expect(result.message).toBe('OpenAI Image model not found: gpt-image-unknown');
+  });
+
+  it('checks Logfare image access through its documented models endpoint', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      body: { cancel: vi.fn().mockResolvedValue(undefined) },
+    });
+
+    const result = await testLogfareImageConnectivity({
+      providerId: 'logfare-image',
+      apiKey: 'logfare-test',
+      baseUrl: 'https://logfare.ai/v1',
+    });
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://logfare.ai/v1/models',
+      expect.objectContaining({
+        redirect: 'manual',
+        headers: { Authorization: expect.stringContaining('logfare-test') },
+      }),
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it('omits the unsupported image count field for Logfare generation', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ data: [{ url: 'https://cdn.example.com/image.png' }] }),
+    });
+
+    await generateWithOpenAIImage(
+      {
+        providerId: 'logfare-image',
+        apiKey: 'logfare-test',
+        baseUrl: 'https://logfare.ai/v1',
+        model: 'flux-1-schnell',
+      },
+      { prompt: 'a blue circle', width: 1024, height: 1024 },
+    );
+
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+    expect(body).toEqual({
+      model: 'flux-1-schnell',
+      prompt: 'a blue circle',
+      size: '1024x1024',
+    });
   });
 });

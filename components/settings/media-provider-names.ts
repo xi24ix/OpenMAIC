@@ -6,7 +6,7 @@ import type { ImageProviderId, VideoProviderId } from '@/lib/media/types';
  * localized name. Lives in its own module to avoid an import cycle between
  * the settings index and the course-model-config panel.
  */
-export const IMAGE_PROVIDER_NAMES: Record<ImageProviderId, string> = {
+export const IMAGE_PROVIDER_NAMES: Partial<Record<ImageProviderId, string>> = {
   seedream: 'providerSeedream',
   'openai-image': 'providerOpenAIImage',
   'qwen-image': 'providerQwenImage',
@@ -19,7 +19,7 @@ export const IMAGE_PROVIDER_NAMES: Record<ImageProviderId, string> = {
   lemonade: 'providerLemonadeImage',
 };
 
-export const VIDEO_PROVIDER_NAMES: Record<VideoProviderId, string> = {
+export const VIDEO_PROVIDER_NAMES: Partial<Record<VideoProviderId, string>> = {
   seedance: 'providerSeedance',
   kling: 'providerKling',
   veo: 'providerVeo',

@@ -80,7 +80,8 @@ export type ImageProviderId =
   | 'glm-image'
   | 'comfyui-image'
   | 'openrouter-image'
-  | 'lemonade';
+  | 'lemonade'
+  | 'logfare-image';
 // Add new image providers below (uncomment and modify):
 // | 'dall-e'
 // | 'midjourney'
@@ -220,7 +221,8 @@ export type VideoProviderId =
   | 'minimax-video'
   | 'grok-video'
   | 'openrouter-video'
-  | 'happyhorse';
+  | 'happyhorse'
+  | 'logfare-video';
 // Add new video providers below (uncomment and modify):
 // | 'runway'
 // | 'pika'

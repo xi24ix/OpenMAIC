@@ -13,6 +13,7 @@ const adapterMocks = vi.hoisted(() => {
     'grok-video': { generate: vi.fn(), test: vi.fn(connectivity) },
     happyhorse: { generate: vi.fn(), test: vi.fn(connectivity) },
     'openrouter-video': { generate: vi.fn(), test: vi.fn(connectivity) },
+    'logfare-video': { generate: vi.fn(), test: vi.fn(connectivity) },
   };
 });
 
@@ -43,6 +44,10 @@ vi.mock('@/lib/media/adapters/happyhorse-adapter', () => ({
 vi.mock('@/lib/media/adapters/openrouter-video-adapter', () => ({
   generateWithOpenRouterVideo: adapterMocks['openrouter-video'].generate,
   testOpenRouterVideoConnectivity: adapterMocks['openrouter-video'].test,
+}));
+vi.mock('@/lib/media/adapters/logfare-video-adapter', () => ({
+  generateWithLogfareVideo: adapterMocks['logfare-video'].generate,
+  testLogfareVideoConnectivity: adapterMocks['logfare-video'].test,
 }));
 
 /** Every catalog id must dispatch to its own adapter in both switches. */

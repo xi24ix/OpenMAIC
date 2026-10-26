@@ -181,6 +181,15 @@ export async function transcribeAudio(
     case 'openai-whisper':
       return await transcribeOpenAIWhisper(config, audioBuffer);
 
+    case 'logfare-asr':
+      return await transcribeOpenAIWhisper(
+        {
+          ...config,
+          modelId: config.modelId || ASR_PROVIDERS['logfare-asr'].defaultModelId,
+        },
+        audioBuffer,
+      );
+
     case 'browser-native':
       throw new Error('Browser Native ASR must be handled client-side using useBrowserASR hook');
 
@@ -399,9 +408,11 @@ async function transcribeOpenAIWhisper(
   config: ASRModelConfig,
   audioBuffer: Buffer | Blob,
 ): Promise<ASRTranscriptionResult> {
+  const provider = ASR_PROVIDERS[config.providerId as keyof typeof ASR_PROVIDERS];
   const openai = createOpenAI({
     apiKey: config.apiKey!,
-    baseURL: config.baseUrl || ASR_PROVIDERS['openai-whisper'].defaultBaseUrl,
+    baseURL:
+      config.baseUrl || provider?.defaultBaseUrl || ASR_PROVIDERS['openai-whisper'].defaultBaseUrl,
     // The AI SDK issues the multipart upload through this transport, so the
     // provider request inherits the same redirect + pinned-DNS protection as
     // the raw provider fetches.
@@ -421,7 +432,11 @@ async function transcribeOpenAIWhisper(
 
   try {
     const result = await transcribe({
-      model: openai.transcription(config.modelId || ASR_PROVIDERS['openai-whisper'].defaultModelId),
+      model: openai.transcription(
+        config.modelId ||
+          provider?.defaultModelId ||
+          ASR_PROVIDERS['openai-whisper'].defaultModelId,
+      ),
       audio: audioData,
       providerOptions: {
         openai: {

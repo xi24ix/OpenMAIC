@@ -2,7 +2,7 @@
  * Token Plan presets — multi-modal.
  *
  * A token plan (e.g. MiniMax) is often a single key that spans LLM + image +
- * video + TTS + web-search. A preset declares, per modality, the target provider
+ * video + TTS + ASR + web-search. A preset declares, per modality, the target provider
  * id + base URL in that modality's registry. "One-click apply" fills the key into
  * every declared modality and lights it up; modalities not declared here are
  * simply "not adapted yet" (at our best — add an entry later to extend).
@@ -16,8 +16,8 @@ import type { ProviderType } from '@/lib/types/provider';
 /** Loose grouping for the preset list UI. */
 export type PresetCategory = 'official' | 'aggregator' | 'token_plan' | 'third_party';
 
-/** The modalities a token plan can be applied to. ASR is omitted = not adapted. */
-export type TokenPlanModality = 'llm' | 'image' | 'video' | 'tts' | 'webSearch';
+/** The modalities a token plan can be applied to. */
+export type TokenPlanModality = 'llm' | 'image' | 'video' | 'tts' | 'asr' | 'webSearch';
 
 /** Where a token plan maps in one modality's provider registry. */
 export interface TokenPlanModalityTarget {
@@ -39,8 +39,8 @@ export interface TokenPlanModalityTarget {
    */
   defaultModels?: string[];
   /**
-   * LLM/TTS: the plan's recommended default model — for LLM the mainline model
-   * (defaults to `defaultModels[0]`), for TTS the model the plan enables.
+   * LLM/TTS/ASR: the plan's recommended default model — for LLM the mainline
+   * model (defaults to `defaultModels[0]`), for TTS/ASR the model the plan enables.
    */
   defaultModelId?: string;
   /**
@@ -75,7 +75,14 @@ export interface TokenPlanPreset {
 }
 
 /** Human-facing order of modalities in the apply result. */
-export const MODALITY_ORDER: TokenPlanModality[] = ['llm', 'image', 'video', 'tts', 'webSearch'];
+export const MODALITY_ORDER: TokenPlanModality[] = [
+  'llm',
+  'image',
+  'video',
+  'tts',
+  'asr',
+  'webSearch',
+];
 
 /**
  * Built-in token plans.
@@ -92,6 +99,53 @@ export const MODALITY_ORDER: TokenPlanModality[] = ['llm', 'image', 'video', 'tt
  * - Volcengine Ark Agent Plan: LLM/image/video/TTS/web-search via the plan key.
  */
 export const TOKEN_PLAN_PRESETS: TokenPlanPreset[] = [
+  {
+    id: 'logfare',
+    name: 'Logfare',
+    websiteUrl: 'https://logfare.ai',
+    subscribeUrls: {
+      domestic: 'https://logfare.ai/register',
+      international: 'https://logfare.ai/register',
+    },
+    apiKeyPlaceholder: 'Logfare API key',
+    category: 'token_plan',
+    modalities: {
+      llm: {
+        providerId: 'logfare',
+        baseUrl: 'https://logfare.ai/v1',
+        apiFormat: 'openai',
+        defaultModelId: 'logfare/auto',
+        defaultModels: [
+          'logfare/auto',
+          'deepseek-v4-flash-0731',
+          'deepseek-v4-pro-0813',
+          'gemma-4-26b',
+          'glm-5.2',
+          'glm-5.3',
+          'glm-5.3-flash',
+          'kimi-k2.7-code',
+          'kiro-auto',
+          'minimax-m3',
+          'moondream3.1',
+          'qwen-3.8-27b',
+        ],
+      },
+      image: {
+        providerId: 'logfare-image',
+        baseUrl: 'https://logfare.ai/v1',
+        defaultModels: [
+          'flux-1-schnell',
+          'phoenix-1.0',
+          'sdxl-lightning',
+          'flux-2-klein-4b',
+          'flux-2-klein-9b',
+          'flux-2-dev',
+          'lucid-origin',
+        ],
+      },
+    },
+  },
+
   // ── Gateway token plan (one key, vendor wire formats) ─────────────────────
   {
     // TokenDance is a model gateway. Chat and image generation are

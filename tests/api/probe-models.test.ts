@@ -120,6 +120,31 @@ describe('POST /api/provider/probe-models', () => {
       expect(provider.lastHeaders()!.authorization).toBe('Bearer test-key');
     });
 
+    it('uses Logfare endpoint metadata to exclude non-chat models', async () => {
+      const provider = await answering(
+        200,
+        JSON.stringify({
+          data: [
+            { id: 'logfare/auto', endpoints: ['chat/completions', 'messages'] },
+            { id: 'flux-2-dev', endpoints: ['images/generations'] },
+            { id: 'aura-2-en', endpoints: ['audio/speech'] },
+          ],
+        }),
+      );
+
+      const res = await postProbeModels({ baseUrl: provider.origin, apiKey: 'test-key' });
+
+      expect(res).toEqual({
+        status: 200,
+        json: {
+          success: true,
+          models: [{ id: 'logfare/auto' }],
+          total: 3,
+          filtered: 2,
+        },
+      });
+    });
+
     it('refuses a redirect with the redirect contract and never follows it', async () => {
       const target = await answering(200, '{"data":[{"id":"sink"}]}');
       const origin = await answering(302, 'redirect response body', {

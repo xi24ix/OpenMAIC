@@ -60,6 +60,24 @@ export async function testOpenAIImageConnectivity(
   return connectivityHttpFailure('OpenAI Image', response.status);
 }
 
+export async function testLogfareImageConnectivity(
+  config: ImageGenerationConfig,
+): Promise<{ success: boolean; message: string }> {
+  const baseUrl = normalizeBaseUrl(config.baseUrl);
+  let response: Response;
+  try {
+    response = await mediaFetchFor(config)(`${baseUrl}/models`, {
+      redirect: 'manual',
+      headers: { Authorization: `Bearer ${config.apiKey}` },
+    });
+  } catch (err) {
+    return connectivityTransportFailure('Logfare Image', err);
+  }
+  await response.body?.cancel().catch(() => undefined);
+  if (response.ok) return { success: true, message: 'Connected to Logfare' };
+  return connectivityHttpFailure('Logfare Image', response.status);
+}
+
 export async function generateWithOpenAIImage(
   config: ImageGenerationConfig,
   options: ImageGenerationOptions,
@@ -79,7 +97,7 @@ export async function generateWithOpenAIImage(
     body: JSON.stringify({
       model,
       prompt: options.prompt,
-      n: 1,
+      ...(config.providerId === 'logfare-image' ? {} : { n: 1 }),
       size: resolveSize(options),
     }),
   });

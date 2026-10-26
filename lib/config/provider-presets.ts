@@ -108,6 +108,7 @@ const MODALITY_CAPABILITY: Record<TokenPlanModality, SlotCapability> = {
   image: 'image',
   video: 'video',
   tts: 'tts',
+  asr: 'asr',
   webSearch: 'webSearch',
 };
 
@@ -164,7 +165,9 @@ export function tokenPlanToPreset(plan: TokenPlanPreset): ProviderPreset {
     // A capability without models to pick (web search) is served by the
     // provider alone: the recommendation names its registry entry, which
     // becomes a provider-only assignment.
-    else if (!target.defaultModels?.length) recommended[root as SlotId] = target.providerId;
+    else if (!target.defaultModels?.length && capability !== 'video') {
+      recommended[root as SlotId] = target.providerId;
+    }
     for (const [stage, model] of Object.entries(target.stageRoutes ?? {})) {
       const slot = STAGE_SLOTS[stage as LlmStage];
       if (slot) recommended[slot] = model;

@@ -15,6 +15,14 @@ const log = createLogger('ProbeModels');
 
 /** Model ids that are not chat models — filtered out of probe results. */
 const NON_CHAT_PATTERN = /(tts|asr|whisper|embedding|rerank|mineru|image|video|voxcpm|moderation)/i;
+const CHAT_ENDPOINTS = new Set(['chat/completions', 'messages', 'responses']);
+
+function isChatModel(model: { id: string; endpoints?: string[] }): boolean {
+  if (model.endpoints?.length) {
+    return model.endpoints.some((endpoint) => CHAT_ENDPOINTS.has(endpoint));
+  }
+  return !NON_CHAT_PATTERN.test(model.id);
+}
 
 /**
  * POST /api/provider/probe-models
@@ -67,7 +75,7 @@ export async function POST(req: NextRequest) {
     }
 
     const models = await fetchModels(baseUrl, apiKey || '', { modelsUrlOverride: modelsUrl });
-    const chatModels = models.filter((m) => !NON_CHAT_PATTERN.test(m.id));
+    const chatModels = models.filter(isChatModel);
 
     return apiSuccess({
       models: chatModels.map((m) => ({ id: m.id, ownedBy: m.ownedBy })),

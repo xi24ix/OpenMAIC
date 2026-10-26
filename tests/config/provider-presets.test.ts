@@ -70,6 +70,34 @@ describe('provider presets', () => {
     expect(Object.keys(getProviderPreset('kimi-coding-plan')!.capabilities)).toEqual(['chat']);
   });
 
+  it('lists Logfare as an LLM and image token plan, leaving other services separate', () => {
+    const logfare = getProviderPreset('logfare')!;
+    expect(logfare.kind).toBe('token-plan');
+    expect(Object.keys(logfare.capabilities).sort()).toEqual(['chat', 'image']);
+    expect(logfare.capabilities.chat?.models?.slice(0, 2)).toEqual([
+      'logfare/auto',
+      'deepseek-v4-flash-0731',
+    ]);
+    expect(logfare.recommended?.llm).toBe('logfare/auto');
+    expect(logfare.capabilities.image?.models?.slice(0, 2)).toEqual([
+      'flux-1-schnell',
+      'phoenix-1.0',
+    ]);
+    expect(logfare.recommended).toMatchObject({
+      llm: 'logfare/auto',
+      image: 'flux-1-schnell',
+    });
+    expect(logfare.recommended).not.toHaveProperty('asr');
+    expect(logfare.recommended).not.toHaveProperty('tts');
+    expect(logfare.recommended).not.toHaveProperty('video');
+  });
+
+  it('keeps Logfare speech and video adapters available as separate services', () => {
+    expect(getProviderPreset('logfare-tts')?.capabilities).toHaveProperty('tts');
+    expect(getProviderPreset('logfare-asr')?.capabilities).toHaveProperty('asr');
+    expect(getProviderPreset('logfare-video')?.capabilities).toHaveProperty('video');
+  });
+
   it('carries plan recommendations onto slots', () => {
     const tokendance = getProviderPreset('tokendance')!;
     expect(tokendance.recommended).toMatchObject({

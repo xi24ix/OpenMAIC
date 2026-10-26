@@ -28,6 +28,7 @@ const pinnedModelsFetch: ModelFetchTransport = createProviderFetch({
 export interface FetchedModel {
   id: string;
   ownedBy?: string;
+  endpoints?: string[];
 }
 
 /**
@@ -122,7 +123,7 @@ export function buildModelsUrlCandidates(
 }
 
 interface ModelsApiResponse {
-  data?: Array<{ id: string; owned_by?: string }>;
+  data?: Array<{ id: string; owned_by?: string; endpoints?: string[] }>;
 }
 
 /**
@@ -176,7 +177,11 @@ export async function fetchModels(
     }
     if (body === null) continue;
     return (body.data ?? [])
-      .map((m) => ({ id: m.id, ownedBy: m.owned_by }))
+      .map((m) => ({
+        id: m.id,
+        ownedBy: m.owned_by,
+        ...(Array.isArray(m.endpoints) ? { endpoints: m.endpoints } : {}),
+      }))
       .sort((a, b) => a.id.localeCompare(b.id));
   }
 
