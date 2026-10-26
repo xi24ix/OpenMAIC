@@ -15,6 +15,17 @@ export async function register(): Promise<void> {
   // want; the persistence stack is Node-only.
   if (process.env.NEXT_RUNTIME !== 'nodejs') return;
 
+  // When Supabase Auth is configured, authenticated users become the owner of
+  // their OpenMAIC library. Keeping this registration at boot means every
+  // owner-scoped API route uses the same verified identity without route-level
+  // auth forks.
+  const { isSupabaseAuthConfigured } = await import('@/lib/supabase/config');
+  if (isSupabaseAuthConfigured()) {
+    const { configureOwnerAuthentication } = await import('@/lib/server/identity');
+    const { supabaseAuthMethod } = await import('@/lib/server/identity/supabase-auth');
+    configureOwnerAuthentication({ methods: [supabaseAuthMethod()], anonymousFallback: false });
+  }
+
   const { warnIfDefaultDatabasePasswordIsPublished } =
     await import('@/lib/server/database-password-warning');
   warnIfDefaultDatabasePasswordIsPublished();

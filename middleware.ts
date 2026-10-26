@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { isAgentRuntimeConfigured, isProWorkbenchEnabled } from '@/lib/config/feature-flags';
 import { verifyAccessTokenEdge } from '@/lib/server/access-token-edge';
+import { isSupabaseAuthConfigured } from '@/lib/supabase/config';
+import { updateSupabaseSession } from '@/lib/supabase/middleware';
 import {
   anonymousOwnerForNavigation,
   type NavigationIdentity,
@@ -14,11 +16,12 @@ import {
  * owner (see `lib/server/identity/navigation.ts`).
  */
 function next(request: NextRequest, identity: NavigationIdentity | undefined): NextResponse {
-  if (!identity) return NextResponse.next();
+  if (!identity && !isSupabaseAuthConfigured()) return NextResponse.next();
   const headers = new Headers(request.headers);
-  headers.set('cookie', identity.requestCookie);
+  const cookie = identity?.requestCookie || request.cookies.toString();
+  if (cookie) headers.set('cookie', cookie);
   const response = NextResponse.next({ request: { headers } });
-  response.headers.append('set-cookie', identity.setCookie);
+  if (identity) response.headers.append('set-cookie', identity.setCookie);
   return response;
 }
 
@@ -38,26 +41,33 @@ export async function middleware(request: NextRequest) {
 
   // One anonymous owner per browser, established on the page response before
   // any API request can mint its own.
-  const identity = anonymousOwnerForNavigation({
-    method: request.method,
-    headers: request.headers,
-    pathname,
-  });
+  const identity = isSupabaseAuthConfigured()
+    ? undefined
+    : anonymousOwnerForNavigation({
+        method: request.method,
+        headers: request.headers,
+        pathname,
+      });
+
+  const supabaseSession = isSupabaseAuthConfigured()
+    ? await updateSupabaseSession(request, () => next(request, identity))
+    : undefined;
+  const response = supabaseSession?.response ?? next(request, identity);
 
   const accessCode = process.env.ACCESS_CODE;
   if (!accessCode) {
-    return next(request, identity);
+    return response;
   }
 
   // Whitelist: access-code endpoints, health check
   if (pathname.startsWith('/api/access-code/') || pathname === '/api/health') {
-    return next(request, identity);
+    return response;
   }
 
   // Check cookie — validate HMAC signature, not just existence
   const cookie = request.cookies.get('openmaic_access');
   if (cookie?.value && (await verifyAccessTokenEdge(cookie.value, accessCode))) {
-    return next(request, identity);
+    return response;
   }
 
   // API requests without valid cookie → 401

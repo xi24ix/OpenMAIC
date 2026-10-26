@@ -31,6 +31,7 @@ import {
 import { useI18n } from '@/lib/hooks/use-i18n';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { AlostadLogo } from '@/components/brand/alostad-logo';
+import { AccountMenu } from '@/components/auth/account-menu';
 import { createLogger } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
 import { InputGroup, InputGroupInput, InputGroupButton } from '@/components/ui/input-group';
@@ -695,6 +696,8 @@ function HomePage() {
         <div className="aurora-utilities flex items-center gap-1">
           {/* Language Selector */}
           <LanguageSwitcher onOpen={() => setThemeOpen(false)} />
+
+          <AccountMenu />
 
           <div className="aurora-div w-[1px] h-4" />
 
