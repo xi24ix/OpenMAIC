@@ -1,0 +1,51 @@
+# Deployment-owned provider configuration.
+#
+# The credentials stay in Coolify environment variables. All model and media
+# slots are locked so regular accounts cannot replace the deployment's
+# providers with browser-supplied keys or stale workspace settings.
+
+providers:
+  router:
+    preset: openrouter
+    apiKey: ${OPENROUTER_API_KEY}
+    models:
+      - deepseek/deepseek-v4.1-flash
+
+  speech:
+    preset: openai-tts
+    apiKey: ${OPENAI_API_KEY}
+    models:
+      - gpt-4o-mini-tts
+
+  transcription:
+    preset: openai-whisper
+    apiKey: ${OPENAI_API_KEY}
+    models:
+      - whisper-1
+
+  images:
+    preset: openrouter-image
+    apiKey: ${OPENROUTER_API_KEY}
+    models:
+      - google/gemini-3-pro-image
+
+  videos:
+    preset: openrouter-video
+    apiKey: ${OPENROUTER_API_KEY}
+    models:
+      - google/veo-3.1
+
+slots:
+  llm: router:deepseek/deepseek-v4.1-flash
+  agent:
+    model: router:deepseek/deepseek-v4.1-flash
+    api: openai-completions
+  tts: speech:gpt-4o-mini-tts
+  asr: transcription:whisper-1
+  image: images:google/gemini-3-pro-image
+  video: videos:google/veo-3.1
+  webSearch: null
+  document: null
+
+lock: all
+allowUserKeys: false

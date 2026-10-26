@@ -19,6 +19,7 @@ import {
   WorkspaceConfigConflictError,
 } from '@/lib/persistence/workspace-model-config';
 import { withRequestOwner } from '@/lib/server/identity/with-owner';
+import { OWNER_ROLES, principalHasRole } from '@/lib/server/identity/types';
 import {
   importModelSettings,
   modelSettingsView,
@@ -54,7 +55,19 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  return withRequestOwner(req, async ({ ownerId }, headers) => {
+  return withRequestOwner(req, async (principal, headers) => {
+    if (!principalHasRole(principal, OWNER_ROLES.admin)) {
+      return NextResponse.json(
+        {
+          error: {
+            code: 'ADMIN_REQUIRED',
+            message: 'Only administrators can import model settings',
+          },
+        },
+        { status: 403, headers },
+      );
+    }
+    const { ownerId } = principal;
     const queryable = (await getServerPersistenceProvider(process.env.DATABASE_URL ?? '')).pool;
     try {
       for (let attempt = 1; ; attempt++) {

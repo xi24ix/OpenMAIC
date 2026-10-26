@@ -376,8 +376,8 @@ export function formatCurriculumGenerationPreparation(
     }));
   const warnings = [...context.warnings];
   const requirement = [
-    'Generate a curriculum-grounded high-school lesson from the authenticated Kuwait Curriculum Knowledge Base context below.',
-    'Create no more than 3 scenes to keep the lesson focused and economical.',
+    `Generate a curriculum-grounded lesson for exactly grade ${course?.grade ?? 'the selected'} from the authenticated Kuwait Curriculum Knowledge Base context below. Do not change the grade, rewrite it for primary-school children, or replace the selected subject with a generic lesson.`,
+    'Create a focused lesson with enough scenes to teach the selected content; do not omit core lesson evidence merely to satisfy an arbitrary short scene limit.',
     'Use the source-grounded content as the authority. Do not invent textbook facts, unit titles, lesson boundaries, page references, or citations. If the context is partial, say so in the teacher-facing notes and keep claims within the supplied evidence.',
     `Curriculum selection: ${curriculumIdentity}.`,
     `Selected unit: ${unit?.title ?? 'unknown unit'}.`,

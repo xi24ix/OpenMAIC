@@ -20,6 +20,10 @@ vi.mock('@/lib/hooks/use-i18n', () => ({
   }),
 }));
 
+vi.mock('@/components/auth/auth-provider', () => ({
+  useAuth: () => ({ isAdmin: true }),
+}));
+
 vi.mock('sonner', () => ({
   toast: Object.assign(vi.fn(), { error: vi.fn(), success: vi.fn(), warning: vi.fn() }),
 }));

@@ -1316,6 +1316,13 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
         outputWindow: 131072,
         capabilities: { streaming: true, tools: true, vision: false },
       },
+      {
+        id: 'deepseek/deepseek-v4.1-flash',
+        name: 'DeepSeek V4.1 Flash',
+        contextWindow: 1048576,
+        outputWindow: 131072,
+        capabilities: { streaming: true, tools: true, vision: false },
+      },
     ],
   },
 

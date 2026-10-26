@@ -464,6 +464,11 @@ const THINKING_CAPABILITIES: Record<string, ThinkingCapability> = {
     ['low', 'medium', 'high'],
     'medium',
   ),
+  [getModelMetadataKey('openrouter', 'deepseek/deepseek-v4.1-flash')]: effortCapability(
+    'openrouter',
+    ['low', 'medium', 'high'],
+    'medium',
+  ),
 
   [getModelMetadataKey('grok', 'grok-4.6')]: grok46Effort,
   [getModelMetadataKey('grok', 'grok-4.5')]: grok45Effort,

@@ -22,6 +22,7 @@ import {
 } from './model-services';
 import { ServerSettingsGate } from './server-settings';
 import type { SettingsSection } from '@/lib/types/settings';
+import { useAuth } from '@/components/auth/auth-provider';
 
 export { SERVICE_TAB_LABELS, type ServiceTab } from './model-services';
 
@@ -48,6 +49,7 @@ const NAV: { id: SettingsSection; icon: typeof Settings; label: string }[] = [
  */
 export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsDialogProps) {
   const { t } = useI18n();
+  const { isAdmin } = useAuth();
 
   // Navigation
   const [requestedSection, setActiveSection] = useState<SettingsSection>('token-plan');
@@ -64,13 +66,16 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
     ? SERVICE_TABS.filter((tab) => sections.modelServices.includes(TAB_CAPABILITY[tab]))
     : SERVICE_TABS;
   const listed = (id: SettingsSection) =>
-    id === 'skills'
-      ? skillsAvailable
-      : id === 'token-plan'
-        ? !sections || sections.tokenPlan
-        : id === 'model-services'
-          ? serviceTabs.length > 0
-          : true;
+    id === 'token-plan' || id === 'model-services' || id === 'course-models'
+      ? isAdmin &&
+        (id === 'token-plan'
+          ? !sections || sections.tokenPlan
+          : id === 'model-services'
+            ? serviceTabs.length > 0
+            : true)
+      : id === 'skills'
+        ? skillsAvailable
+        : true;
   const nav = NAV.filter(({ id }) => listed(id));
   // A section that is not listed (asked for, or the default) lands on the first one.
   const activeSection = listed(requestedSection) ? requestedSection : nav[0].id;

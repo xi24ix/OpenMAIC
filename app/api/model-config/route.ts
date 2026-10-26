@@ -23,6 +23,7 @@ import {
   WorkspaceConfigInvalidError,
 } from '@/lib/persistence/workspace-model-config';
 import { withRequestOwner } from '@/lib/server/identity/with-owner';
+import { OWNER_ROLES, principalHasRole } from '@/lib/server/identity/types';
 import {
   applyModelSettingsChange,
   keysClearedBy,
@@ -100,7 +101,16 @@ export async function PUT(req: NextRequest) {
   const revision = parsed.data.revision;
   const change = parsed.data.change as ModelSettingsChange;
 
-  return withRequestOwner(req, async ({ ownerId }, headers) => {
+  return withRequestOwner(req, async (principal, headers) => {
+    if (!principalHasRole(principal, OWNER_ROLES.admin)) {
+      return jsonError(
+        403,
+        'ADMIN_REQUIRED',
+        'Only administrators can change model settings',
+        headers,
+      );
+    }
+    const { ownerId } = principal;
     const queryable = await pool();
     try {
       const current = await readWorkspaceModelConfig(queryable, ownerId);

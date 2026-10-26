@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { PGlite } from '@electric-sql/pglite';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { OwnerAuthMethod } from '@/lib/server/identity/types';
+import { OWNER_ROLES, type OwnerAuthMethod } from '@/lib/server/identity/types';
 
 /**
  * /api/model-config on the real route, owner seam and an in-memory
@@ -38,7 +38,7 @@ const sessionMethod: OwnerAuthMethod = {
       principal: {
         ownerId: `user:${user}`,
         kind: 'user',
-        roles: new Set(),
+        roles: user === 'ordinary' ? new Set() : new Set([OWNER_ROLES.admin]),
         assurance: 'verified',
       },
     };
@@ -254,6 +254,16 @@ describe('/api/model-config', () => {
     expect((await get('bad')).status).toBe(401);
     const malformed = await put('alice', 'x' as never, { kind: 'slots' });
     expect(malformed.status).toBe(400);
+  });
+
+  it('allows ordinary accounts to read deployment state but not change it', async () => {
+    expect((await get('ordinary')).status).toBe(200);
+    const response = await put('ordinary', null, {
+      kind: 'slots',
+      set: { llm: 'operator:deepseek-v4-pro' },
+    });
+    expect(response.status).toBe(403);
+    expect((await response.json()).error.code).toBe('ADMIN_REQUIRED');
   });
 
   it('imports browser settings once, keeping what the workspace already has', async () => {

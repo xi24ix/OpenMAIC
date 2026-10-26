@@ -55,7 +55,7 @@ describe('curriculum lesson preparation', () => {
     expect(prepared.requirement).toContain('grade 11');
     expect(prepared.requirement).toContain('Unit 3');
     expect(prepared.requirement).toContain('Source-grounded mathematics content.');
-    expect(prepared.requirement).toContain('no more than 3 scenes');
+    expect(prepared.requirement).toContain('enough scenes to teach the selected content');
     expect(prepared.requirement).toContain('existing animated classroom pipeline');
     expect(prepared.warnings).toContain('Private evaluation mode is enabled');
     expect(prepared.skillIds).toEqual(['k12-core-literacy-planning']);

@@ -12,7 +12,7 @@ import { useAuth } from './auth-provider';
 export function AccountMenu({ onOpenUsage }: { onOpenUsage?: () => void }) {
   const { t } = useI18n();
   const router = useRouter();
-  const { user, supabase } = useAuth();
+  const { isAdmin, user, supabase } = useAuth();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -66,15 +66,17 @@ export function AccountMenu({ onOpenUsage }: { onOpenUsage?: () => void }) {
             <BarChart3 className="size-4" aria-hidden="true" />
             Usage
           </button>
-          <Link
-            href="/admin/library"
-            role="menuitem"
-            className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-            onClick={() => setOpen(false)}
-          >
-            <ShieldCheck className="size-4" aria-hidden="true" />
-            Admin library
-          </Link>
+          {isAdmin && (
+            <Link
+              href="/admin/library"
+              role="menuitem"
+              className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              onClick={() => setOpen(false)}
+            >
+              <ShieldCheck className="size-4" aria-hidden="true" />
+              Admin library
+            </Link>
+          )}
           <button
             type="button"
             role="menuitem"

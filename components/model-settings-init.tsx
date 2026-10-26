@@ -9,6 +9,7 @@ import { useI18n } from '@/lib/hooks/use-i18n';
 import { adoptNewerView } from '@/lib/model-settings/adopt-newer-view';
 import { modelSettingsClient, type ModelSettingsClient } from '@/lib/model-settings/client';
 import { useSettingsStore } from '@/lib/store/settings';
+import { useAuth } from '@/components/auth/auth-provider';
 
 /**
  * Import the model settings an earlier build kept in this browser, once the
@@ -56,7 +57,10 @@ async function run(): Promise<void> {
 
 /** Runs the import on load. Renders nothing. */
 export function ModelSettingsInit() {
+  const { isAdmin } = useAuth();
+
   useEffect(() => {
+    if (!isAdmin) return;
     const persist = useSettingsStore.persist;
     if (persist.hasHydrated()) {
       void run();
@@ -72,7 +76,7 @@ export function ModelSettingsInit() {
       done = true;
       unsubscribe();
     };
-  }, []);
+  }, [isAdmin]);
 
   return null;
 }

@@ -21,6 +21,9 @@ import type { SettingsSection } from '@/lib/types/settings';
 vi.mock('@/lib/hooks/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key, locale: 'en-US', setLocale: () => {} }),
 }));
+vi.mock('@/components/auth/auth-provider', () => ({
+  useAuth: () => ({ isAdmin: true }),
+}));
 vi.mock('@/components/settings/general-settings', () => ({
   GeneralSettings: () => createElement('div', { 'data-testid': 'panel-general' }),
 }));

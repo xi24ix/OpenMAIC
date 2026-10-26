@@ -980,7 +980,7 @@ async function executeClaimedRun(
     ).flatMap((skill) => (skill && isOutlineSkill(skill) ? [skill] : []));
     const skillContext = skills.length
       ? skills
-          .map((skill) => skillOutlineContext(skill, { includeConstraints: false }))
+          .map((skill) => skillOutlineContext(skill, { includeConstraints: true }))
           .join('\n\n')
       : undefined;
     let result: OutlineResult;

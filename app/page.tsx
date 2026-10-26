@@ -951,7 +951,7 @@ function HomePage() {
             const started = await handleGenerate({
               requirement: prepared.requirement,
               skillIds: prepared.skillIds,
-              maxScenes: 3,
+              maxScenes: 8,
               sourceVisuals: prepared.visuals,
               interactive: true,
             });
