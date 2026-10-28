@@ -1,0 +1,48 @@
+# Coolify sandbox: one self-contained test deployment (app + its own Postgres).
+#
+# Deployed as a docker-compose application against the public GitHub repo, in
+# its own Coolify project, so sandbox testing never touches the production
+# "openmaic" application or its database. The provider keys are set as env
+# vars on the Coolify resource and interpolated here at deploy time; the app
+# image ships the repo's openmaic.yml, which reads them at boot. Delete the
+# sandbox application (and this file) after verification.
+services:
+  openmaic:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgres://openmaic:${PERSISTENCE_POSTGRES_PASSWORD:-openmaic-dev}@postgres:5432/openmaic
+      # Headless verification identity: the anonymous single owner serves the
+      # sandbox's one course library. The sandbox URL is throwaway; delete it.
+      - OWNER_SINGLE_USER=true
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - TAVILY_API_KEY=${TAVILY_API_KEY}
+    volumes:
+      - openmaic-data:/app/data
+
+  postgres:
+    image: postgres:16
+    environment:
+      - POSTGRES_DB=openmaic
+      - POSTGRES_USER=openmaic
+      # Sandbox default, mirrors docker-compose.yml. It initializes the role
+      # only when the volume is empty; use letters and digits only (or set an
+      # encoded DATABASE_URL) to change it.
+      - POSTGRES_PASSWORD=${PERSISTENCE_POSTGRES_PASSWORD:-openmaic-dev}
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U openmaic -d openmaic']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    volumes:
+      - openmaic-postgres:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  openmaic-data:
+  openmaic-postgres:
