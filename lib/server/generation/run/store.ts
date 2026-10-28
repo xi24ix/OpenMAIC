@@ -1480,7 +1480,10 @@ export async function confirmGenerationRunOutline(
       // produces the per-beat classroom scenes. Idempotent: already-exploded
       // outlines carry `widgetOutline.startPhase` and pass through.
       const outlines = edited
-        ? explodeExplainerOutlines(command.outlines!).slice(0, run.input.maxScenes ?? 100)
+        ? explodeExplainerOutlines(command.outlines!, run.input.maxScenes).slice(
+            0,
+            run.input.maxScenes ?? 100,
+          )
         : undefined;
       const outline: GenerationRunOutline = edited
         ? { ...run.outline, outlines: outlines! }

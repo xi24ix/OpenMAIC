@@ -31,6 +31,12 @@ export interface OutlinePromptContext {
   videoGenerationEnabled?: boolean;
   researchContext?: string;
   teacherContext?: string;
+  /**
+   * The caller's scene-count target, rendered into the template's Scene Count
+   * section ("Plan about N scenes total…"). Undefined leaves the section out
+   * (the browser path that predates scene budgets).
+   */
+  sceneCountTarget?: string;
 }
 
 export interface OutlineGenerationOptions extends Omit<
@@ -109,6 +115,7 @@ export function buildOutlinePrompt(
     mediaEnabled,
     researchContext: context.researchContext || 'None',
     teacherContext: context.teacherContext || '',
+    sceneCountTarget: context.sceneCountTarget,
   });
 
   if (!prompts) {

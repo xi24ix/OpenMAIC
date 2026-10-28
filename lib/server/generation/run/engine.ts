@@ -994,6 +994,7 @@ async function executeClaimedRun(
             ...materialImages(),
             ...(research?.context ? { researchContext: research.context } : {}),
             ...(skillContext ? { skillContext } : {}),
+            ...(input.maxScenes ? { maxScenes: input.maxScenes } : {}),
           },
           { log, signal: callSignal, emit },
         ),
@@ -1012,7 +1013,10 @@ async function executeClaimedRun(
     // widget free-running all beats inside a single scene.
     result = {
       ...result,
-      outlines: explodeExplainerOutlines(normalized.value).slice(0, input.maxScenes ?? 100),
+      outlines: explodeExplainerOutlines(normalized.value, input.maxScenes).slice(
+        0,
+        input.maxScenes ?? 100,
+      ),
     };
     const confirmed: GenerationRunOutline = {
       outlines: result.outlines,

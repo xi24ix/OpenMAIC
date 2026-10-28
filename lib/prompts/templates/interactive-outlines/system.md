@@ -78,11 +78,19 @@ Structure:
 
 ---
 
-## Intro Scene (MANDATORY — every course)
+## Intro Scene (optional cinematic cold open)
 
-The **first scene** must always be `"type": "interactive"` with `"widgetType": "animation-explainer"` — a 25-45 second pure motion-graphics intro that hooks the learner before any teaching. It does not count against the widget quota.
+The **first scene** MAY be `"type": "interactive"` with `"widgetType": "animation-explainer"` — a 25-45 second pure motion-graphics intro that hooks the learner before any teaching. It does not count against the widget quota.
 
-Requirements:
+**Include the intro only when ALL of these hold:**
+
+1. The scene count target (see the user prompt) is at least 5 scenes.
+2. The requirement asks for an engaging, story-driven, or young-learner lesson — or the subject is one where a visual hook genuinely adds motivation (science phenomena, stories, kids content).
+3. The user did not ask for a plain, structured, presentation-style, or exam-prep lesson.
+
+Otherwise **skip the intro**: the course opens with a `slide` that states the topic and objectives. A course without the intro is complete, not deficient. Never let the intro crowd out teaching scenes: when you include it, plan the teaching scenes so the whole course still fits the scene count target, and keep the intro to 3-4 beats.
+
+When included, the intro scene needs:
 
 - `title`: the course hook (NOT "Introduction") — e.g. "为什么递归会停？" / "Why Light Bends".
 - `description`: one sentence naming the attention hook (paradox, surprise, question).
@@ -194,7 +202,7 @@ Interactive 3D scenes using Three.js for immersive learning experiences.
 - Smooth animations with requestAnimationFrame
 
 ### 6. Motion-Graphics Explainer (`animation-explainer`)
-A pure motion-graphics page that HOOKS the learner with animated typography, iconography, and a signature animated infographic — exactly the mandatory intro scene of every course. GSAP-driven phases (HOOK → TEASE → SPARK → TITLE), no narration narrator, no interactive controls beyond play/replay.
+A pure motion-graphics page that HOOKS the learner with animated typography, iconography, and a signature animated infographic — typically the optional intro scene. GSAP-driven phases (HOOK → TEASE → SPARK → TITLE), no narration narrator, no interactive controls beyond play/replay.
 
 **Output in widgetOutline:**
 - `concept`: What the animation reveals (the hook payload)
@@ -211,7 +219,7 @@ A pure motion-graphics page that HOOKS the learner with animated typography, ico
 
 | Content Type                | Recommended Widget     | Reason                                        |
 | --------------------------- | ---------------------- | --------------------------------------------- |
-| Course intro hook (scene 1) | animation-explainer    | MANDATORY cinematic cold open                 |
+| Course intro hook (scene 1) | animation-explainer    | Optional cinematic cold open (see Intro Scene) |
 | Physics formulas/concepts   | simulation             | Let students EXPERIMENT with variables        |
 | Step-by-step processes      | diagram                | Visual walkthrough with reveal                |
 | Programming concepts        | code                   | Hands-on coding practice                      |
@@ -224,11 +232,12 @@ A pure motion-graphics page that HOOKS the learner with animated typography, ico
 
 ## Widget Distribution Guidelines
 
-1. **Scene 1 (`animation-explainer`)**: The mandatory motion-graphics intro — hook first, always.
+1. **Scene 1 (`animation-explainer`)**: the optional motion-graphics intro — hook first, when the Intro Scene rules allow it. Otherwise scene 1 is an opening `slide`.
 2. **Opening scenes (slides)**: Introduction, learning objectives, context setting
 3. **Middle scenes (widgets)**: Hands-on exploration, practice, discovery
 4. **Transition scenes (slides)**: Concept explanations between widgets
-5. **Closing scenes (slides)**: Summary, key takeaways, next steps
+5. **Check understanding (`quiz`)**: For courses of 5+ scenes, include at least one quiz scene — after the teaching block it tests, and ideally one final quiz before the closing summary. For 3-4 scene courses, a single closing quiz replaces the summary slide's "next steps" point.
+6. **Closing scenes (slides)**: Summary, key takeaways, next steps
 
 ## Widget Type Preferences (Adjust Based on Course Length)
 
@@ -249,6 +258,30 @@ For **shorter courses (<10 scenes)**:
 - code/visualization3d as needed
 
 **Flexibility is encouraged** — match widgets to content needs, not rigid formulas.
+
+## Quiz Scenes (assessment)
+
+A `quiz` scene is a real assessment the classroom grades — use it for check-understanding moments, not as a widget substitute:
+
+```json
+{
+  "id": "scene_6",
+  "type": "quiz",
+  "title": "Check Your Understanding",
+  "description": "Five questions on the water cycle's stages",
+  "keyPoints": ["Evaporation and condensation", "Precipitation and collection"],
+  "order": 6,
+  "quizConfig": {
+    "questionCount": 5,
+    "difficulty": "medium",
+    "questionTypes": ["multiple_choice", "true_false"]
+  }
+}
+```
+
+- Every `quiz` scene MUST carry `quizConfig` (`questionCount`, `difficulty`: "easy"|"medium"|"hard", `questionTypes`: "multiple_choice"|"true_false"|"fill_blank").
+- Place a quiz AFTER the block of scenes it tests; for 5+ scene courses add one final quiz before the closing summary.
+- A quiz is not a game widget: keep game widgets for playful challenges, quizzes for measurement.
 
 ## Example Outline with Good Game Design
 
@@ -314,7 +347,7 @@ Your entire response MUST be a single JSON **object** with exactly these four to
   "languageDirective": "<the directive you inferred in the Language Inference step>",
   "courseTitle": "<concise course name, ≤30 chars, in the teaching language>",
   "designDirective": { "concept": "...", "palette": ["#hex"], "background": "dark", "motionPersonality": "calm" },
-  "outlines": [ /* array of scene objects, FIRST one is the animation-explainer intro */ ]
+  "outlines": [ /* array of scene objects; the FIRST one is the animation-explainer intro ONLY when the Intro Scene rules allow it */ ]
 }
 ```
 
@@ -396,7 +429,7 @@ Rules:
 
 **Scene-level rules:**
 
-4. **Scene 1 is always the `animation-explainer` intro** (see Intro Scene). The intro does not count against the widget quota.
+4. **Scene 1 is the `animation-explainer` intro ONLY when the Intro Scene rules allow it** (scene count ≥ 5, engaging lesson, no plain/structured request). The intro does not count against the widget quota.
 5. **Interactive focus**: Prefer interactive widgets for hands-on learning.
 6. **Widget variety**: Use different widget types throughout the course when appropriate.
 7. **Flow**: Slides should introduce concepts, widgets should let students explore.

@@ -37,6 +37,12 @@ Infer the course language directive by applying the decision rules from the syst
 
 ---
 
+## Scene Count
+
+{{#if sceneCountTarget}}{{sceneCountTarget}}{{/if}}
+
+---
+
 ## Output Requirements
 
 Please automatically infer the following from user requirements:

@@ -81,11 +81,19 @@ Structure:
 
 ---
 
-## Intro Scene (MANDATORY — every course)
+## Intro Scene (optional cinematic cold open)
 
-The **first scene** must always be `"type": "interactive"` with `"widgetType": "animation-explainer"` — a 25-45 second pure motion-graphics intro that hooks the learner before any teaching. It does not count against the interactive-scene budget.
+The **first scene** MAY be `"type": "interactive"` with `"widgetType": "animation-explainer"` — a 25-45 second pure motion-graphics intro that hooks the learner before any teaching. It does not count against the interactive-scene budget.
 
-Requirements:
+**Include the intro only when ALL of these hold:**
+
+1. The scene count target (see the user prompt) is at least 5 scenes.
+2. The requirement asks for an engaging, story-driven, or young-learner lesson — or the subject is one where a visual hook genuinely adds motivation (science phenomena, stories, kids content).
+3. The user did not ask for a plain, structured, presentation-style, or exam-prep lesson.
+
+Otherwise **skip the intro**: the course opens with a `slide` that states the topic and objectives. A course without the intro is complete, not deficient. Never let the intro crowd out teaching scenes: when you include it, plan the teaching scenes so the whole course still fits the scene count target, and keep the intro to 3-4 beats.
+
+When included, the intro scene needs:
 
 - `title`: the course hook (NOT "Introduction") — e.g. "为什么递归会停？" / "Why Light Bends".
 - `description`: one sentence naming the attention hook (paradox, surprise, question).
@@ -186,7 +194,7 @@ Use `interactive` type when a concept benefits significantly from hands-on inter
 
 **Constraints**:
 
-- Limit to **1-2 interactive scenes per course** (they are resource-intensive). The mandatory `animation-explainer` intro scene does NOT count against this budget.
+- Limit to **1-2 interactive scenes per course** (they are resource-intensive). The optional `animation-explainer` intro scene does NOT count against this budget.
 - Interactive scenes **require** an `interactiveConfig` object
 - Do NOT use interactive for purely textual/conceptual content - use slides instead
 - The `interactiveConfig.designIdea` should describe the specific interactive elements and user interactions

@@ -364,6 +364,12 @@ export interface OutlineInput {
   /** The scene-outlines-stream stage's model. */
   model: StepLanguageModel;
   /**
+   * The caller's scene-count budget, rendered into the templates' Scene Count
+   * section. The run still trims to it after the intro explosion; the target
+   * makes the plan fit instead of losing its tail scenes.
+   */
+  maxScenes?: number;
+  /**
    * Whether the outline may plan generated images and videos, as far as the
    * caller is concerned (default true). It only opts out: the workspace's
    * image and video slots decide whether media is offered at all.
@@ -533,6 +539,13 @@ async function prepareOutline(
   // Standard outline generation is byte-identical to the package path. The
   // two app-only modes retain their own templates but share the same inputs.
   // The standard branch receives the N3 RESOLVED slice (unresolvable vision
+  // The caller's scene-count target, so the model plans a course that fits
+  // the budget the run enforces later (the fit trims trailing scenes — the
+  // summary and the quiz — so an over-budget plan loses its tail).
+  const sceneCountTarget = input.maxScenes
+    ? `Plan about ${Math.min(input.maxScenes, MAX_OUTLINE_SCENES)} scenes in total (never more).`
+    : 'Plan 6-10 scenes in total, scaling with the breadth of the subject.';
+
   // images removed, mapping naming only resolved ids) so its placeholder
   // text never promises an image this step will not attach.
   let prompts: { system: string; user: string } | null = buildOutlinePrompt(requirements, {
@@ -544,6 +557,7 @@ async function prepareOutline(
     videoGenerationEnabled,
     researchContext,
     teacherContext,
+    sceneCountTarget,
   });
 
   if (taskEngineMode || interactiveMode) {
@@ -559,6 +573,7 @@ async function prepareOutline(
       imageEnabled: imageGenerationEnabled,
       videoEnabled: videoGenerationEnabled,
       mediaEnabled: mediaGenerationEnabled,
+      sceneCountTarget,
       teacherContext,
       userProfile: userProfileText,
     });

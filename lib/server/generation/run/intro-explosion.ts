@@ -64,18 +64,24 @@ function isExplodable(outline: SceneOutline): boolean {
 /**
  * Explode-one: an explainer outline with N widget beats becomes N-1
  * interactive siblings + 1 title-card slide. An outline with fewer than two
- * widget beats cannot be meaningfully cut; it passes through unchanged.
+ * widget beats cannot be meaningfully cut; it passes through unchanged. `cap`
+ * bounds the group's scene count (the caller derives it from the run's scene
+ * budget); the beats list is trimmed to the same count, so the shared widget
+ * generates exactly as many phases as there are per-beat scenes.
  */
-function explodeOne(outline: SceneOutline): SceneOutline[] {
+function explodeOne(outline: SceneOutline, cap: number): SceneOutline[] {
   if (!isExplodable(outline)) return [outline];
+  // The budget cannot fit a group (one beat + the cover): keep the widget
+  // whole rather than half-exploding it or dropping the teaching scenes.
+  if (cap < 2) return [outline];
   const base = outline.widgetOutline!;
   const beats = base.keyBeats && base.keyBeats.length > 0 ? base.keyBeats : DEFAULT_KEY_BEATS;
   // Widget beats = everything except a trailing title beat; the title card
-  // slide takes its job. Hard-cap the group at MAX_INTRO_SCENES scenes:
-  // `trimmed` is what every sibling's widgetOutline carries, so the shared
-  // widget generates exactly as many phases as there are per-beat scenes —
-  // beat i of the trimmed list is phase p_i of classroom scene i.
-  const sceneCount = Math.min(beats.length, MAX_INTRO_SCENES);
+  // slide takes its job. Hard-cap the group at `cap` scenes: `trimmed` is what
+  // every sibling's widgetOutline carries, so the shared widget generates
+  // exactly as many phases as there are per-beat scenes — beat i of the
+  // trimmed list is phase p_i of classroom scene i.
+  const sceneCount = Math.min(beats.length, MAX_INTRO_SCENES, cap);
   if (sceneCount < 2) return [outline];
   const trimmed = beats.slice(0, sceneCount);
 
@@ -135,13 +141,35 @@ function explodeOne(outline: SceneOutline): SceneOutline[] {
  * Explode every animation-explainer outline in the confirmed outline into
  * per-beat scenes + a title-card cover slide, then renumber `order`
  * 0..n-1 (exploded siblings must trail their group's monotonically).
+ *
+ * With a `sceneBudget` (the run's maxScenes) the intro keeps at most ~40% of
+ * it and the body fills the rest — the fit now trims the BODY to the scenes
+ * the intro leaves, instead of slicing AFTER the explosion, which let a
+ * 6-scene intro crowd 6 of 8 slots out of the teaching scenes. Without a
+ * budget each group keeps its beats cap only.
  */
 export function explodeExplainerOutlines(
   outlines: readonly SceneOutline[],
+  sceneBudget?: number,
 ): SceneOutline[] {
-  const exploded: SceneOutline[] = [];
+  const introScenesCap = sceneBudget
+    ? Math.min(MAX_INTRO_SCENES, Math.max(1, Math.ceil(sceneBudget * 0.4)))
+    : MAX_INTRO_SCENES;
+  const groups = new Map<SceneOutline, readonly SceneOutline[]>();
+  let introScenes = 0;
   for (const outline of outlines) {
-    exploded.push(...explodeOne(outline));
+    if (!isExplodable(outline)) continue;
+    const group = explodeOne(outline, Math.max(1, introScenesCap - introScenes));
+    groups.set(outline, group);
+    introScenes += group.length;
   }
-  return exploded.map((outline, index) => ({ ...outline, order: index }));
+  // Emit in outline order, body scenes filling the budget the intro left.
+  const result: SceneOutline[] = [];
+  for (const outline of outlines) {
+    const group = groups.get(outline);
+    if (group) result.push(...group);
+    else result.push(outline);
+  }
+  const fit = sceneBudget ? result.slice(0, Math.max(introScenes, sceneBudget)) : result;
+  return fit.map((outline, index) => ({ ...outline, order: index }));
 }

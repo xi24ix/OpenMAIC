@@ -37,18 +37,26 @@ Infer the course language directive by applying the decision rules from the syst
 
 ---
 
+## Scene Count
+
+{{#if sceneCountTarget}}{{sceneCountTarget}}{{/if}}
+
+---
+
 ## Distribution Target
 
-- **70% interactive scenes** (widgets: simulation, diagram, code, game)
-- **30% slide scenes** (introductions, summaries, transitions)
+A balanced lesson that teaches AND lets the learner do:
 
-## Widget Type Constraints (MANDATORY)
+- **~50% slide scenes** (introductions, concept explanations, transitions, summary)
+- **~30% interactive scenes** (widgets: simulation, diagram, code, game — 1-2 hands-on explorations)
+- **~20% quiz scenes** (check-understanding assessments; omit only for courses under 3 scenes)
 
-| Widget Type | Constraint |
-|------------|-----------|
-| simulation | **Minimum 2 scenes** |
-| game | **Minimum 1 scene** |
-| diagram | **Maximum 1 scene** |
+Slides carry the teaching; widgets let the learner apply it; quizzes measure it.
+
+## Widget Type Constraints
+
+- Match each widget to the content that genuinely benefits (see the selection guide) — quotas do not apply.
+- An interactive scene that would repeat what a slide teaches more clearly should BE a slide.
 
 ## CRITICAL: Required Fields for Interactive Scenes
 
@@ -116,3 +124,5 @@ Choose widgets based on the content:
 ```
 
 **Final reminder**: your entire response must be a JSON **object** with exactly three top-level keys — `languageDirective` (string, inferred via the Language Inference rules in the system prompt), `courseTitle` (string, ≤30 chars, in the teaching language), and `outlines` (array of scene objects). Do not return a bare array. Do not wrap in prose or code fences.
+
+Respect the scene count target: the plan is trimmed to fit, and the scenes cut are the ones at the end — usually the summary and the quiz. Plan the course to fit the target so nothing valuable is lost.
