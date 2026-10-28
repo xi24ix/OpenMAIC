@@ -37,9 +37,11 @@ Infer the course language directive by applying the decision rules from the syst
 
 ---
 
+{{#if sceneCountTarget}}
 ## Scene Count
 
-{{#if sceneCountTarget}}{{sceneCountTarget}}{{/if}}
+{{sceneCountTarget}}
+{{/if}}
 
 ---
 
