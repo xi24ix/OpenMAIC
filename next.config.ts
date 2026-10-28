@@ -79,6 +79,9 @@ const nextConfig: NextConfig = {
     // fail before compilation. This volume never preserves .next/cache anyway;
     // container builds start from a clean layer, so the cache is dead weight.
     turbopackFileSystemCacheForBuild: false,
+    // Same volume, dev server: the dev-mode cache fails with "Operation not
+    // supported" (os error 45) opening its redb database on this share.
+    turbopackFileSystemCacheForDev: false,
   },
   async headers() {
     const extraAncestors = process.env.ALLOWED_FRAME_ANCESTORS?.trim();

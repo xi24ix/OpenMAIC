@@ -1,51 +1,87 @@
-# Deployment-owned provider configuration.
+# Deployment-owned provider configuration (app.zobeidi.com).
 #
-# The credentials stay in Coolify environment variables. All model and media
-# slots are locked so regular accounts cannot replace the deployment's
-# providers with browser-supplied keys or stale workspace settings.
+# One OpenRouter key covers chat, image and video; one OpenAI key covers the
+# voice pipeline (speech synthesis + voice input). Tavily serves web search and
+# the built-in unpdf parser handles document extraction, both keyless of the
+# user. The credentials stay in Coolify environment variables and are
+# referenced as ${VAR}; an unset variable stops the server at startup.
+#
+# All model and media slots are locked (`lock: all`) so every account uses
+# exactly this setup: nobody can replace the deployment's providers with
+# browser-supplied keys or stale workspace settings, and the provider catalog
+# (Ollama, Lemonade, ComfyUI, ...) is not offered in the web settings at all.
 
 providers:
+  # Chat + image + video through OpenRouter (one key).
   router:
     preset: openrouter
     apiKey: ${OPENROUTER_API_KEY}
     models:
       - deepseek/deepseek-v4.1-flash
+      - z-ai/glm-5.3-flash
 
+  # Speech synthesis (the lesson's voice-over): OpenAI.
   speech:
     preset: openai-tts
     apiKey: ${OPENAI_API_KEY}
     models:
       - gpt-4o-mini-tts
 
+  # Voice input (speech recognition): OpenAI.
   transcription:
     preset: openai-whisper
     apiKey: ${OPENAI_API_KEY}
     models:
-      - whisper-1
+      - gpt-4o-mini-transcribe
 
+  # Scene images: OpenRouter's image endpoint.
   images:
     preset: openrouter-image
     apiKey: ${OPENROUTER_API_KEY}
     models:
-      - google/gemini-3-pro-image
+      - bytedance-seed/seedream-5-0-pro
 
+  # Scene video: OpenRouter's video endpoint.
   videos:
     preset: openrouter-video
     apiKey: ${OPENROUTER_API_KEY}
     models:
-      - google/veo-3.1
+      - bytedance/seedance-2.5
+
+  # Web search: Tavily.
+  search:
+    preset: tavily
+    apiKey: ${TAVILY_API_KEY}
+
+  # Document parsing: the built-in unpdf extractor (no key needed).
+  sources:
+    preset: unpdf
 
 slots:
+  # The default chat model: every chat slot without its own assignment below
+  # follows it (course outlines, scene content, actions, classroom, titles).
   llm: router:deepseek/deepseek-v4.1-flash
+
+  # The Pro workbench agent needs dependable tool calling.
   agent:
     model: router:deepseek/deepseek-v4.1-flash
     api: openai-completions
+
+  # Web-search query rewriting and the agent roster run on the faster GLM.
+  course.research: router:z-ai/glm-5.3-flash
+  course.agents: router:z-ai/glm-5.3-flash
+
+  # Voice: OpenAI in both directions.
   tts: speech:gpt-4o-mini-tts
-  asr: transcription:whisper-1
-  image: images:google/gemini-3-pro-image
-  video: videos:google/veo-3.1
-  webSearch: null
-  document: null
+  asr: transcription:gpt-4o-mini-transcribe
+
+  # Media: OpenRouter.
+  image: images:bytedance-seed/seedream-5-0-pro
+  video: videos:bytedance/seedance-2.5
+
+  # Research and document extraction.
+  webSearch: search
+  document: sources
 
 lock: all
 allowUserKeys: false

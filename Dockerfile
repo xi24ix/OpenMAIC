@@ -120,6 +120,12 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# The deployment's model configuration (providers, slot assignments, locks).
+# openmaic.yml is read from the working directory (/app) at boot and request
+# time; without it the deployment serves no providers and nothing generates.
+# A Coolify/compose bind mount of the same path overrides this copy.
+COPY --from=builder /app/openmaic.yml ./openmaic.yml
+
 # The app persists classrooms, classroom media, and usage records under
 # ./data, which docker-compose.yml mounts as the openmaic-data named volume.
 # Nothing above creates the directory, so on first run Docker materializes

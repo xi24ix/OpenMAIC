@@ -20,8 +20,11 @@ dist
 .env*
 !.env.example
 server-providers*.yml
-# model configuration: may hold inline keys; mounted at run time, never baked in
-openmaic.yml
+# The model configuration is deployment-owned and stays in the repo, but its
+# secrets come from the environment (${OPENROUTER_API_KEY} etc. are
+# interpolated at boot), so baking the file is safe: no keys in the image.
+# A run-time bind mount of /app/openmaic.yml overrides the baked-in copy.
+!openmaic.yml
 
 # misc
 assets
@@ -35,6 +38,12 @@ logs
 data
 docs
 .claude
+
+# local data-prep workspaces — the knowledge base is a separate project,
+# built and served elsewhere (kwdb.zobeidi.com); never part of the app image.
+knowledge-base-curiculum
+books
+book-lessons
 
 # isolated MP4 render service — built as its own image (render-service/Dockerfile),
 # never part of the main app image.
