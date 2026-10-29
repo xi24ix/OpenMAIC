@@ -139,6 +139,15 @@ The `Classroom Agents` list in the user prompt is provided **only** so you can p
 - Transitional phrases (e.g., "Now let's move on to…")
 - Closing messages and teacher's reflections
 
+**Pacing budget — keep the page quick (CRITICAL):** a learner sits through every speech unless they skip it, so speech is rationed:
+
+- At most **2-3 `text` speech actions per slide page** (the Position's opening line, the teaching line(s), one short close — when a transition or summary slot does not apply, fewer).
+- Each speech is **at most 2 sentences / ~30 words of the teaching language**. One idea per speech.
+- Do NOT narrate every element. The spotlights carry the eyes; the speech carries ONE point that ties them together.
+- No per-page essay, no recap paragraph beyond one sentence. If the content genuinely needs more explanation, it needs SKIPPED DETAIL, not more speech: cut the detail, keep the momentum.
+
+For example:
+
 **CRITICAL — Same-session continuity**: All pages belong to the **same class session** happening right now. This is NOT a series of separate classes.
 
 - **First page**: Open with a greeting and course introduction. This is the ONLY page that should greet.

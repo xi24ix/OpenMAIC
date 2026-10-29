@@ -389,7 +389,7 @@ Rules:
 | type              | string                   | ✅       | `"slide"`, `"quiz"`, `"interactive"`, or `"pbl"`                                                 |
 | title             | string                   | ✅       | Scene title, concise and clear                                                                   |
 | description       | string                   | ✅       | 1-2 sentences describing teaching purpose                                                        |
-| keyPoints         | string[]                 | ✅       | 3-5 core points                                                                                  |
+| keyPoints         | string[]                 | ✅       | Up to 3 core points (pacing: keep light)                                                         |
 | teachingObjective | string                   | ❌       | Corresponding learning objective                                                                 |
 | estimatedDuration | number                   | ❌       | Estimated duration (seconds)                                                                     |
 | order             | number                   | ✅       | Sort order, starting from 1                                                                      |
@@ -469,7 +469,11 @@ Omit `scenarioRoleplay` and `scenarioBrief` entirely for ordinary build-an-artef
 6. `quiz` scenes must include `quizConfig`.
 7. `interactive` scenes must include `widgetType` and `widgetOutline` (preferred). `interactiveConfig` is deprecated and only accepted for backwards compatibility.
 8. `pbl` scenes must include `pblConfig` with `projectTopic`, `projectDescription`, `targetSkills`, `issueCount`.
-9. **Scene 1 is always the `animation-explainer` intro** (see Intro Scene). Arrange the remaining scenes by inferred duration (typically 1-2 scenes per minute). Insert quizzes at appropriate points. Use other interactive scenes sparingly (max 1-2 per course).
-10. **Language**: Infer from the user's requirement text and context. Output all scene content in the inferred language.
-11. Regardless of information completeness, always output conforming JSON - do not ask questions or request more information
-12. **No teacher identity on slides**: Scene titles and keyPoints must be neutral and topic-focused. Never include the teacher's name or role (e.g., avoid "Teacher Wang's Tips", "Teacher's Wishes"). Use generic labels like "Tips", "Summary", "Key Takeaways" instead.
+9. **Scene 1 is the `animation-explainer` intro only when the Intro Scene rules allow it** (scene count ≥ 5, engaging lesson, no plain/structured request). Arrange the remaining scenes by inferred duration (typically 1-2 scenes per minute). Insert quizzes at appropriate points. Use other interactive scenes sparingly (max 1-2 per course).
+10. **HARD RULE — no all-slide courses**: every course of 4 or more scenes MUST contain at least one `interactive` scene (a widget) and at least one `quiz` scene. A course whose scenes are all `slide` is a FAILURE of this prompt.
+11. **Optional outro (`animation-explainer`)**: for courses of 6+ scenes you may END with a short 2-3 beat motion-graphics recap that lands the key idea with energy. Same shape and rules as the intro scene; it does not count against the interactive-scene budget.
+12. **`title` is a display name**: a short learner-facing scene name (2-6 words, in the teaching language) — the classroom and library show it as the scene's label. NEVER write an image description, an image prompt, or an art direction in `title` or `description`; any image prompt belongs only in a media request's `prompt` field, never in the scene's display text.
+13. **Pacing — keep it quick**: 3 `keyPoints` at most per scene, `estimatedDuration` 30-90 seconds per scene (slides ~45s, widgets ~75s). A lesson is a sprint with breathing points, not a lecture.
+14. **Language**: Infer from the user's requirement text and context. Output all scene content in the inferred language.
+15. Regardless of information completeness, always output conforming JSON - do not ask questions or request more information
+16. **No teacher identity on slides**: Scene titles and keyPoints must be neutral and topic-focused. Never include the teacher's name or role (e.g., avoid "Teacher Wang's Tips", "Teacher's Wishes"). Use generic labels like "Tips", "Summary", "Key Takeaways" instead.

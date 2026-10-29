@@ -125,6 +125,7 @@ import {
   type RunStep,
 } from './plan';
 import { explodeExplainerOutlines } from './intro-explosion';
+import { ensureLessonMix } from './lesson-mix';
 import {
   FIRST_SCENE_MAX_RETRIES,
   SCENE_MAX_RETRIES,
@@ -1013,9 +1014,12 @@ async function executeClaimedRun(
     // widget free-running all beats inside a single scene.
     result = {
       ...result,
-      outlines: explodeExplainerOutlines(normalized.value, input.maxScenes).slice(
-        0,
-        input.maxScenes ?? 100,
+      outlines: ensureLessonMix(
+        explodeExplainerOutlines(normalized.value, input.maxScenes).slice(
+          0,
+          input.maxScenes ?? 100,
+        ),
+        input.maxScenes,
       ),
     };
     const confirmed: GenerationRunOutline = {

@@ -20,7 +20,7 @@ import type {
   GeneratedInteractiveContent,
   GeneratedPBLContent,
 } from '@/lib/types/generation';
-import type { SpeechAction } from '@/lib/types/action';
+import type { Action, SpeechAction } from '@/lib/types/action';
 import type { PBLContent } from '@/lib/types/stage';
 import { normalizeLegacyPBLContent } from '@/lib/pbl/legacy/read';
 
@@ -47,6 +47,36 @@ export interface SceneActionsInput {
 }
 
 export type SceneActionsRefusal = 'assembly-failed';
+
+/**
+ * Speech ration, enforced. The action prompts ask for 2-3 speeches on a
+ * slide page and 3-4 on a widget page, but a model can keep elaborating in
+ * speech anyway (a sandbox run produced 6-9 speech actions per scene, which
+ * plays as a slow, over-explaining lesson). Between generation and assembly
+ * this keeps the opening speeches and the final one and drops the middle
+ * elaborations: every non-speech action (spotlights, widget events, the
+ * closing discussion) survives, the teacher just says less.
+ */
+const SPEECH_CAPS: Record<SceneOutline['type'], number> = {
+  slide: 3,
+  quiz: 3,
+  interactive: 4,
+  pbl: 4,
+};
+
+export function capSpeechActions(
+  actions: readonly Action[],
+  type: SceneOutline['type'],
+): Action[] {
+  const cap = SPEECH_CAPS[type];
+  const speechIndexes = actions.flatMap((action, index) =>
+    action.type === 'speech' ? [index] : [],
+  );
+  if (speechIndexes.length <= cap) return [...actions];
+  const keep = new Set<number>(speechIndexes.slice(0, cap - 1));
+  keep.add(speechIndexes[speechIndexes.length - 1]!);
+  return actions.filter((action, index) => action.type !== 'speech' || keep.has(index));
+}
 
 export type GeneratedScene = NonNullable<ReturnType<typeof buildCompleteScene>>;
 
@@ -149,8 +179,16 @@ export async function generateSceneActions(
 
   log.info(`Generated ${actions.length} actions for: "${outline.title}"`);
 
+  // ── Speech ration: the prompts ask for quick pacing, this enforces it ──
+  const rationedActions = capSpeechActions(actions, outline.type);
+  if (rationedActions.length !== actions.length) {
+    log.info(
+      `Speech ration for: "${outline.title}" — ${actions.length} → ${rationedActions.length} actions`,
+    );
+  }
+
   // ── Build complete scene ──
-  const scene = buildCompleteScene(outline, generationContent, actions, stageId);
+  const scene = buildCompleteScene(outline, generationContent, rationedActions, stageId);
 
   if (!scene) {
     log.error(`Failed to build scene: "${outline.title}"`);

@@ -108,6 +108,8 @@ The user prompt includes a Course Outline and Position indicator. Use them to de
 - Last page: frame the interactive as a final exploration and provide a closing remark after.
 - Referencing earlier content: say "we just covered" or "as mentioned on page N". Never say "last class" or "previous session".
 
+**Pacing budget — keep the page quick:** at most **3-4 `text` speech actions per widget page**, each **at most 2 sentences / ~30 words**. The widget is the scene's attraction — speech only orients the hands ("try changing the angle, watch the path") and names the takeaway; it never lectures over the interaction.
+
 {{snippet:speech-tts-readability}}
 
 Other principles:

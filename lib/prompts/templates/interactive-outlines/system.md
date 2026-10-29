@@ -238,6 +238,7 @@ A pure motion-graphics page that HOOKS the learner with animated typography, ico
 4. **Transition scenes (slides)**: Concept explanations between widgets
 5. **Check understanding (`quiz`)**: For courses of 5+ scenes, include at least one quiz scene — after the teaching block it tests, and ideally one final quiz before the closing summary. For 3-4 scene courses, a single closing quiz replaces the summary slide's "next steps" point.
 6. **Closing scenes (slides)**: Summary, key takeaways, next steps
+7. **Optional outro (`animation-explainer`)**: for courses of 6+ scenes you may END with a short 2-3 beat motion-graphics recap that lands the key idea with energy. Same shape and rules as the intro scene; it does not count against the widget quota.
 
 ## Widget Type Preferences (Adjust Based on Course Length)
 
@@ -274,12 +275,12 @@ A `quiz` scene is a real assessment the classroom grades — use it for check-un
   "quizConfig": {
     "questionCount": 5,
     "difficulty": "medium",
-    "questionTypes": ["multiple_choice", "true_false"]
+    "questionTypes": ["single", "multiple"]
   }
 }
 ```
 
-- Every `quiz` scene MUST carry `quizConfig` (`questionCount`, `difficulty`: "easy"|"medium"|"hard", `questionTypes`: "multiple_choice"|"true_false"|"fill_blank").
+- Every `quiz` scene MUST carry `quizConfig` (`questionCount` 1-10, `difficulty`: "easy"|"medium"|"hard", `questionTypes`: "single"|"multiple"|"text" — exactly these values).
 - Place a quiz AFTER the block of scenes it tests; for 5+ scene courses add one final quiz before the closing summary.
 - A quiz is not a game widget: keep game widgets for playful challenges, quizzes for measurement.
 
@@ -430,10 +431,12 @@ Rules:
 **Scene-level rules:**
 
 4. **Scene 1 is the `animation-explainer` intro ONLY when the Intro Scene rules allow it** (scene count ≥ 5, engaging lesson, no plain/structured request). The intro does not count against the widget quota.
-5. **Interactive focus**: Prefer interactive widgets for hands-on learning.
+5. **HARD RULE — no all-slide courses**: every course of 4 or more scenes MUST contain at least one `interactive` scene (a widget) and at least one `quiz` scene. A course whose scenes are all `slide` is a FAILURE of this prompt, no matter how good the slides are.
 6. **Widget variety**: Use different widget types throughout the course when appropriate.
-7. **Flow**: Slides should introduce concepts, widgets should let students explore.
+7. **Flow**: Slides should introduce concepts, widgets should let students explore, quizzes should measure.
 8. **Language**: Apply the Language Inference decision rules above when producing `languageDirective`, and author all scene content in the inferred language.
 9. **REQUIRED for interactive scenes**: Every scene with `type: "interactive"` MUST include both `widgetType` AND `widgetOutline` fields.
 10. **Game quality**: Game widgets should be INTERACTIVE and FUN, not boring quizzes.
 11. **Mobile-first**: All widgets should work well on mobile devices.
+12. **`title` is a display name**: a short learner-facing scene name (2-6 words, in the teaching language) — the classroom and library show it as the scene's label. NEVER write an image description, an image prompt, or an art direction in `title` or `description`; any image prompt belongs only in a media request's `prompt` field, never in the scene's display text.
+13. **Pacing — keep it quick**: 3 `keyPoints` at most per scene, `estimatedDuration` 30-90 seconds per scene (slides ~45s, widgets ~75s). A lesson is a sprint with breathing points, not a lecture: anything the viewer must sit through much longer than a minute gets boring.
