@@ -69,6 +69,18 @@ function defaultVoiceFor(providerId: string, modelId?: string): string {
   return voices.find((voice) => voiceServesModel(providerId, voice.id, modelId))?.id ?? preferred;
 }
 
+/**
+ * The voice the deployment pins to the slot's provider carrier (`options`
+ * in openmaic.yml): when the connection carries a `voice` setting, the slot
+ * narrates with it whenever the run itself names no voice — the operator
+ * decides what their provider speaks with, without a browser voice picker.
+ * Absent when the option is not a non-empty string.
+ */
+function deploymentVoiceFor(target: RunNarrationTarget): string | undefined {
+  const raw = target.connection.options?.voice;
+  return typeof raw === 'string' && raw.trim() ? raw.trim() : undefined;
+}
+
 /** The learner's voice for the slot's provider, else the provider's default. */
 export function slotVoice(
   target: RunNarrationTarget,
@@ -78,8 +90,19 @@ export function slotVoice(
     preference?.providerId === target.providerId &&
     !!preference.voiceId &&
     voiceServesModel(target.providerId, preference.voiceId, target.modelId);
+  if (usable) {
+    return { voice: preference!.voiceId, speed: preference!.speed ?? 1 };
+  }
+  // A run without a voice speaks through the deployment's pinned voice (the
+  // `options.voice` a provider entry carries) when it has one, else through
+  // the provider catalogue's default. A deployment voice that cannot serve
+  // the model never wins: the catalogue default takes over instead.
+  const deployment = deploymentVoiceFor(target);
   return {
-    voice: usable ? preference!.voiceId : defaultVoiceFor(target.providerId, target.modelId),
+    voice:
+      deployment && voiceServesModel(target.providerId, deployment, target.modelId)
+        ? deployment
+        : defaultVoiceFor(target.providerId, target.modelId),
     speed: preference?.speed ?? 1,
   };
 }

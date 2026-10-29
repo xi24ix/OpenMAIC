@@ -20,7 +20,18 @@ providers:
       - deepseek/deepseek-v4.1-flash
       - z-ai/glm-5.3-flash
 
-  # Speech synthesis (the lesson's voice-over): OpenAI.
+  # Speech synthesis (the lesson's voice-over): Fish Audio, the operator's
+  # reference voice (FISH_VOICE_ID) pinned through `options.voice`, so every
+  # run narrates with that one voice without a browser voice picker.
+  speech-fish:
+    preset: fish-tts
+    apiKey: ${FISH_API_KEY}
+    models:
+      - s2.1-pro-free
+    options:
+      voice: ${FISH_VOICE_ID}
+
+  # Speech synthesis fallback (the lesson's voice-over before fish): OpenAI.
   speech:
     preset: openai-tts
     apiKey: ${OPENAI_API_KEY}
@@ -71,8 +82,8 @@ slots:
   course.research: router:z-ai/glm-5.3-flash
   course.agents: router:z-ai/glm-5.3-flash
 
-  # Voice: OpenAI in both directions.
-  tts: speech:gpt-4o-mini-tts
+  # Voice: Fish Audio out, OpenAI in (speech recognition).
+  tts: speech-fish:s2.1-pro-free
   asr: transcription:gpt-4o-mini-transcribe
 
   # Media: OpenRouter.
