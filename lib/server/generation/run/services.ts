@@ -8,6 +8,7 @@
  */
 import type { Queryable } from '@openmaic/storage/document/pg';
 
+import { callLLM } from '@/lib/ai/llm';
 import type { AgentConfig } from '@/lib/orchestration/registry/types';
 import { MAX_EXTRACT_DOCUMENT_FILE_SIZE_BYTES } from '@/lib/constants/generation';
 import type { MediaGenerationRequest } from '@/lib/media/types';
@@ -25,7 +26,8 @@ import { MAX_GENERATED_VIDEO_BYTES } from '@/lib/server/agent-runtime/generate-v
 import { generateImageStep } from '@/lib/server/generation/steps/image';
 import { generateVideoStep, type VideoProviderTask } from '@/lib/server/generation/steps/video';
 import { decodeDataUrl, fetchProviderResultUrl } from '@/lib/server/provider-result-fetch';
-import type { PdfImage } from '@/lib/types/generation';
+import type { PdfImage, SceneOutline } from '@/lib/types/generation';
+import { rewritePromptLikeTitles } from './outline-titles';
 
 import { TTS_PROVIDERS } from '@/lib/audio/constants';
 import type { BuiltInTTSProviderId, TTSProviderId } from '@/lib/audio/types';
@@ -190,6 +192,15 @@ export interface RunStepServices {
     input: Omit<OutlineInput, 'model'>,
     ctx: StepContext<OutlineEvent>,
   ): Promise<OutlineResult>;
+  /**
+   * Rewrite image-prompt-like outline titles into learner-facing names (the
+   * same titles back when nothing is flagged or the rewrite fails).
+   */
+  retitleOutlines(
+    ownerId: string,
+    input: { outlines: SceneOutline[]; languageDirective?: string; requirement: string },
+    ctx: StepContext,
+  ): Promise<SceneOutline[]>;
   agentProfiles(
     ownerId: string,
     input: Omit<AgentProfilesInput, 'model'>,
@@ -449,6 +460,34 @@ export const defaultRunStepServices: RunStepServices = {
         workspaceId: await backgroundWorkspaceId(ownerId),
         resolveVisionImages: ownerVisionImages(ownerId, ctx.log),
       },
+    );
+  },
+
+  async retitleOutlines(ownerId, input, ctx) {
+    const model = await stageModel(ownerId, 'outline-titles');
+    return rewritePromptLikeTitles(
+      input.outlines,
+      {
+        ...(input.languageDirective ? { languageDirective: input.languageDirective } : {}),
+        requirement: input.requirement,
+      },
+      (systemPrompt, userPrompt) =>
+        callLLM(
+          {
+            model: model.model,
+            abortSignal: ctx.signal,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt },
+            ],
+            maxOutputTokens: 512,
+          },
+          'outline-titles',
+          undefined,
+          model.thinkingConfig,
+          { serverManaged: model.serverManaged },
+        ).then((result) => result.text),
+      ctx.log,
     );
   },
 

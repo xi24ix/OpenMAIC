@@ -70,10 +70,8 @@ import type { SpeechAction } from '@/lib/types/action';
 import type {
   ImageMapping,
   PdfImage,
-  SceneOutline,
   UserRequirements,
 } from '@/lib/types/generation';
-import type { WidgetConfigBase } from '@openmaic/dsl';
 import { storeGeneratedAsset } from '@/lib/server/store-generated-asset';
 import { getGenerationRunHooks } from '@/lib/server/generation-run-hooks/registry';
 import {
@@ -124,7 +122,6 @@ import {
   type RunMediaItem,
   type RunStep,
 } from './plan';
-import { explodeExplainerOutlines } from './intro-explosion';
 import { ensureLessonMix } from './lesson-mix';
 import {
   FIRST_SCENE_MAX_RETRIES,
@@ -549,37 +546,6 @@ async function executeClaimedRun(
   };
 
   // ── Scene content, possibly generated ahead ──
-  // Exploded intro groups share ONE content generation: the group's anchor
-  // beat calls the model once, and every sibling scene copies the same HTML,
-  // relabelled with its own classroom phase. See `./intro-explosion.ts`.
-  const explainerGroupContent = new Map<string, Promise<SceneContentResult>>();
-
-  const relabelExplainerSibling = (
-    anchor: SceneContentResult,
-    item: SceneOutline,
-  ): SceneContentResult => {
-    const widgetOutline = item.widgetOutline;
-    const content = 'widgetType' in anchor.content ? anchor.content : null;
-    if (!widgetOutline?.startPhase || !content || content.widgetType !== 'animation-explainer') {
-      // Shape custody: not an exploded animation-explainer group — serve the
-      // anchor result unchanged rather than guessing.
-      return anchor;
-    }
-    const widgetConfig: WidgetConfigBase = content.widgetConfig ?? { type: 'animation-explainer' };
-    widgetConfig.startPhase = widgetOutline.startPhase;
-    if (widgetOutline.phaseLabel) widgetConfig.phaseLabel = widgetOutline.phaseLabel;
-    return {
-      ...anchor,
-      content: {
-        ...content,
-        widgetConfig,
-      },
-      // The sibling's effective outline answers who this scene is, not the
-      // anchor's — records, actions prompts and validators read it.
-      effectiveOutline: { ...item },
-    };
-  };
-
   const generateContent = async (
     sceneIndex: number,
     contentSignal: AbortSignal,
@@ -587,59 +553,6 @@ async function executeClaimedRun(
     const { outlines, languageDirective, taskEngineMode, designDirective } = outline();
     const stepId = sceneStepId(sceneIndex, 'content');
     const research = output<ResearchOutput>('research');
-
-    const item = outlines[sceneIndex]!;
-    const groupId = item.widgetOutline?.groupId;
-    const startPhase = item.widgetOutline?.startPhase;
-
-    if (groupId && startPhase) {
-      const shared = explainerGroupContent.get(groupId);
-      if (shared) {
-        const anchor = await shared;
-        return relabelExplainerSibling(anchor, item);
-      }
-      // The anchor is the sibling whose beat starts the group; every caller
-      // eventually generates with the same outline, deterministic. Deadlines
-      // and retry bookkeeping stay on the CALLER's step: the plan retries a
-      // scene step, not another scene's.
-      const anchorIndex = outlines.findIndex(
-        (o) => o.widgetOutline?.groupId === groupId && o.widgetOutline?.beatIndex === 0,
-      );
-      const anchorOutline = anchorIndex >= 0 ? outlines[anchorIndex]! : item;
-      const generation = withRouteRetry(
-        () =>
-          withDeadline(stepId, STEP_DEADLINES_MS.sceneContent, contentSignal, (callSignal) =>
-            services.sceneContent(
-              owner,
-              {
-                outline: anchorOutline,
-                ...materialImages(),
-                agents: agents().agents.agents,
-                languageDirective,
-                designDirective,
-                requirements:
-                  anchorIndex === 0
-                    ? runRequirements(input, research?.webSearch === true)
-                    : taskEngineMode
-                      ? ({ taskEngineMode: true } as UserRequirements)
-                      : undefined,
-              },
-              { log, signal: callSignal },
-            ),
-          ),
-        retryOptions(stepId, sceneIndex, 500, contentSignal),
-      );
-      // A failed shared generation must not be cached: the next arrival (or a
-      // retry of this scene) re-enters and generates.
-      generation.catch(() => {
-        if (explainerGroupContent.get(groupId) === generation) {
-          explainerGroupContent.delete(groupId);
-        }
-      });
-      explainerGroupContent.set(groupId, generation);
-      const anchor = await generation;
-      return relabelExplainerSibling(anchor, item);
-    }
 
     return withRouteRetry(
       () =>
@@ -1004,22 +917,24 @@ async function executeClaimedRun(
       await appending;
     }
     if (appendFailure) throw appendFailure;
-    // The outline in the normal form a confirmation takes, so the outline
-    // as generated is always confirmable unchanged.
     const normalized = normalizeSceneOutlines(result.outlines);
     if (!normalized.ok) throw new Error(`The generated outline is unusable: ${normalized.message}`);
-    // Intro explosion FIRST: animation-explainer outlines become one scene
-    // per story beat + a title-card cover slide, so the classroom plays the
-    // intro beat by beat (its play/stop, its transcript) instead of the
-    // widget free-running all beats inside a single scene.
+    // The mix guarantee first (a converted scene's title rides along), then the
+    // title guarantee: an outline model that answers with the image prompt as
+    // the scene's title gets learner-facing names in the teaching language.
     result = {
       ...result,
-      outlines: ensureLessonMix(
-        explodeExplainerOutlines(normalized.value, input.maxScenes).slice(
-          0,
-          input.maxScenes ?? 100,
-        ),
-        input.maxScenes,
+      outlines: await services.retitleOutlines(
+        owner,
+        {
+          outlines: ensureLessonMix(
+            normalized.value.slice(0, input.maxScenes ?? 100),
+            input.maxScenes,
+          ),
+          ...(result.languageDirective ? { languageDirective: result.languageDirective } : {}),
+          requirement: input.requirement,
+        },
+        { log, signal },
       ),
     };
     const confirmed: GenerationRunOutline = {

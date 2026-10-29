@@ -15,6 +15,7 @@ describe('model-routes', () => {
         'scene-content:interactive',
         'scene-content:pbl',
         'scene-outlines-stream',
+        'outline-titles',
         'scene-content',
         'scene-actions',
         'agent-profiles',

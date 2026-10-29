@@ -19,6 +19,7 @@ const ids = MODEL_SLOTS.map((slot) => slot.id as SlotId);
  */
 const EXPECTED_STAGE_SLOTS: Record<LlmStage, SlotId> = {
   'scene-outlines-stream': 'course.outline',
+  'outline-titles': 'course.outline',
   'scene-content': 'course.content',
   'scene-content:slide': 'course.content.slide',
   'scene-content:quiz': 'course.content.quiz',

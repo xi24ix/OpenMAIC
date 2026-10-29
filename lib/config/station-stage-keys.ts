@@ -14,7 +14,7 @@
  */
 export const STATION_STAGE_KEYS: Record<string, readonly string[]> = {
   'web-research': ['web-search-query-rewrite'],
-  outline: ['scene-outlines-stream'],
+  outline: ['scene-outlines-stream', 'outline-titles'],
   agents: ['agent-profiles'],
   'scene-content': ['scene-content'],
   'scene-actions': ['scene-actions'],

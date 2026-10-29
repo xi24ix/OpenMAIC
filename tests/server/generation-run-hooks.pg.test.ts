@@ -111,6 +111,7 @@ function fakeServices(overrides: Partial<RunStepServices> = {}) {
         taskEngineMode: false,
       };
     },
+    retitleOutlines: async (_owner, input) => input.outlines,
     agentProfiles: async () => [
       {
         id: 'gen-teacher',

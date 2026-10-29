@@ -85,6 +85,7 @@ export type SlotId = (typeof MODEL_SLOTS)[number]['id'];
  */
 export const STAGE_SLOTS = {
   'scene-outlines-stream': 'course.outline',
+  'outline-titles': 'course.outline',
   'scene-content': 'course.content',
   'scene-content:slide': 'course.content.slide',
   'scene-content:quiz': 'course.content.quiz',

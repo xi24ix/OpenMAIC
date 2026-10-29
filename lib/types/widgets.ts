@@ -211,9 +211,9 @@ export interface AnimationExplainerConfig extends WidgetConfigBase {
   beats?: Array<{ id: string; label: string }>;
   mood?: string;
   /**
-   * Exploded intro groups (see `lib/server/generation/run/intro-explosion.ts`):
-   * the classroom phase this *scene copy* drives (`p0..pN`). The widget html
-   * is shared across the group; each sibling scene starts its own cut here.
+   * Legacy exploded intro groups (no longer produced): the classroom phase
+   * this *scene copy* drives (`p0..pN`). The widget html is shared across the
+   * group; each sibling scene starts its own cut here.
    */
   startPhase?: string;
   /** Human label of `startPhase`. */

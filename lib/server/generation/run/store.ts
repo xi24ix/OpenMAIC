@@ -33,7 +33,6 @@ import type { SceneOutline } from '@/lib/types/generation';
 
 import { generationRunConfig } from './config';
 import { reportCommittedRunEvents } from './hook-events';
-import { explodeExplainerOutlines } from './intro-explosion';
 import {
   FINAL_RUN_MEDIA_FAILURE_CODES,
   isRetryableRunMedia,
@@ -1475,15 +1474,10 @@ export async function confirmGenerationRunOutline(
       // The run is confirmable: whether the owner may run one more decides.
       if (refusal) throw refusal;
       const edited = command.outlines !== undefined;
-      // Edited outlines re-enter the intro explosion: the browser edits the
-      // outline as it was, so an edit of a pre-explosion outline still
-      // produces the per-beat classroom scenes. Idempotent: already-exploded
-      // outlines carry `widgetOutline.startPhase` and pass through.
+      // Edited outlines re-enter the scene-count cap only: the browser edits
+      // the outline as it was, so an edit keeps every scene the owner saw.
       const outlines = edited
-        ? explodeExplainerOutlines(command.outlines!, run.input.maxScenes).slice(
-            0,
-            run.input.maxScenes ?? 100,
-          )
+        ? command.outlines!.slice(0, run.input.maxScenes ?? 100)
         : undefined;
       const outline: GenerationRunOutline = edited
         ? { ...run.outline, outlines: outlines! }

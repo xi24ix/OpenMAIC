@@ -186,6 +186,7 @@ function fakeServices(overrides: Partial<RunStepServices> = {}) {
         taskEngineMode: false,
       };
     },
+    retitleOutlines: async (_owner, input) => input.outlines,
     agentProfiles: async (_owner, input) => {
       calls.agentProfiles.push(input);
       return GENERATED_AGENTS;
