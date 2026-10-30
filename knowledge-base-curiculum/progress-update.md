@@ -30,6 +30,35 @@ what changed, how it was verified, and what comes next. Latest work at the top o
 
 ## Log
 
+### 2026-10-30 — A1+A2 shipped: 43 semester-1 + 13 semester-2 courses live
+
+**A1 (dedupe):** `bundle-corpus.py --latest-editions` keeps only the newest edition per
+(grade, semester, subject, track) — excluded books 3676, 3534, 3634, 3535, 3638.
+Deployed catalog has zero same-key duplicates (G11 math general/scientific is a track
+split and stays).
+
+**A2 (term 2):** downloaded the 13 G11/G12 teacher guides (`fetch-term2-teachers.py`,
+~260 MB), extracted with OCR + LLM TOC passes (2 focused retries; 985/989 have no
+readable TOC → honest page-chunk fallback), bundled as `dist/corpus-bundle-v2.ndjson.gz`
+(2.04 GB, sha256 `8d8250c1…ca1db`, 65 books / 8,997 assets), restore-tested locally
+(56 courses / 125 units / 908 lessons / 127,149 blocks), then bootstrapped to
+`/app/data/corpus3` on kwdb via the tunnel+env flow. Deploy `7zd5509d9c5jyo6eadeh2xxi`.
+
+**Retrieval fix:** term-2 unit-context answered `not_available` because the repository
+hardcoded `student_book` as the only primary kind. Widened to `teacher_guide` (student
+books still sort first); commit `5ae5bac7`, 18/18 tests pass, redeploy `sw06kpkbfvpjg5bbrvzva5rg`.
+
+**Live verification (post-deploy):** 56 courses (43+13), zero dupes;
+`/v1/unit-context` on G12 chemistry term-2 returns 8 real blocks
+(الوحدة الرابعة: الأملاح ومعايرة الأحماض …).
+
+**New backlog items:**
+- A9: G10 term-2 + English/French/Quran/Islamic-ed term-2 have nothing official —
+  third-party aggregator scraping or manual PDF sourcing, user decision.
+- A10: teacher-guide lesson coverage is uneven (21–98%); a merge of LLM lessons +
+  fallback chunks for unmapped ranges would lift retrieval coverage.
+- A11: old `corpus`/`corpus2` dirs on the kwdb volume need cleanup (corpus3 is live).
+
 ### 2026-10-30 — A1+A2 investigation results
 
 **A2 (term-2 sourcing):**
