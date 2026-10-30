@@ -1,7 +1,23 @@
 services:
+  # One-shot volume cleanup: removes superseded corpus directories before the
+  # service starts. Never list the live KB_BOOTSTRAP_ROOT corpus here —
+  # deleting it forces a full bundle re-download on every deploy. When a
+  # refresh moves the live corpus (e.g. corpus3 -> corpus4), retire the old
+  # directories by adding them to this list in the same commit.
+  volume-cleanup:
+    image: alpine:3.20
+    command: sh -c 'cd /data && ls -d corpus* 2>/dev/null; rm -rf corpus corpus2 && echo "volume cleanup done"'
+    volumes:
+      - curriculum-kb-data:/data
+    networks:
+      - coolify
+    restart: "no"
   curriculum-kb:
     build: .
     restart: unless-stopped
+    depends_on:
+      volume-cleanup:
+        condition: service_completed_successfully
     env_file:
       - .env
     networks:

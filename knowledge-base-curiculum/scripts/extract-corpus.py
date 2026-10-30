@@ -50,6 +50,8 @@ def norm(value: str) -> str:
 
 
 def subject_slug(record: dict) -> str:
+    if record.get("_subject"):
+        return str(record["_subject"])
     label = record["scope"]["subjectLabel"]
     subject_id = int(record["scope"]["subjectId"])
     return SUBJECT_SLUGS.get(label) or SUBJECT_ID_SLUGS.get(subject_id, f"subject-{subject_id}")
@@ -83,6 +85,8 @@ def infer_kind(record: dict) -> str:
 def build_title(record: dict) -> str:
     subject = record["scope"]["subjectLabel"]
     description = norm(str(record["item"].get("fileDescription", "")))
+    if record.get("_subject"):
+        return norm(f"{description} - {record['scope']['gradeLabel']} - الفصل {record['scope']['term']}")
     title = description if not description else f"{subject} - {description}"
     return norm(f"{title} - {record['scope']['gradeLabel']} - الفصل {record['scope']['term']}")
 
@@ -128,7 +132,7 @@ def main() -> None:
     parser.add_argument("--ocr-bin", type=Path, default=ROOT / "scripts/bin/vision-ocr")
     parser.add_argument("--workers", type=int, default=8)
     parser.add_argument("--limit", type=int, default=0)
-    parser.add_argument("--book-id", type=int, action="append", default=[])
+    parser.add_argument("--book-id", action="append", default=[])
     parser.add_argument("--skip-existing", action="store_true", default=True)
     args = parser.parse_args()
 
@@ -138,7 +142,7 @@ def main() -> None:
         records = [record for record in records if int(record["id"]) in wanted]
     if args.limit:
         records = records[: args.limit]
-    records.sort(key=lambda record: (record["scope"]["gradeLabel"], record["scope"]["term"], record["scope"]["subjectLabel"], int(record["id"])))
+    records.sort(key=lambda record: (record["scope"]["gradeLabel"], record["scope"]["term"], record["scope"]["subjectLabel"], str(record["id"])))
 
     args.staging.mkdir(parents=True, exist_ok=True)
     progress_path = args.staging / "extraction-progress.json"
@@ -147,7 +151,7 @@ def main() -> None:
     started_at = time.time()
 
     for index, record in enumerate(records, start=1):
-        book_id = int(record["id"])
+        book_id = str(record["id"])
         out_dir = args.staging / f"book-{book_id}"
         if args.skip_existing and already_done(out_dir):
             progress[str(book_id)] = {"status": "skipped", "output": str(out_dir), "updatedAt": datetime.now(timezone.utc).isoformat()}

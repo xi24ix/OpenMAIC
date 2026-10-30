@@ -586,6 +586,56 @@ def assign_pages(units: list[Unit], ocr: dict[int, list[OcrLine]], page_count: i
         lesson.end_page = max(lesson.start_page, end)
 
 
+def append_gap_chunks(units: list[Unit], page_count: int, toc_pages: list[int]) -> int:
+    """Cover pages outside every lesson range with page-chunk lessons.
+
+    Pages with no lesson produce no extraction segments, so any gap silently
+    drops that content from retrieval. Each gap of two or more pages becomes a
+    "صفحات X-Y" lesson attached to the unit of the nearest preceding lesson.
+    Front matter before the first lesson (covers, TOC spreads) stays unmapped.
+    Returns the number of appended lessons.
+    """
+    lessons = [lesson for unit in units for lesson in unit.lessons]
+    if not lessons:
+        return 0
+    covered: set[int] = set()
+    for lesson in lessons:
+        covered.update(range(lesson.start_page, lesson.end_page + 1))
+    toc_set = set(toc_pages)
+    first_start = min(lesson.start_page for lesson in lessons)
+    gaps: list[tuple[int, int]] = []
+    start: int | None = None
+    for page in range(first_start, page_count + 1):
+        unmapped = page not in covered and page not in toc_set
+        if unmapped and start is None:
+            start = page
+        elif not unmapped and start is not None:
+            gaps.append((start, page - 1))
+            start = None
+    if start is not None:
+        gaps.append((start, page_count))
+    appended = 0
+    ordered = sorted(lessons, key=lambda lesson: lesson.start_page)
+    for gap_start, gap_end in gaps:
+        if gap_end - gap_start + 1 < 2:
+            continue
+        anchor = next((lesson for lesson in reversed(ordered) if lesson.start_page < gap_start), None)
+        if anchor is None:
+            continue
+        unit = next(unit for unit in units if anchor in unit.lessons)
+        order = len(unit.lessons) + 1
+        unit.lessons.append(Lesson(
+            id=f"{unit.id}-l{order}",
+            title=f"صفحات {gap_start}-{gap_end}",
+            order=order,
+            start_page=gap_start,
+            end_page=gap_end,
+            unit_order=unit.order,
+        ))
+        appended += 1
+    return appended
+
+
 def native_blocks(page: pymupdf.Page) -> list[Block]:
     width, height = page.rect.width, page.rect.height
     blocks: list[Block] = []
@@ -1019,6 +1069,9 @@ def main() -> None:
             start = lesson.printed_page or 1
             lesson.start_page = start
             lesson.end_page = min(page_count, start + 9)
+    gap_chunks = append_gap_chunks(units, page_count, toc_pages)
+    if gap_chunks:
+        print(f"info: appended {gap_chunks} gap-chunk lesson(s) for unmapped page ranges", file=sys.stderr)
 
     figures_by_page: dict[int, list[Figure]] = defaultdict(list)
     page_previews: dict[int, tuple[str, str, int, int]] = {}

@@ -268,7 +268,7 @@ def main() -> None:
             track = "literary" if "أدبي" in text else "scientific" if "علمي" in text else "general"
         meta_by_id[str(record["id"])] = {
             "id": record["id"], "scope": record["scope"],
-            "subjectSlug": subject_slugs.get(label, f"subject-{record['scope'].get('subjectId')}"),
+            "subjectSlug": record.get("_subject") or subject_slugs.get(label, f"subject-{record['scope'].get('subjectId')}"),
             "title": clean(f"{label} - {description} - {record['scope']['gradeLabel']} - الفصل {record['scope']['term']}"),
             "kind": kind, "track": track,
             "downloadUrl": record.get("downloadUrl", ""),
