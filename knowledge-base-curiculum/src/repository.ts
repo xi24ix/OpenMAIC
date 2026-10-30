@@ -16,6 +16,11 @@ const stableCourse = (course: Course): string => JSON.stringify([
   course.country, course.curriculum, course.academicYear, course.grade, course.track,
   course.subject, course.semester, course.edition, course.language,
 ]);
+// Teacher guides carry the full student content for courses whose only imported
+// material is a teacher guide (the term-2 books the MOE library publishes), so
+// they count as primary teaching content; student books still sort first.
+const PRIMARY_KINDS = new Set(['student_book', 'teacher_guide']);
+const PRIMARY_ORDER_SQL = "CASE WHEN r.kind='student_book' THEN 0 WHEN r.kind='teacher_guide' THEN 1 ELSE 2 END";
 const json = (value: unknown): string => JSON.stringify(value);
 const parseJson = <T>(value: unknown, fallback: T): T => {
   if (typeof value !== 'string') return (value as T) ?? fallback;
@@ -208,7 +213,7 @@ export class CurriculumRepository {
        JOIN resource_versions rv ON rv.resource_version_id=cb.resource_version_id AND rv.course_id=cb.course_id AND rv.is_active=TRUE
        JOIN resources r ON r.resource_id=rv.resource_id
        WHERE cb.text ILIKE '%' || $1 || '%'${courseFilter}${verificationFilter}
-       ORDER BY CASE WHEN r.kind='student_book' THEN 0 ELSE 1 END, cb.course_id, cb.lesson_id, cb.block_order
+       ORDER BY ${PRIMARY_ORDER_SQL}, cb.course_id, cb.lesson_id, cb.block_order
        LIMIT $${values.length}`,
       values,
     );
@@ -274,13 +279,13 @@ export class CurriculumRepository {
        FROM content_blocks cb JOIN resource_versions rv ON rv.resource_version_id=cb.resource_version_id AND rv.course_id=cb.course_id AND rv.is_active=TRUE
        JOIN resources r ON r.resource_id=rv.resource_id
        WHERE cb.course_id=$1 AND cb.lesson_id=$2${versionFilter}
-       ORDER BY CASE WHEN r.kind='student_book' THEN 0 ELSE 1 END, r.kind, r.resource_id, cb.block_order`, params);
-    const primaryRows = blocks.rows.filter((row) => row.resource_kind === 'student_book');
-    const supportingRows = blocks.rows.filter((row) => row.resource_kind !== 'student_book' && request.includeSupplementary);
+       ORDER BY ${PRIMARY_ORDER_SQL}, r.kind, r.resource_id, cb.block_order`, params);
+    const primaryRows = blocks.rows.filter((row) => PRIMARY_KINDS.has(row.resource_kind));
+    const supportingRows = blocks.rows.filter((row) => !PRIMARY_KINDS.has(row.resource_kind) && request.includeSupplementary);
     const warnings: string[] = [];
     const activeAll = await this.database.query<DbRow>(
       `SELECT rv.*,r.kind FROM resource_versions rv JOIN resources r ON r.resource_id=rv.resource_id WHERE rv.course_id=$1 AND rv.is_active=TRUE`, [request.courseId]);
-    const activePrimary = activeAll.rows.filter((row) => row.kind === 'student_book');
+    const activePrimary = activeAll.rows.filter((row) => PRIMARY_KINDS.has(row.kind));
     if (activePrimary.length === 0) return this.emptyContext(request, 'No active primary student_book is available', rowCourse(courseRow), { id: lessonRow.lesson_id, title: lessonRow.title, objectives: parseJson<string[]>(lessonRow.objectives, []) }, 'not_available');
     if (request.allowUnverified) warnings.push('Private evaluation mode is enabled; this context is not publication-ready and remains private reference only.');
     if (request.allowUnverified && activePrimary.some((row) => !row.curriculum_verified || !row.content_verified)) warnings.push('Unverified material included for private evaluation; this context is not publication-ready.');
@@ -329,8 +334,8 @@ export class CurriculumRepository {
     if (nextOffset === null && offset + selected.length < totalBlocks) nextOffset = offset + selected.length;
     const selectedIds = new Set(selected.map((row) => row.block_id));
     const toBlock = (row: DbRow): ContextBlock => ({ id: row.block_id, text: row.text, textStatus: row.text_status, lessonId: row.lesson_id, citation: citation(row) });
-    const primaryContent = selected.filter((row) => row.resource_kind === 'student_book').map(toBlock);
-    const supportingMaterial = selected.filter((row) => row.resource_kind !== 'student_book').map(toBlock);
+    const primaryContent = selected.filter((row) => PRIMARY_KINDS.has(row.resource_kind)).map(toBlock);
+    const supportingMaterial = selected.filter((row) => !PRIMARY_KINDS.has(row.resource_kind)).map(toBlock);
     if (selected.some((row) => row.curriculum_verified !== true || row.content_verified !== true)) warnings.push('Some returned material is unverified and must remain private reference material.');
     if (supportingRows.length > 0 && !request.includeSupplementary) warnings.push('Supplementary material was excluded by request.');
     const visuals = await this.contextVisuals(request.courseId, request.lessonId, selected, request.allowUnverified);
@@ -354,7 +359,7 @@ export class CurriculumRepository {
     if (request.lessonId && lessons.length === 0) return this.emptyUnitContext(request, 'Lesson is not available in this unit', rowCourse(courseRow), unit, [], 'not_available');
     const activeAll = await this.database.query<DbRow>(
       `SELECT rv.*,r.kind FROM resource_versions rv JOIN resources r ON r.resource_id=rv.resource_id WHERE rv.course_id=$1 AND rv.is_active=TRUE`, [request.courseId]);
-    const activePrimary = activeAll.rows.filter((row) => row.kind === 'student_book');
+    const activePrimary = activeAll.rows.filter((row) => PRIMARY_KINDS.has(row.kind));
     if (activePrimary.length === 0) return this.emptyUnitContext(request, 'No active primary student_book is available', rowCourse(courseRow), unit, lessons, 'not_available');
     const versionFilter = request.allowUnverified ? '' : ' AND rv.curriculum_verified=TRUE AND rv.content_verified=TRUE';
     const blocks = await this.database.query<DbRow>(
@@ -364,11 +369,11 @@ export class CurriculumRepository {
        JOIN resource_versions rv ON rv.resource_version_id=cb.resource_version_id AND rv.course_id=cb.course_id AND rv.is_active=TRUE
        JOIN resources r ON r.resource_id=rv.resource_id
        WHERE cb.course_id=$1 AND cb.unit_id=$2${request.lessonId ? ' AND cb.lesson_id=$3' : ''}${versionFilter}
-       ORDER BY l.lesson_order, CASE WHEN r.kind='student_book' THEN 0 ELSE 1 END, r.kind, r.resource_id, cb.block_order`,
+       ORDER BY l.lesson_order, ${PRIMARY_ORDER_SQL}, r.kind, r.resource_id, cb.block_order`,
        request.lessonId ? [request.courseId, request.unitId, request.lessonId] : [request.courseId, request.unitId],
     );
-    const primaryRows = blocks.rows.filter((row) => row.resource_kind === 'student_book');
-    const supportingRows = blocks.rows.filter((row) => row.resource_kind !== 'student_book' && request.includeSupplementary);
+    const primaryRows = blocks.rows.filter((row) => PRIMARY_KINDS.has(row.resource_kind));
+    const supportingRows = blocks.rows.filter((row) => !PRIMARY_KINDS.has(row.resource_kind) && request.includeSupplementary);
     const warnings: string[] = [];
     if (request.allowUnverified) warnings.push('Private evaluation mode is enabled; this context is not publication-ready and remains private reference only.');
     if (request.allowUnverified && activePrimary.some((row) => !row.curriculum_verified || !row.content_verified)) warnings.push('Unverified material included for private evaluation; this context is not publication-ready.');
@@ -391,8 +396,8 @@ export class CurriculumRepository {
     if (nextOffset === null && offset + selected.length < totalBlocks) nextOffset = offset + selected.length;
     const selectedIds = new Set(selected.map((row) => row.block_id));
     const toBlock = (row: DbRow): ContextBlock => ({ id: row.block_id, text: row.text, textStatus: row.text_status, lessonId: row.lesson_id, citation: citation(row) });
-    const primaryContent = selected.filter((row) => row.resource_kind === 'student_book').map(toBlock);
-    const supportingMaterial = selected.filter((row) => row.resource_kind !== 'student_book').map(toBlock);
+    const primaryContent = selected.filter((row) => PRIMARY_KINDS.has(row.resource_kind)).map(toBlock);
+    const supportingMaterial = selected.filter((row) => !PRIMARY_KINDS.has(row.resource_kind)).map(toBlock);
     if (selected.some((row) => row.curriculum_verified !== true || row.content_verified !== true)) warnings.push('Some returned material is unverified and must remain private reference material.');
     if (supportingRows.length > 0 && !request.includeSupplementary) warnings.push('Supplementary material was excluded by request.');
     const selectedLessonIds = [...new Set(selected.map((row) => row.lesson_id as string))];
@@ -474,7 +479,7 @@ export class CurriculumRepository {
       this.database.query<DbRow>('SELECT COUNT(*)::int AS count FROM lessons'),
       this.database.query<DbRow>('SELECT COUNT(*)::int AS count FROM resources'),
       this.database.query<DbRow>('SELECT COUNT(*)::int AS count,COALESCE(SUM(CASE WHEN curriculum_verified AND content_verified THEN 1 ELSE 0 END),0)::int AS verified FROM resource_versions WHERE is_active=TRUE'),
-      this.database.query<DbRow>(`SELECT COUNT(*)::int AS count,COUNT(DISTINCT CASE WHEN r.kind='student_book' AND rv.curriculum_verified AND rv.content_verified AND (cb.text_status='native' OR cb.text_status='ocr') THEN cb.course_id||':'||cb.lesson_id END)::int AS ready_lessons FROM content_blocks cb JOIN lessons l ON l.course_id=cb.course_id AND l.lesson_id=cb.lesson_id JOIN resource_versions rv ON rv.resource_version_id=cb.resource_version_id AND rv.course_id=cb.course_id AND rv.is_active=TRUE JOIN resources r ON r.resource_id=rv.resource_id WHERE rv.is_active=TRUE`),
+      this.database.query<DbRow>(`SELECT COUNT(*)::int AS count,COUNT(DISTINCT CASE WHEN r.kind IN ('student_book','teacher_guide') AND rv.curriculum_verified AND rv.content_verified AND (cb.text_status='native' OR cb.text_status='ocr') THEN cb.course_id||':'||cb.lesson_id END)::int AS ready_lessons FROM content_blocks cb JOIN lessons l ON l.course_id=cb.course_id AND l.lesson_id=cb.lesson_id JOIN resource_versions rv ON rv.resource_version_id=cb.resource_version_id AND rv.course_id=cb.course_id AND rv.is_active=TRUE JOIN resources r ON r.resource_id=rv.resource_id WHERE rv.is_active=TRUE`),
       this.database.query<DbRow>('SELECT COUNT(*)::int AS count FROM visual_assets'),
     ]);
     return { courses: Number(courses.rows[0].count), units: Number(units.rows[0].count), lessons: Number(lessons.rows[0].count), resources: Number(resources.rows[0].count), activeVersions: Number(versions.rows[0].count), verifiedActiveVersions: Number(versions.rows[0].verified), contentBlocks: Number(blocks.rows[0].count), readyLessons: Number(blocks.rows[0].ready_lessons), assets: Number(assets.rows[0].count) };
