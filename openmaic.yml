@@ -17,6 +17,9 @@ providers:
     preset: openrouter
     apiKey: ${OPENROUTER_API_KEY}
     models:
+      # The lesson workhorse: Haiku-class quality at flash-tier latency and
+      # $0.10/$0.50 per M tokens — scene HTML, outlines and titles.
+      - anthropic/claude-haiku-5.5
       - deepseek/deepseek-v4.1-flash
       - z-ai/glm-5.3-flash
 
@@ -70,22 +73,35 @@ providers:
 
 slots:
   # The default chat model: every chat slot without its own assignment below
-  # follows it (course outlines, scene content, actions, classroom, titles).
-  llm: router:deepseek/deepseek-v4.1-flash
+  # follows it (classroom chat, scene actions). Deepseek handles the short
+  # calls well and answers in seconds; the GLM catches an empty/dead reply.
+  llm:
+    model: router:deepseek/deepseek-v4.1-flash
+    fallback: router:z-ai/glm-5.3-flash
 
   # The Pro workbench agent needs dependable tool calling.
   agent:
     model: router:deepseek/deepseek-v4.1-flash
     api: openai-completions
 
-  # Web-search query rewriting and the agent roster run on the faster GLM.
+  # Web-search query rewriting and the agent roster: tiny calls the free GLM
+  # flash answers in seconds.
   course.research: router:z-ai/glm-5.3-flash
   course.agents: router:z-ai/glm-5.3-flash
 
-  # Scene content (the widget HTML especially) stalls on the deepseek flash
-  # route: five 300 s deadlines with an empty stream while the same prompt on
-  # the GLM route answered in under a minute. Content goes to the GLM.
-  course.content: router:z-ai/glm-5.3-flash
+  # Course outlines and scene titles: structured JSON the deepseek flash route
+  # kept truncating into fragments. Haiku follows the outline contract and
+  # answers fast; the free GLM catches a failure.
+  course.outline:
+    model: router:anthropic/claude-haiku-5.5
+    fallback: router:z-ai/glm-5.3-flash
+
+  # Scene content — the bottleneck (widget HTML is the longest generation of
+  # the run): Haiku writes the GSAP/canvas pages fast and clean, at a fifth of
+  # the Gemini flash price; the free GLM catches a failure.
+  course.content:
+    model: router:anthropic/claude-haiku-5.5
+    fallback: router:z-ai/glm-5.3-flash
 
   # Voice: Fish Audio out, OpenAI in (speech recognition).
   tts: speech-fish:s2.1-pro-free

@@ -24,6 +24,10 @@ services:
       # Fish Audio TTS (the openmaic.yml speech-fish provider reads both).
       - FISH_API_KEY=${FISH_API_KEY}
       - FISH_VOICE_ID=${FISH_VOICE_ID}
+      # Parallel scene-content prewarm (upstream #572): three scenes generate
+      # at once, so the classroom opens on the first committed scenes instead
+      # of waiting for a serial queue.
+      - PARALLEL_SCENE_CONCURRENCY=3
     volumes:
       - openmaic-data:/app/data
 
