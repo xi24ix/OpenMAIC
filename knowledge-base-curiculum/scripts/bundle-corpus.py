@@ -13,15 +13,34 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--staging', type=Path, required=True)
     parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--latest-editions', action='store_true',
+                        help='Bundle only the newest edition per (grade, semester, subject, track);'
+                             ' every book of that edition year is kept as a version')
     args = parser.parse_args()
     if args.out.exists():
         raise SystemExit('Refusing to overwrite an existing bundle')
+    if args.latest_editions:
+        groups = {}
+        for directory in sorted(args.staging.glob('book-*')):
+            manifest = json.loads((directory / 'manifest.json').read_text())
+            course = manifest['course']
+            groups.setdefault((course['grade'], course['semester'], course['subject'], course['track']), []).append(
+                (course['academicYear'], directory))
+        keep = set()
+        for members in groups.values():
+            newest = max(year for year, _ in members)
+            keep.update(directory for year, directory in members if year == newest)
+    else:
+        keep = None
     seen = {}
     books = 0
     with args.out.open('xb') as raw, gzip.GzipFile(fileobj=raw, mode='wb', compresslevel=1, mtime=0) as output:
         def emit(record):
             output.write((json.dumps(record, ensure_ascii=False, separators=(',', ':')) + '\n').encode())
         for directory in sorted(args.staging.glob('book-*')):
+            if keep is not None and directory not in keep:
+                print(f'Skipping {directory.name} (older edition)')
+                continue
             manifest = json.loads((directory / 'manifest.json').read_text())
             extraction = json.loads((directory / 'extraction.json').read_text())
             emit({'type': 'book', 'manifest': manifest, 'extraction': extraction})

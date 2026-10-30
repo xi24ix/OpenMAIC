@@ -258,9 +258,14 @@ def main() -> None:
             continue
         label = record["scope"]["subjectLabel"]
         description = str(record.get("item", {}).get("fileDescription", ""))
-        kind = "workbook" if any(t in description for t in ("كتاب التطبيقات", "كراسة التطبيقات", "كراسة التمارين", "كتاب التمارين", "Work Book", "workbook")) else "student_book"
+        kind = "teacher_guide" if any(t in description for t in ("كتاب المعلم", "دليل المعلم")) else "student_book"
+        if any(t in description for t in ("كتاب التطبيقات", "كراسة التطبيقات", "كراسة التمارين", "كتاب التمارين", "Work Book", "workbook")):
+            kind = "workbook"
         text = f"{record['scope'].get('gradeLabel', '')} {label} {description}"
-        track = "literary" if "أدبي" in text else "scientific" if "علمي" in text else "general"
+        if record.get("_track"):
+            track = str(record["_track"])
+        else:
+            track = "literary" if "أدبي" in text else "scientific" if "علمي" in text else "general"
         meta_by_id[str(record["id"])] = {
             "id": record["id"], "scope": record["scope"],
             "subjectSlug": subject_slugs.get(label, f"subject-{record['scope'].get('subjectId')}"),
@@ -299,10 +304,11 @@ def main() -> None:
             page_count = int(extraction.get("pageCount") or 0)
             pdf_path = Path(meta["localPath"])
             if not pdf_path.exists():
-                # macOS stores NFD filenames while the inventory records NFC.
-                matches = sorted((args.inventory.parent).glob(f"*book-{book_id}.pdf"))
+                # macOS stores NFD filenames while the inventory records NFC,
+                # and the file suffix varies (book-/teacher-/guide-<id>.pdf).
+                matches = sorted((args.inventory.parent).glob(f"*-{book_id}.pdf"))
                 if not matches:
-                    matches = sorted((ROOT / "downloads").rglob(f"*book-{book_id}.pdf"))
+                    matches = sorted((ROOT / "downloads").rglob(f"*-{book_id}.pdf"))
                 if not matches:
                     raise FileNotFoundError(f"source PDF missing for book {book_id}")
                 pdf_path = matches[0]

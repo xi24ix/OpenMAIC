@@ -30,6 +30,40 @@ what changed, how it was verified, and what comes next. Latest work at the top o
 
 ## Log
 
+### 2026-10-30 — A1+A2 investigation results
+
+**A2 (term-2 sourcing):**
+- Probed the MOE e-library `librarysearch` API exhaustively (response key is `books`,
+  not `data`/`rows` — the first sweep read the wrong key): **zero real term-2 student
+  books** across all 42 grade×subject combos and MoeYear 2023/2024/2025/2026. Only 4
+  "الفهرس الالكتروني" index stubs (G11/G12 math + statistics). The official UI uses the
+  same API contract, so this is authoritative.
+- `BooksFor=2` (teacher section) **does** have term-2 content: 13 teacher guides
+  (كتاب المعلم) for G11 (biology, statistics-literary, math, physics, chemistry,
+  Arabic, IT, geology) and G12 (biology, statistics-literary, physics, chemistry,
+  Arabic). Teacher guides reproduce the full student content + answers — good fit for
+  self-generated lessons.
+- Still missing officially: grade-10 term-2 (nothing at all), English/French/Quran/
+  Islamic-education term-2 (only خطة توزيع plans). Third-party aggregator sites
+  (almanahj etc.) are JS-walled; scraping them is a separate effort of uncertain
+  reliability — deferred unless the user wants it.
+- Built `scripts/fetch-term2-teachers.py`: downloads the 13 guides into
+  `downloads/moe-term2-teachers/` and emits a compatible `inventory.json` (13/13
+  downloaded, ~260 MB). `kind=teacher_guide` added to the extractors' inference
+  (the contracts enum already had it).
+
+**A1 (edition dedupe):**
+- Rule: one course per (grade, semester, subject, track) — newest edition year wins,
+  all books of that year merge as versions. A naive max-year-per-subject would keep a
+  2026/2027 workbook over an older student book, so the rule keys on the year groups
+  as imported.
+- Excluded books: 3676 (G11 English 2009/2010), 3534 (G12 biology 2024/2025),
+  3634 (G12 math 2025/2026), 3535 (G12 physics 2022/2023), 3638 (G12 statistics
+  2014/2015). G11 math general+scientific is a track split, not an edition dupe —
+  kept.
+- `bundle-corpus.py --latest-editions` implements the rule at bundle time (52 of 57
+  books bundled; semester-1 courses drop 48 → 43).
+
 ### 2026-10-30 — Batch complete: 43/44 placeholder books fixed, fresh import in progress
 
 **Batch run (3 parallel shards, Gemini 2.5 Flash via OpenRouter):**

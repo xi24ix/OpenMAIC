@@ -61,6 +61,8 @@ def infer_track(record: dict) -> str:
     # though its inventory scope only says grade-11.
     if int(record.get("id", 0)) == 3627:
         return "scientific"
+    if record.get("_track"):
+        return str(record["_track"])
     text = f"{record['scope'].get('gradeLabel', '')} {record['scope']['subjectLabel']} {record['item'].get('fileDescription', '')}"
     if "أدبي" in text:
         return "literary"
@@ -73,6 +75,8 @@ def infer_kind(record: dict) -> str:
     text = str(record["item"].get("fileDescription", ""))
     if any(token in text for token in ("كتاب التطبيقات", "كراسة التطبيقات", "كراسة التمارين", "كتاب التمارين", "Work Book", "workbook")):
         return "workbook"
+    if any(token in text for token in ("كتاب المعلم", "دليل المعلم", "Teacher", "teacher")):
+        return "teacher_guide"
     return "student_book"
 
 

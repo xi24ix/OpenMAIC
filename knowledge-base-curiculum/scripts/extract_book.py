@@ -962,7 +962,7 @@ def main() -> None:
     parser.add_argument("--subject", required=True)
     parser.add_argument("--subject-label", default="")
     parser.add_argument("--title", required=True)
-    parser.add_argument("--kind", default="student_book", choices=["student_book", "workbook", "exam", "answer_key", "summary"])
+    parser.add_argument("--kind", default="student_book", choices=["student_book", "workbook", "teacher_guide", "exam", "answer_key", "summary"])
     parser.add_argument("--track", default="general", choices=["general", "scientific", "literary"])
     parser.add_argument("--language", default="ar", choices=["ar", "en", "fr"])
     parser.add_argument("--download-url", default="")
