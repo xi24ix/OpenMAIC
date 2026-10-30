@@ -514,11 +514,26 @@ def find_title_page(unit: Unit, lesson: Lesson, ocr: dict[int, list[OcrLine]], s
     return min(matches, key=lambda page: (abs(page - preferred), page))
 
 
+def find_phrase_page(phrase: str, ocr: dict[int, list[OcrLine]], start: int, end: int) -> int | None:
+    key = match_key(phrase)
+    if not key:
+        return None
+    for page in range(max(1, start), min(len(ocr), end) + 1):
+        if any(key in match_key(line.text) for line in ocr.get(page, [])):
+            return page
+    return None
+
+
 def assign_pages(units: list[Unit], ocr: dict[int, list[OcrLine]], page_count: int, toc_pages: list[int]) -> None:
     pairs = page_number_pairs(ocr)
     toc_set = set(toc_pages)
     lessons = [lesson for unit in units for lesson in unit.lessons]
     lessons.sort(key=lambda lesson: (lesson.printed_page or 10**9, lesson.order))
+    ordered_units = sorted(units, key=lambda unit: unit.order)
+    next_unit_by_order = {
+        unit.order: ordered_units[index + 1] if index + 1 < len(ordered_units) else None
+        for index, unit in enumerate(ordered_units)
+    }
     previous = 1
     for lesson in lessons:
         mapped = None
@@ -542,6 +557,29 @@ def assign_pages(units: list[Unit], ocr: dict[int, list[OcrLine]], page_count: i
             end = lessons[index + 1].start_page - 1
         else:
             end = page_count
+        if index + 1 >= len(lessons) or lessons[index + 1].unit_order != lesson.unit_order:
+            next_unit = next_unit_by_order.get(lesson.unit_order)
+            if next_unit and next_unit.lessons:
+                next_unit_start = min(item.start_page for item in next_unit.lessons)
+                next_unit_title = find_phrase_page(
+                    next_unit.title,
+                    ocr,
+                    lesson.start_page + 1,
+                    next_unit_start,
+                )
+                if next_unit_title is not None:
+                    # Textbooks often place a unit summary before a cover,
+                    # project, or orientation spread for the next unit. Keep
+                    # the summary with the current unit, but do not leak the
+                    # next unit's transition pages into its last lesson.
+                    summary_pages = [
+                        page
+                        for page in range(lesson.start_page, next_unit_title)
+                        if any("ملخص" in match_key(line.text) for line in ocr.get(page, []))
+                    ]
+                    end = max(lesson.start_page, max(summary_pages) if summary_pages else next_unit_title - 1)
+                else:
+                    end = next_unit_start - 1
         later_toc = [page for page in toc_pages if lesson.start_page < page <= end]
         if later_toc:
             end = min(later_toc) - 1
@@ -847,6 +885,7 @@ def cover_year(doc: pymupdf.Document, ocr: dict[int, list[OcrLine]]) -> str:
 
 def build_manifest(meta: dict[str, Any], units: list[Unit], figures_by_page: dict[int, list[Figure]], page_count: int) -> dict[str, Any]:
     unit_entries = []
+    seen_visual_ids: set[str] = set()
     for unit in units:
         lessons = []
         for lesson in unit.lessons:
@@ -856,6 +895,12 @@ def build_manifest(meta: dict[str, Any], units: list[Unit], figures_by_page: dic
             visuals = []
             for page_number in pages:
                 for figure in figures_by_page.get(page_number, []):
+                    # Adjacent lessons can share a boundary page when the printed
+                    # TOC puts two rows on the same page; attach the figure to
+                    # the first lesson only so visual ids stay unique.
+                    if figure.id in seen_visual_ids:
+                        continue
+                    seen_visual_ids.add(figure.id)
                     figure.lesson_id = lesson.id
                     visuals.append({
                         "id": figure.id,
@@ -883,6 +928,30 @@ def build_manifest(meta: dict[str, Any], units: list[Unit], figures_by_page: dic
     }
 
 
+def units_from_toc_json(payload: dict[str, Any], page_count: int) -> list[Unit]:
+    """Build units/lessons from an LLM-transcribed TOC (scripts/toc-llm.py)."""
+    units: list[Unit] = []
+    for index, entry in enumerate(payload.get("units") or [], start=1):
+        unit = Unit(id=f"u{index}", title=clean(str(entry.get("title") or "")) or f"وحدة {index}", order=index)
+        for order, lesson in enumerate(entry.get("lessons") or [], start=1):
+            printed = lesson.get("printedPage")
+            if isinstance(printed, str):
+                digits = re.sub(r"\D", "", printed)
+                printed = int(digits) if digits else None
+            if printed is not None and not 1 <= int(printed) <= page_count:
+                printed = None
+            unit.lessons.append(Lesson(
+                id=f"u{index}-l{order}",
+                title=clean(str(lesson.get("title") or "")) or f"درس {order}",
+                order=order,
+                printed_page=int(printed) if printed is not None else None,
+                unit_order=index,
+            ))
+        if unit.lessons:
+            units.append(unit)
+    return [unit for unit in units if unit.lessons]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pdf", required=True, type=Path)
@@ -902,6 +971,7 @@ def main() -> None:
     parser.add_argument("--workers", type=int, default=8)
     parser.add_argument("--limit-pages", type=int, default=0)
     parser.add_argument("--ocr-bin", type=Path, default=Path(os.environ.get("VISION_OCR_BIN", "scripts/bin/vision-ocr")))
+    parser.add_argument("--toc-json", type=Path, default=None, help="Use an LLM-transcribed TOC instead of regex parsing")
     args = parser.parse_args()
 
     pdf_path = args.pdf.resolve()
@@ -922,7 +992,19 @@ def main() -> None:
     pages = list(range(1, page_count + 1))
     ocr, barcodes = render_pdf_pages(pdf_path, ocr_cache, args.dpi, pages, args.workers, args.ocr_bin)
 
-    units, toc_pages = build_toc(ocr, page_count)
+    toc_pages: list[int] = []
+    toc_source = "parsed"
+    units: list[Unit] = []
+    if args.toc_json:
+        payload = json.loads(args.toc_json.read_text(encoding="utf-8"))
+        units = units_from_toc_json(payload, page_count)
+        toc_pages = [page for page in payload.get("tocPages") or [] if 1 <= int(page) <= page_count]
+        toc_source = "llm" if units else "llm-empty"
+        if not units:
+            print("warning: toc-json yielded no units; falling back to regex parse", file=sys.stderr)
+    if not units:
+        units, toc_pages = build_toc(ocr, page_count)
+        toc_source = "parsed" if units else "fallback"
     has_toc = bool(units)
     if not units:
         print("warning: no TOC parsed; falling back to 10-page chunks", file=sys.stderr)
@@ -1057,6 +1139,7 @@ def main() -> None:
         "bookId": args.book_id,
         "pageCount": page_count,
         "tocPages": toc_pages,
+        "tocSource": toc_source,
         "units": [{"id": unit.id, "title": unit.title, "lessons": [{"id": lesson.id, "title": lesson.title, "printedPage": lesson.printed_page, "startPage": lesson.start_page, "endPage": lesson.end_page} for lesson in unit.lessons]} for unit in units],
         "figures": len(figures),
         "warnings": sorted(set(warnings)),
