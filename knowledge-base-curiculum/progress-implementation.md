@@ -13,9 +13,9 @@ Newest entries first.
 | 3 | Batch fix 44 placeholder books | done 2026-10-30 | **43/44 fixed** → 120 units / 846 lessons; 2 books (3577, 3702) legitimately on fallback (no readable TOC in PDF) |
 | 4 | Fresh local import + tests | done 2026-10-30 | 57/57 imported, **18/18 tests pass**, 46/48 courses with real structure |
 | 5 | Bundle + deploy to production | done 2026-10-30 | Bootstrap via `corpus2` + tunnel; live: 104 units / 781 lessons, healthz 200 |
-| 6 | Commit + push KB changes to GitHub | **in-progress** | toc-llm.py, serve-bundle.mjs, extract_book.py, progress docs |
-| 7 | Redeploy Coolify from git + test live | pending | Build is data-identical; deploy confirms the committed code serves correctly |
-| 8 | Free local disk (move to SMB, delete local copies) | pending | Remove `~/kb-run`, `/tmp/kb-final`, `/tmp/kb-restore-test`, `/tmp/kb-assets`, temp logs |
+| 6 | Commit + push KB changes to GitHub | done | Commit `a752acc6` on `main` (toc-llm.py, serve-bundle.mjs, extract_book.py, progress docs) |
+| 7 | Redeploy Coolify from git + test live | done | Deployment `slydpwjqyx2igdaahq6kjydw` finished; healthz 200; coverage 48/104/781; unit-context + 298 KB PNG asset fetch OK |
+| 8 | Free local disk (move to SMB, delete local copies) | done | Removed `~/kb-run` (2.2 GB), `/tmp/kb-final`, `/tmp/kb-restore-test`, `/tmp/kb-assets`, logs — ~4.5 GB freed; durable artifacts live on SMB + git |
 
 ## Backlog (user-approved, from the Oct 29 audit)
 
@@ -37,6 +37,25 @@ share, commit + push to GitHub, then delete local copies (`~/kb-run`, `/tmp/*` t
 databases/assets/bundles/logs) to free the local disk.
 
 ## Log
+
+### 2026-10-30 — Committed, redeployed from git, live-tested, disk cleaned
+
+- Committed `a752acc6` "Recover real book TOCs with a vision model and ship them to
+  kwdb" (5 files, +688) and pushed to `xi24ix/OpenMAIC` main.
+- Redeployed Coolify app from git (deployment `slydpwjqyx2igdaahq6kjydw`, finished
+  17:51 UTC; bootstrap correctly no-ops since `corpus2/complete.json` exists).
+- Live tests against the redeployed container, all passing:
+  - `healthz` → 200
+  - `/v1/coverage` → 48 courses / 104 units / 781 lessons / 84,713 blocks / 8,094 assets
+  - `/v1/catalog` → 46/48 real structures (2 known no-TOC books on fallback)
+  - `/v1/unit-context` (G10 islamic-education) → real lessons "جات توحيد الربوبية" …,
+    6 blocks + 9 visuals
+  - `/v1/assets/...` → 200 `image/png`, 298,904 bytes
+- Local disk cleanup per the standing workflow: deleted `~/kb-run` (2.2 GB),
+  `/tmp/kb-final` (245 MB), `/tmp/kb-restore-test` (2.0 GB), `/tmp/kb-assets` symlinks
+  and all temp logs/screenshots — ~4.5 GB freed (data volume 12→16 Gi available).
+  Everything durable lives on the SMB project folder (`staging/`, `dist/` bundle) and
+  in git.
 
 ### 2026-10-30 — Production deployed, commit pending
 
