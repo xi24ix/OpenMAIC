@@ -927,7 +927,10 @@ def cover_year(doc: pymupdf.Document, ocr: dict[int, list[OcrLine]]) -> str:
         text = " ".join(line.text for line in ocr.get(page, [])) + " " + norm(doc[page - 1].get_text("text"))
         match = re.search(r"20\d{2}\s*[-/]\s*20\d{2}", text)
         if match:
-            years = sorted(re.findall(r"20\d{2}", match.group(0)))
+            # Covers sometimes print the year in Arabic-Indic digits, which
+            # Python's \d accepts but the importer's academicYear schema rejects.
+            found = match.group(0).translate(str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789"))
+            years = sorted(re.findall(r"20\d{2}", found))
             if len(years) == 2:
                 return f"{years[0]}/{years[1]}"
     return "2026/2027"
