@@ -41,7 +41,18 @@ function sandboxOutline(): SceneOutline[] {
 describe('promptLikeTitleIndexes', () => {
   it('flags the art-direction titles, not the learner-facing ones', () => {
     const flagged = promptLikeTitleIndexes(sandboxOutline());
-    expect(flagged).toEqual([3, 4, 5, 6]);
+    // The cover's sentence-length title (51 chars) is flagged too: a display
+    // name is short no matter how clean its language is.
+    expect(flagged).toEqual([2, 3, 4, 5, 6]);
+  });
+
+  it('flags Arabic image-prompt titles (the language the lesson actually came back in)', () => {
+    const outlines = [
+      outlineOf('s1', 'slide', { title: 'رسوم توضيحية زاهية للأطفال تُظهر شمسًا صفراء' }),
+      outlineOf('s2', 'slide', { title: 'رسوم توضيحية كرتونية تُظهر سحابة بيضاء' }),
+      outlineOf('s3', 'slide', { title: 'التبخر' }),
+    ];
+    expect(promptLikeTitleIndexes(outlines)).toEqual([0, 1]);
   });
 
   it('does not flag real lesson titles that merely mention technology words', () => {
@@ -63,6 +74,7 @@ describe('rewritePromptLikeTitles', () => {
         { id: 's2', title: 'دورة الماء' },
         { id: 's3', title: 'التبخر' },
         { id: 's4', title: 'A gentle animated illustration of condensation' },
+        { id: 'cover', title: 'رسوم توضيحية لرحلة قطرة الماء' },
         { id: 'unknown', title: 'مقصول' },
         { id: 's5', title: '' },
       ],
@@ -81,7 +93,8 @@ describe('rewritePromptLikeTitles', () => {
       'رحلة قطرة ماء واحدة من البحر إلى السحابة إلى المطر',
       'دورة الماء',
       'التبخر',
-      // A rewrite that still reads like an image prompt is rejected.
+      // A rewrite that still reads like an image prompt is rejected — in
+      // English or in Arabic.
       'A gentle animated illustration of condensation',
       // An empty rewrite is rejected.
       "A cheerful children's illustration of rainfall",

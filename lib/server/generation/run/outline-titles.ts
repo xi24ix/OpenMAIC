@@ -4,26 +4,35 @@
  * ("A cheerful children's cartoon poster of the water cycle") — and the
  * classroom then labels scenes with art direction, often in the wrong
  * language. Before the run commits its outline, titles that read like image
- * prompts are rewritten through one small model call in the teaching
- * language. A failed or malformed rewrite keeps the original titles: a wrong
- * title is cosmetic, a failed run is not.
+ * prompts — art-direction nouns in either language, or any title long enough
+ * to be a description instead of a name — are rewritten through one small
+ * model call in the teaching language. A failed or malformed rewrite keeps
+ * the original titles: a wrong title is cosmetic, a failed run is not.
  */
 import { buildPrompt, PROMPT_IDS } from '@/lib/prompts';
 import type { SceneOutline } from '@/lib/types/generation';
 
 /**
- * Titles that name artwork, not the lesson. Deliberately narrow art-direction
- * nouns: "images" or "pictures" appear in real lesson titles ("Handling
- * Images with PIL"), while "illustration", "cartoon", "poster" in a title
- * almost always leaked from a media prompt.
+ * Titles that name artwork, not the lesson. Deliberately narrow
+ * art-direction nouns in the languages lessons actually come back in —
+ * English ("a cheerful children's cartoon poster of …") and Arabic ("رسوم
+ * توضيحية كرتونية للأطفال تُظهر …"). "Images" or "pictures" are left out:
+ * they appear in real lesson titles ("Handling Images with PIL").
  */
 const PROMPT_TITLE_MARKER =
-  /\b(illustrations?|cartoons?|posters?|infographics?|artwork|drawings?|clip ?art|renderings?|vector art|digital art)\b/i;
+  /\b(illustrations?|cartoons?|posters?|infographics?|artwork|drawings?|clip ?art|renderings?|vector art|digital art)\b|رسوم توضيحية|رسم توضيحي|كرتونية|كرتوني|إنفوجرافيك|بوستر|لوحة إنفوجرافيك/i;
+
+/** A title long enough to be a description rather than a display name. */
+const TITLE_TOO_LONG = 45;
+
+function promptLikeTitle(title: string): boolean {
+  return PROMPT_TITLE_MARKER.test(title) || title.length > TITLE_TOO_LONG;
+}
 
 /** The indexes of outlines whose title reads like an image prompt. */
 export function promptLikeTitleIndexes(outlines: readonly SceneOutline[]): number[] {
   return outlines.flatMap((outline, index) =>
-    PROMPT_TITLE_MARKER.test(outline.title) ? [index] : [],
+    promptLikeTitle(outline.title) ? [index] : [],
   );
 }
 
@@ -38,7 +47,9 @@ export interface RetitleInput {
 
 /** A rewritten title the model may keep: short, present, no art direction. */
 function acceptableTitle(title: unknown): title is string {
-  return typeof title === 'string' && title.trim().length > 0 && title.length <= 60 && !PROMPT_TITLE_MARKER.test(title);
+  return (
+    typeof title === 'string' && title.trim().length > 0 && !promptLikeTitle(title.trim())
+  );
 }
 
 /**

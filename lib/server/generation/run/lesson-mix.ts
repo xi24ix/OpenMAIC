@@ -78,7 +78,9 @@ export function ensureLessonMix(
   outlines: readonly SceneOutline[],
   maxScenes?: number,
 ): SceneOutline[] {
-  if (outlines.length < 4) return [...outlines];
+  // A two-scene outline is degenerate; from three scenes up the lesson still
+  // needs its interactive and its quiz.
+  if (outlines.length < 3) return [...outlines];
   const hasQuiz = outlines.some((outline) => outline.type === 'quiz');
   const hasInteractive = outlines.some((outline) => outline.type === 'interactive');
   if (hasQuiz && hasInteractive) return [...outlines];

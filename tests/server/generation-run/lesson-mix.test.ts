@@ -93,10 +93,16 @@ describe('ensureLessonMix', () => {
     expect(result.filter((o) => o.type === 'quiz')).toHaveLength(1);
   });
 
-  it('leaves outlines under 4 scenes alone', () => {
+  it('mixes a three-scene outline: the quiz inserts, keeping every scene under the budget', () => {
     const original = allSlides(3);
     const result = ensureLessonMix(original, 8);
-    expect(result.map((o) => o.type)).toEqual(['slide', 'slide', 'slide']);
+    expect(result.map((o) => o.type)).toEqual(['slide', 'interactive', 'quiz', 'slide']);
+  });
+
+  it('leaves a two-scene outline alone', () => {
+    const original = allSlides(2);
+    const result = ensureLessonMix(original, 8);
+    expect(result.map((o) => o.type)).toEqual(['slide', 'slide']);
   });
 
   it('does not convert the lone convertible slide when only a quiz is missing at budget', () => {
