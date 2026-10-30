@@ -81,28 +81,28 @@ Structure:
 
 ---
 
-## Intro Scene (optional cinematic cold open)
+## Outro Scene (optional motion-graphics finale)
 
-The **first scene** MAY be `"type": "interactive"` with `"widgetType": "animation-explainer"` — a 25-45 second pure motion-graphics intro that hooks the learner before any teaching. It does not count against the interactive-scene budget.
+The **last scene** MAY be `"type": "interactive"` with `"widgetType": "animation-explainer"` — a 25-45 second pure motion-graphics outro that recaps the key idea with energy after the teaching. It does not count against the interactive-scene budget. NEVER put the animation-explainer first: the course opens with a `slide` so the classroom is ready immediately, while this heaviest scene generates last.
 
-**Include the intro only when ALL of these hold:**
+**Include the outro only when ALL of these hold:**
 
 1. The scene count target (see the user prompt) is at least 5 scenes.
 2. The requirement asks for an engaging, story-driven, or young-learner lesson — or the subject is one where a visual hook genuinely adds motivation (science phenomena, stories, kids content).
 3. The user did not ask for a plain, structured, presentation-style, or exam-prep lesson.
 
-Otherwise **skip the intro**: the course opens with a `slide` that states the topic and objectives. A course without the intro is complete, not deficient. Never let the intro crowd out teaching scenes: when you include it, plan the teaching scenes so the whole course still fits the scene count target, and keep the intro to 3-4 beats.
+Otherwise **skip the outro**: the course closes with a summary `slide` or the final quiz. A course without the outro is complete, not deficient. Never let the outro crowd out teaching scenes: when you include it, plan the teaching scenes so the whole course still fits the scene count target, and keep the outro to 2-3 beats.
 
-When included, the intro scene needs:
+When included, the outro scene needs:
 
-- `title`: the course hook (NOT "Introduction") — e.g. "为什么递归会停？" / "Why Light Bends".
-- `description`: one sentence naming the attention hook (paradox, surprise, question).
-- `keyPoints`: exactly 4 beats in display order — HOOK → TEASE (3-4 keyword cards) → SPARK (the signature animated infographic) → TITLE (course title lock-up).
+- `title`: the payoff moment (NOT "Conclusion") — e.g. "水的旅程完成！" / "The Journey Completes".
+- `description`: one sentence naming what the recap lands (the one idea the learner keeps).
+- `keyPoints`: 2-3 beats in display order — RECAP (the key idea in one animated line) → PAYOFF (the signature animated infographic) → TITLE (course title lock-up).
 - `widgetOutline`: `{ "concept": "<what the animation shows>", "keyBeats": ["<beat 1, one short phrase>", ... 4 beats], "mood": "<e.g. 'curious, meteoric, cosmic'>" }`.
 
-The intro scene is still one complete scene object: `id`, `type: "interactive"`, `title`, `description`, `keyPoints`, `order` sit at the scene's TOP level, and the animation's `concept`/`keyBeats`/`mood` sit INSIDE `widgetOutline`. Never write `concept`, `keyBeats` or `mood` directly on the scene, never omit `type` or `title`, and never put this scene's `widgetOutline` on a bare `{...}` array entry. Also never write bare fragments like `{"diagramType": "flowchart"}` as a scene — a scene entry that omits the wrapper fields is a broken schema, not a style choice.
+The outro scene is still one complete scene object: `id`, `type: "interactive"`, `title`, `description`, `keyPoints`, `order` sit at the scene's TOP level, and the animation's `concept`/`keyBeats`/`mood` sit INSIDE `widgetOutline`. Never write `concept`, `keyBeats` or `mood` directly on the scene, never omit `type` or `title`, and never put this scene's `widgetOutline` on a bare `{...}` array entry. Also never write bare fragments like `{"diagramType": "flowchart"}` as a scene — a scene entry that omits the wrapper fields is a broken schema, not a style choice.
 
-This gives the course a cinematic cold open consistent with the design directive.
+This gives the course a motion-graphics finale consistent with the design directive.
 
 ---
 
@@ -194,7 +194,7 @@ Use `interactive` type when a concept benefits significantly from hands-on inter
 
 **Constraints**:
 
-- Limit to **1-2 interactive scenes per course** (they are resource-intensive). The optional `animation-explainer` intro scene does NOT count against this budget.
+- Limit to **1-2 interactive scenes per course** (they are resource-intensive). The optional `animation-explainer` outro scene does NOT count against this budget.
 - Interactive scenes **require** an `interactiveConfig` object
 - Do NOT use interactive for purely textual/conceptual content - use slides instead
 - The `interactiveConfig.designIdea` should describe the specific interactive elements and user interactions
@@ -212,7 +212,7 @@ When generating an interactive scene, you MUST select the appropriate widget typ
 | Programming concepts, algorithms                            | `code`                | `language`                                    |
 | Practice activities, gamified assessment                    | `game`                | `gameType`, `challenge`                       |
 | Biological/geometric structures, 3D models                  | `visualization3d`     | `visualizationType`, `objects`                |
-| Motion-graphics intro/hook (ALWAYS scene 1)                 | `animation-explainer` | `concept`, `keyBeats`, `mood`                 |
+| Motion-graphics finale (ALWAYS the last scene)              | `animation-explainer` | `concept`, `keyBeats`, `mood`                 |
 
 **widgetOutline Format by Type:**
 
@@ -245,10 +245,10 @@ When generating an interactive scene, you MUST select the appropriate widget typ
   "objects": ["sun", "earth", "mars"]
 }
 
-// animation-explainer (the intro scene — see Intro Scene section)
+// animation-explainer (the outro scene — see Outro Scene section)
 "widgetOutline": {
   "concept": "what the animation reveals",
-  "keyBeats": ["hook beat", "tease beat", "spark beat", "title beat"],
+  "keyBeats": ["recap beat", "payoff beat", "title beat"],
   "mood": "two or three mood adjectives"
 }
 ```
@@ -296,7 +296,7 @@ Your entire response MUST be a single JSON **object** with exactly these four to
   "languageDirective": "<the directive you inferred in the Language Inference step>",
   "courseTitle": "<concise course name, ≤30 chars, in the teaching language>",
   "designDirective": { "concept": "...", "palette": ["#hex"], "background": "dark", "motionPersonality": "calm" },
-  "outlines": [ /* array of scene objects, FIRST one is the animation-explainer intro */ ]
+  "outlines": [ /* array of scene objects, LAST one is the animation-explainer outro */ ]
 }
 ```
 
@@ -321,35 +321,11 @@ Rules:
   "outlines": [
     {
       "id": "scene_1",
-      "type": "interactive",
-      "title": "Why Does the Ball Obey This Curve?",
-      "description": "A motion-graphics hook tracing one throw's invisible parabola in slow motion.",
-      "keyPoints": [
-        "A ball leaves a hand — and carries a mystery",
-        "GRAVITY · ANGLE · SPEED — three forces in cards",
-        "The parabola ignites where math and motion meet",
-        "Lock up: Intro to Projectile Motion"
-      ],
-      "order": 1,
-      "widgetType": "animation-explainer",
-      "widgetOutline": {
-        "concept": "one thrown ball's parabola drawn in real time with physics callouts",
-        "keyBeats": [
-          "A hand throws; the ball freezes mid-air",
-          "Three cards: GRAVITY, ANGLE, SPEED",
-          "The parabola sketches itself through the frozen ball",
-          "Title lock-up: Intro to Projectile Motion"
-        ],
-        "mood": "curious, weightless, cinematic"
-      }
-    },
-    {
-      "id": "scene_2",
       "type": "slide",
       "title": "Introduction",
       "description": "Welcome students and introduce the core concept.",
       "keyPoints": ["Context", "Agenda", "Goals"],
-      "order": 2
+      "order": 1
     },
     {
       "id": "scene_3",
@@ -365,7 +341,7 @@ Rules:
       }
     },
     {
-      "id": "scene_4",
+      "id": "scene_3",
       "type": "quiz",
       "title": "Knowledge Check",
       "description": "Test student understanding of the key concepts.",
@@ -375,7 +351,29 @@ Rules:
         "difficulty": "medium",
         "questionTypes": ["single", "multiple"]
       },
-      "order": 4
+      "order": 3
+    },
+    {
+      "id": "scene_4",
+      "type": "interactive",
+      "title": "The Parabola Completes",
+      "description": "One throw retraced as the whole idea lands in a single arc.",
+      "keyPoints": [
+        "RECAP: angle, speed and gravity bend every throw",
+        "PAYOFF: the parabola sketches itself through the frozen ball",
+        "TITLE: lock up Intro to Projectile Motion"
+      ],
+      "order": 4,
+      "widgetType": "animation-explainer",
+      "widgetOutline": {
+        "concept": "the lesson's throw retraced as one parabola with physics callouts",
+        "keyBeats": [
+          "RECAP: three cards — GRAVITY, ANGLE, SPEED",
+          "PAYOFF: the parabola sketches itself through the frozen ball",
+          "TITLE lock-up: Intro to Projectile Motion"
+        ],
+        "mood": "triumphant, weightless, cinematic"
+      }
     }
   ]
 }
@@ -469,9 +467,9 @@ Omit `scenarioRoleplay` and `scenarioBrief` entirely for ordinary build-an-artef
 6. `quiz` scenes must include `quizConfig`.
 7. `interactive` scenes must include `widgetType` and `widgetOutline` (preferred). `interactiveConfig` is deprecated and only accepted for backwards compatibility.
 8. `pbl` scenes must include `pblConfig` with `projectTopic`, `projectDescription`, `targetSkills`, `issueCount`.
-9. **Scene 1 is the `animation-explainer` intro only when the Intro Scene rules allow it** (scene count ≥ 5, engaging lesson, no plain/structured request). Arrange the remaining scenes by inferred duration (typically 1-2 scenes per minute). Insert quizzes at appropriate points. Use other interactive scenes sparingly (max 1-2 per course).
+9. **Scene 1 is an opening `slide`** (never the animation-explainer); the LAST scene may be the `animation-explainer` outro only when the Outro Scene rules allow it (scene count ≥ 5, engaging lesson, no plain/structured request). Arrange the remaining scenes by inferred duration (typically 1-2 scenes per minute). Insert quizzes at appropriate points. Use other interactive scenes sparingly (max 1-2 per course).
 10. **HARD RULE — no all-slide courses**: every course of 4 or more scenes MUST contain at least one `interactive` scene (a widget) and at least one `quiz` scene. A course whose scenes are all `slide` is a FAILURE of this prompt.
-11. **Optional outro (`animation-explainer`)**: for courses of 6+ scenes you may END with a short 2-3 beat motion-graphics recap that lands the key idea with energy. Same shape and rules as the intro scene; it does not count against the interactive-scene budget.
+11. **Optional outro (`animation-explainer`)**: for courses of 6+ scenes you may END with a short 2-3 beat motion-graphics recap that lands the key idea with energy. Same shape and rules as described in the Outro Scene section; it does not count against the interactive-scene budget.
 12. **`title` is a display name**: a short learner-facing scene name (2-6 words, in the teaching language) — the classroom and library show it as the scene's label. NEVER write an image description, an image prompt, or an art direction in `title` or `description`; any image prompt belongs only in a media request's `prompt` field, never in the scene's display text.
 13. **Pacing — keep it quick**: 3 `keyPoints` at most per scene, `estimatedDuration` 30-90 seconds per scene (slides ~45s, widgets ~75s). A lesson is a sprint with breathing points, not a lecture.
 14. **Language**: Infer from the user's requirement text and context. Output all scene content in the inferred language.

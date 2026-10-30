@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { SceneOutline } from '@/lib/types/generation';
 
-import { ensureLessonMix } from '@/lib/server/generation/run/lesson-mix';
+import { ensureLessonMix, moveExplainersToEnd } from '@/lib/server/generation/run/lesson-mix';
 
 /** A minimal outline of a given type, with the fields the mix reads. */
 function outlineOf(
@@ -25,6 +25,26 @@ function outlineOf(
 function allSlides(count: number): SceneOutline[] {
   return Array.from({ length: count }, (_, i) => outlineOf(`s${i + 1}`, 'slide'));
 }
+
+describe('moveExplainersToEnd', () => {
+  it('moves the animation-explainer to the last scene, keeping the rest in order', () => {
+    const outlines = [
+      outlineOf('s1', 'interactive', { widgetType: 'animation-explainer' }),
+      outlineOf('s2', 'slide'),
+      outlineOf('s3', 'interactive', { widgetType: 'simulation' }),
+      outlineOf('s4', 'quiz'),
+    ];
+    const result = moveExplainersToEnd(outlines);
+    expect(result.map((o) => o.id)).toEqual(['s2', 's3', 's4', 's1']);
+    expect(result.map((o) => o.order)).toEqual([0, 1, 2, 3]);
+    expect(result[3]!.widgetType).toBe('animation-explainer');
+  });
+
+  it('is a no-op without an explainer', () => {
+    const outlines = [outlineOf('s1', 'slide'), outlineOf('s2', 'quiz')];
+    expect(moveExplainersToEnd(outlines)).toEqual(outlines);
+  });
+});
 
 describe('ensureLessonMix', () => {
   it('converts a slide of an all-slide outline into one interactive scene and one quiz', () => {

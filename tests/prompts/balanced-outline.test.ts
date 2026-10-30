@@ -35,14 +35,15 @@ describe('balanced interactive outline prompt', () => {
     expect(p!.user).not.toMatch(/\{\{/);
   });
 
-  test('quiz scenes are first-class; the intro is optional', () => {
+  test('quiz scenes are first-class; the explainer is an optional outro', () => {
     const p = buildPrompt(PROMPT_IDS.INTERACTIVE_OUTLINES, {
       ...BASE,
       sceneCountTarget: 'Plan about 8 scenes in total (never more).',
     });
     expect(p!.system).toContain('Quiz Scenes (assessment)');
-    expect(p!.system).toContain('Intro Scene (optional cinematic cold open)');
-    expect(p!.system).not.toContain('Intro Scene (MANDATORY');
+    expect(p!.system).toContain('Outro Scene (optional motion-graphics finale)');
+    expect(p!.system).toContain('NEVER put the animation-explainer first');
+    expect(p!.system).not.toContain('Intro Scene');
     expect(p!.user).toContain('~50% slide scenes');
   });
 });

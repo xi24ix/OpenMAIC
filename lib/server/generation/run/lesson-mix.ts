@@ -67,6 +67,24 @@ function asQuiz(outline: SceneOutline): SceneOutline {
 }
 
 /**
+ * The heavy scene goes last: the animation-explainer widget is the longest
+ * content to generate (its GSAP page dwarfs a slide), and the classroom opens
+ * as soon as the first scenes commit — a lesson that OPENS with the explainer
+ * makes the learner wait for the slowest scene. The outline model may still
+ * write it as scene 1 (it was the intro once), so the engine enforces the
+ * order: explainers move to the end, everything else keeps its relative
+ * order.
+ */
+export function moveExplainersToEnd(outlines: readonly SceneOutline[]): SceneOutline[] {
+  if (!outlines.some((outline) => outline.widgetType === 'animation-explainer')) {
+    return [...outlines];
+  }
+  const rest = outlines.filter((outline) => outline.widgetType !== 'animation-explainer');
+  const explainers = outlines.filter((outline) => outline.widgetType === 'animation-explainer');
+  return [...rest, ...explainers].map((outline, index) => ({ ...outline, order: index }));
+}
+
+/**
  * Fill a slide-heavy outline's mix: one interactive scene among the middle
  * teaching scenes, and one quiz built from a teaching scene just before the
  * end. Slides a finite budget left over keep the summary instruction light:

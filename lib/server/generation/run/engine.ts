@@ -122,7 +122,10 @@ import {
   type RunMediaItem,
   type RunStep,
 } from './plan';
-import { ensureLessonMix } from './lesson-mix';
+import {
+  ensureLessonMix,
+  moveExplainersToEnd,
+} from './lesson-mix';
 import {
   FIRST_SCENE_MAX_RETRIES,
   SCENE_MAX_RETRIES,
@@ -941,16 +944,18 @@ async function executeClaimedRun(
       normalized = normalizeSceneOutlines(result.outlines);
     }
     if (!normalized.ok) throw new Error(`The generated outline is unusable: ${normalized.message}`);
-    // The mix guarantee first (a converted scene's title rides along), then the
-    // title guarantee: an outline model that answers with the image prompt as
-    // the scene's title gets learner-facing names in the teaching language.
+    // The classroom opens on the fast scenes: the heavy animation-explainer
+    // (whoever wrote it first) moves to the end. Then the mix guarantee (a
+    // converted scene's title rides along), then the title guarantee: an
+    // outline model that answers with the image prompt as the scene's title
+    // gets learner-facing names in the teaching language.
     result = {
       ...result,
       outlines: await services.retitleOutlines(
         owner,
         {
           outlines: ensureLessonMix(
-            normalized.value.slice(0, input.maxScenes ?? 100),
+            moveExplainersToEnd(normalized.value.slice(0, input.maxScenes ?? 100)),
             input.maxScenes,
           ),
           ...(result.languageDirective ? { languageDirective: result.languageDirective } : {}),

@@ -82,6 +82,11 @@ slots:
   course.research: router:z-ai/glm-5.3-flash
   course.agents: router:z-ai/glm-5.3-flash
 
+  # Scene content (the widget HTML especially) stalls on the deepseek flash
+  # route: five 300 s deadlines with an empty stream while the same prompt on
+  # the GLM route answered in under a minute. Content goes to the GLM.
+  course.content: router:z-ai/glm-5.3-flash
+
   # Voice: Fish Audio out, OpenAI in (speech recognition).
   tts: speech-fish:s2.1-pro-free
   asr: transcription:gpt-4o-mini-transcribe
