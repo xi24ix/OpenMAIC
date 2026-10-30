@@ -480,10 +480,13 @@ export const defaultRunStepServices: RunStepServices = {
               { role: 'system', content: systemPrompt },
               { role: 'user', content: userPrompt },
             ],
-            maxOutputTokens: 512,
+            maxOutputTokens: 1024,
           },
           'outline-titles',
-          undefined,
+          // The rewrite is one small call on a route that sometimes answers
+          // empty (the sandbox saw it once); retry rather than keep the
+          // prompt-like titles without a fight.
+          { retries: 2 },
           model.thinkingConfig,
           { serverManaged: model.serverManaged },
         ).then((result) => result.text),
