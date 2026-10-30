@@ -19,6 +19,10 @@ Newest entries first.
 | 9 | A1 dedupe old-edition courses | done 2026-10-30 | `--latest-editions` bundle flag; 5 stale editions dropped; 43 semester-1 courses, zero dupes live |
 | 10 | A2 term-2 sourcing | done 2026-10-30 | E-library has NO term-2 student books (verified exhaustively); 13 teacher guides downloaded + extracted; 13 semester-2 courses live with real units/lessons |
 | 11 | teacher_guide primary-content fix | done 2026-10-30 | Repository retrieval treated only student_book as primary → term-2 context returned not_available; widened to teacher_guide (commit `5ae5bac7`), redeployed, live-verified |
+| 12 | A9 term-2 student books (third party) | done 2026-10-31 | alktab24 Drive mirrors: 40/48 books (8 dead links); extracted + LLM TOC; 30 semester-2 courses total live |
+| 13 | A10 gap-chunk coverage merge | done 2026-10-31 | `append_gap_chunks` + unit tests; 30 low-coverage books re-extracted; post-lesson-1 coverage ≥85% everywhere |
+| 14 | A11 volume cleanup | done 2026-10-31 | compose `volume-cleanup` sidecar wiped corpus+corpus2 on deploy; corpus3 retires next pass; live corpus is corpus4 |
+| 15 | Live + UI verification | done 2026-10-31 | kwdb coverage 73 courses/1,269 lessons; app picker API returns both terms for every grade, zero dupes; G10 math T2 units render (مصفوفات الأعداد…) |
 
 ## Backlog (user-approved, from the Oct 29 audit)
 

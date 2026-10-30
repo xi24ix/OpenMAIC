@@ -30,6 +30,43 @@ what changed, how it was verified, and what comes next. Latest work at the top o
 
 ## Log
 
+### 2026-10-31 — A9/A10/A11 shipped: 73 courses live, both terms in every grade
+
+**A9 (term-2 student books via third party):** alktab24.com hosts the current
+(2025/2027) term-2 editions per grade on Google Drive. `scripts/fetch-alktab-term2.py`
+harvests the grade 10-12 category pages, classifies titles into the KB taxonomy
+(hyphen-normalized matching), and downloads with the Drive confirmation hop.
+**40/48 books downloaded** (~330 MB; 8 dead links: G10 history + English exercises,
+G11 physics student, G11/G12 French ×2, G12 philosophy, G10/G11 Quran — none exist).
+Extracted 40/40 (zero failures) + LLM TOC re-extraction (1 model miss: G12 IT has no
+readable TOC → fallback chunks).
+
+**A10 (gap chunks):** `extract_book.py append_gap_chunks` turns any lesson-range gap
+≥2 pages into a "صفحات X-Y" lesson on the nearest preceding unit (front matter before
+lesson 1 stays unmapped by design). Unit-tested (4 cases); 30 low-coverage books
+re-extracted; effective post-first-lesson coverage now ≥85% everywhere except two
+known no-TOC books.
+
+**A11 (volume cleanup):** Coolify scheduled-task API 404s and the applications PATCH
+500s on this version, so cleanup is a one-shot `volume-cleanup` sidecar in compose.yaml
+(removes superseded corpus dirs before the service starts; never the live corpus).
+This deploy wiped `corpus` + `corpus2`; `corpus3` retires on the next cleanup pass.
+
+**Bug fixed en route:** one term-2 cover prints its year in Arabic-Indic digits —
+Python `\d` accepted `202١/202٢` and the importer's schema rejected it mid-bootstrap.
+`cover_year` now normalizes digits (commit `544d8576`).
+
+**Deploy:** bundle v3 (`dist/corpus-bundle-v3.ndjson.gz`, 2.69 GB, sha256
+`52a4a7ee…54baf0`, 90 books / 12,130 assets) restore-tested locally (73 courses /
+160 units / 1,269 lessons / 163,399 blocks) then bootstrapped into `/app/data/corpus4`
+(deploy `c1gx2zy…`). Live coverage: 73 courses, 160 units, 1,269 lessons, 163,399
+blocks, 12,870 assets.
+
+**Live verification:** catalog has grades 10/11/12 × terms [1,2], zero same-key
+duplicates; G10 math term-2 serves "الوحدة الأولى: مصفوفات الأعداد" (25 blocks).
+The app picker consumes `/api/curriculum/catalog` (public route), which now returns
+all 73 courses — both terms appear in every grade, no duplicated books.
+
 ### 2026-10-30 — A1+A2 shipped: 43 semester-1 + 13 semester-2 courses live
 
 **A1 (dedupe):** `bundle-corpus.py --latest-editions` keeps only the newest edition per
