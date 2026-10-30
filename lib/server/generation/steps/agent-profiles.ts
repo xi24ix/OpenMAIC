@@ -88,9 +88,12 @@ function findAdvertisedVoice(
 
 /**
  * Resolve the narrator (teacher) voice from the user's explicit global choice.
- * It is honored only when the provider/voice is present in the advertised list
- * (which contains only enabled providers) or when it is a self-contained Qwen
- * clone. The binding always carries the advertised entry's model resolution so
+ * It is honored when the provider/voice is present in the advertised list
+ * (which contains only enabled providers), when it is a self-contained Qwen
+ * clone, or when it is the deployment's own pinned voice (openmaic.yml
+ * `options.voice` — the operator's narrator choice, already slot-validated by
+ * `narratorVoiceForGeneration`, so it needs no advertisement). The binding
+ * always carries the advertised entry's model resolution so
  * provider/model/voice stay bound together (model follows voice).
  */
 function resolveNarratorVoice(
@@ -126,7 +129,14 @@ function resolveNarratorVoice(
     };
   }
 
-  return undefined;
+  // The deployment's pinned voice (openmaic.yml `options.voice`) is the
+  // operator's narrator choice: `narratorVoiceForGeneration` validated it
+  // against the slot, so it binds even though no catalogue advertises it.
+  return {
+    providerId: narratorVoice.providerId,
+    ...(narratorVoice.modelId ? { modelId: narratorVoice.modelId } : {}),
+    voiceId: narratorVoice.voiceId,
+  };
 }
 
 function stripCodeFences(text: string): string {
