@@ -16,6 +16,9 @@ Newest entries first.
 | 6 | Commit + push KB changes to GitHub | done | Commit `a752acc6` on `main` (toc-llm.py, serve-bundle.mjs, extract_book.py, progress docs) |
 | 7 | Redeploy Coolify from git + test live | done | Deployment `slydpwjqyx2igdaahq6kjydw` finished; healthz 200; coverage 48/104/781; unit-context + 298 KB PNG asset fetch OK |
 | 8 | Free local disk (move to SMB, delete local copies) | done | Removed `~/kb-run` (2.2 GB), `/tmp/kb-final`, `/tmp/kb-restore-test`, `/tmp/kb-assets`, logs — ~4.5 GB freed; durable artifacts live on SMB + git |
+| 9 | A1 dedupe old-edition courses | done 2026-10-30 | `--latest-editions` bundle flag; 5 stale editions dropped; 43 semester-1 courses, zero dupes live |
+| 10 | A2 term-2 sourcing | done 2026-10-30 | E-library has NO term-2 student books (verified exhaustively); 13 teacher guides downloaded + extracted; 13 semester-2 courses live with real units/lessons |
+| 11 | teacher_guide primary-content fix | done 2026-10-30 | Repository retrieval treated only student_book as primary → term-2 context returned not_available; widened to teacher_guide (commit `5ae5bac7`), redeployed, live-verified |
 
 ## Backlog (user-approved, from the Oct 29 audit)
 
