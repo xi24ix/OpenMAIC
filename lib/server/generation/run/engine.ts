@@ -898,8 +898,8 @@ async function executeClaimedRun(
           .join('\n\n')
       : undefined;
     let result: OutlineResult;
-    try {
-      result = await withDeadline(stepId, STEP_DEADLINES_MS.outline, signal, (callSignal) =>
+    const callOutline = () =>
+      withDeadline(stepId, STEP_DEADLINES_MS.outline, signal, (callSignal) =>
         services.outline(
           owner,
           {
@@ -913,11 +913,33 @@ async function executeClaimedRun(
           { log, signal: callSignal, emit },
         ),
       );
+    try {
+      result = await callOutline();
     } finally {
       await appending;
     }
     if (appendFailure) throw appendFailure;
-    const normalized = normalizeSceneOutlines(result.outlines);
+    let normalized = normalizeSceneOutlines(result.outlines);
+    // The scene-count target asks for about `maxScenes`, but a fast outline
+    // model sometimes answers with a fraction of it (the sandbox's answered
+    // with a single scene where eight were planned). One retry — the retry
+    // event resets the streamed outline for the UI — then the answer stands,
+    // however small: the mix and title guarantees still run on it.
+    if (
+      input.maxScenes !== undefined &&
+      normalized.ok &&
+      normalized.value.length < Math.min(4, input.maxScenes)
+    ) {
+      emit({ type: 'retry', attempt: 2, maxAttempts: 2 });
+      await appending;
+      try {
+        result = await callOutline();
+      } finally {
+        await appending;
+      }
+      if (appendFailure) throw appendFailure;
+      normalized = normalizeSceneOutlines(result.outlines);
+    }
     if (!normalized.ok) throw new Error(`The generated outline is unusable: ${normalized.message}`);
     // The mix guarantee first (a converted scene's title rides along), then the
     // title guarantee: an outline model that answers with the image prompt as
