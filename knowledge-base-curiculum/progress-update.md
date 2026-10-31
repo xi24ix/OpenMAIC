@@ -30,6 +30,40 @@ what changed, how it was verified, and what comes next. Latest work at the top o
 
 ## Log
 
+### 2026-10-31 — Content-quality audit: 4 defect classes found and fixed
+
+Random-stratified sampling of the served unit contexts (grades × semesters × subject
+types) plus a full 149-unit sweep exposed:
+
+1. **9 courses answered not_available** — two causes: the edition dedupe had kept
+   newer workbooks over older student books (workbooks were not primary kinds), and
+   transcribed section-divider units had no retrievable content.
+2. **Duplicate course content** — the G10 Quran course served two uploads of the same
+   book (174 duplicate blocks in one response).
+3. **Mojibake text** — ten books (mostly alktab downloads) had legacy-encoded Arabic
+   that decoded as Latin-1 symbol soup and never triggered OCR.
+4. **Arabic-Indic cover year** crashed one bootstrap.
+
+Fixes (commit `4022dc7e`, `d30253a1`): workbook serves as primary when a course has no
+student_book/teacher_guide (resolved per course in getLessonContext/getUnitContext);
+the dedupe prefers the newest edition containing a student book and collapses
+near-identical same-year uploads (G10 Quran → one version); extraction drops lessons
+without segments/visuals and units left empty (37 books re-extracted — zero empty
+lessons corpus-wide); Latin-1 symbol soup now triggers the OCR path (16 books
+re-extracted — zero true mojibake); cover years normalize Arabic-Indic digits.
+
+**Transfer fix:** the 2.79 GB single-stream bootstrap failed its checksum 6/6 through
+the quick tunnel. bootstrapCorpus now supports multi-part archives
+(`KB_BOOTSTRAP_PARTS` + per-part SHA-256s, three attempts per part, whole-file digest
+still enforced); serve-bundle.mjs serves directories. Local e2e verified, then the
+live deploy succeeded first try (9/9 parts).
+
+**Live post-fix state:** 73 courses / 149 units / 1,108 lessons / 170,458 blocks /
+12,977 assets; full sweep: 148/149 units serve content (single residual: G10 English
+"Unit Four: Citizenship" — no extractable text in that scan). Re-run sampler: 0
+not_available, mojibake gone, Quran dupes 174 → 24 (remaining are legitimate repeated
+passages).
+
 ### 2026-10-31 — A9/A10/A11 shipped: 73 courses live, both terms in every grade
 
 **A9 (term-2 student books via third party):** alktab24.com hosts the current
