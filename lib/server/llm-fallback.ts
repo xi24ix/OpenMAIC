@@ -100,6 +100,14 @@ const NETWORK_ERROR_RE =
   /Cannot connect to API|failed to connect|ECONN|ENOTFOUND|EAI_AGAIN|UND_ERR|socket hang up|fetch failed|timed ?out|timeout/i;
 
 /**
+ * Credit exhaustion in a message ('Insufficient credits…', a provider's
+ * credit-balance wording). Unambiguous — never a content-safety or validation
+ * rejection — so it may override the SDK's terminal classification: the
+ * configured fallback may bill a different account.
+ */
+const CREDIT_EXHAUSTED_RE = /insufficient credits|credit balance|payment required/i;
+
+/**
  * Whether an error falls into the retryable set that may trigger a fallback.
  *
  * Decision order, matching what the AI SDK actually throws:
@@ -123,8 +131,10 @@ export function isRetryableLlmError(error: unknown): boolean {
     // Credit exhaustion (402) is terminal on the primary account but the
     // configured fallback may bill a different one (a free tier): the
     // deployment keeps serving instead of pausing every run. Checked before
-    // the SDK's own isRetryable, which marks payment errors as terminal.
-    if (err.statusCode === 402) return true;
+    // the SDK's own isRetryable, which marks payment errors as terminal, and
+    // before any status check, because a stream error part may carry only the
+    // message ('Insufficient credits…') without its status.
+    if (err.statusCode === 402 || CREDIT_EXHAUSTED_RE.test(err.message)) return true;
     // The SDK's own classification wins before any message matching: a
     // message-based check first would misread e.g. a 400
     // "Invalid value for 'timeout'" as a transport timeout.
@@ -137,10 +147,11 @@ export function isRetryableLlmError(error: unknown): boolean {
         err.statusCode >= 500
       );
     }
-    // No flag and no status: the only APICallError shape that can still be
-    // transient is a transport failure ("Cannot connect to API: …" thrown by a
-    // maxRetries=0 call), which some providers leave unflagged.
-    return NETWORK_ERROR_RE.test(err.message);
+    // No flag and no status: the only APICallError shapes that can still be
+    // transient are a transport failure ("Cannot connect to API: …" thrown by
+    // a maxRetries=0 call, unflagged by some providers) or the credit message
+    // a stream error part carries without its status.
+    return NETWORK_ERROR_RE.test(err.message) || CREDIT_EXHAUSTED_RE.test(err.message);
   }
 
   const statusCode = (err as { statusCode?: unknown }).statusCode;
@@ -154,7 +165,11 @@ export function isRetryableLlmError(error: unknown): boolean {
     );
   }
 
-  return NETWORK_ERROR_RE.test(err.message);
+  // A stream error part may carry the provider's refusal as a plain message
+  // with no status at all. 'Insufficient credits' is unambiguous — it can
+  // never be a content-safety or validation rejection — and the fallback may
+  // bill a different account.
+  return NETWORK_ERROR_RE.test(err.message) || /insufficient credits|credit balance/i.test(err.message);
 }
 
 /**
