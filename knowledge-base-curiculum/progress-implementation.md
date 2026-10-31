@@ -75,3 +75,49 @@ databases/assets/bundles/logs) to free the local disk.
   84,713 blocks / 8,094 assets; `/v1/catalog` 46/48 real structures;
   `/v1/unit-context` on formerly placeholder courses returns real Arabic text + visuals.
 - Next: commit code + docs to GitHub, redeploy from git, re-test live, clean local disk.
+
+### 2026-10-31 — Lesson generation speed: upstream study, Haiku routing, parallel prewarm
+
+Goal: enter the classroom as fast as possible without losing lesson quality
+(mix, Arabic titles, audio, design/animation). Studied upstream
+THU-MAIC/OpenMAIC, tuned the model routing, verified on the sandbox.
+
+**Findings from upstream (THU-MAIC/OpenMAIC):**
+- They prefer ONE strong model per capability (their example: `openai:gpt-5.5`)
+  rather than a flash model per stage, and document `fallback:` chains per
+  slot (e.g. `course.outline: {model: anthropic:claude-sonnet-4-6, fallback:
+  openai:gpt-5.4-mini}`) — a resilience pattern our openmaic.yml was not
+  using.
+- Classroom speed comes from the opt-in two-phase scene generation
+  (`PARALLEL_SCENE_CONCURRENCY`, #572, clamped 0-10): content for the
+  remaining scenes generates N-at-once and commits as it lands, while
+  actions/narration still run in scene order. Our deployments ran it at 0
+  (serial) — the single biggest entry-speed lever.
+- The fork already carried the whole mechanism (engine `startContentPrewarm`).
+
+**OpenRouter model choice** (catalog probed 2026-10-31): picked
+`anthropic/claude-haiku-5.5` — $0.10/$0.50 per M tokens (a fifth of Gemini
+flash pricing), 1M context, Haiku-class at HTML/JSON — for the two heavy
+stages. The free `z-ai/glm-5.3-flash` stays for tiny calls (research, agent
+roster) and as the fallback; deepseek flash kept for chat/actions (its empty
+stream and fragment outlines made it wrong for content/outlines).
+
+**Changes (commit `1202738f`, deployed sandbox + prod):**
+- `openmaic.yml`: `course.content` and `course.outline` →
+  `router:anthropic/claude-haiku-5.5` with `fallback: router:z-ai/glm-5.3-flash`;
+  `llm` keeps deepseek with the same fallback; GLM keeps research/agents.
+- `PARALLEL_SCENE_CONCURRENCY=3`: sandbox compose env + prod Coolify env.
+- Prod resource also got `FISH_API_KEY`/`FISH_VOICE_ID` (the openmaic.yml
+  speech-fish provider needs them; unset variables stop the server at boot).
+
+**Measured on the sandbox** (Arabic water-cycle run `run-LcewA9Yf-P3mDl3D`,
+PASS): outline clean in one pass (~1.5 min, no undershoot retry); first scene
+committed **+156 s** after run start (classroom entry); scenes 0-4 all
+committed by +212 s; heavy outro landed +402 s; run total **10.8 min** (was
+15-50 min with serial GLM and its 300 s timeouts). Quality unchanged: 4
+slides + quiz + interactive outro, all titles short Arabic names, 14/14
+speeches with Fish audio (pinned voice), pacing ≤3 speeches/scene.
+
+Remaining known issue: the interactive/outro widget scene is still the slowest
+single generation (its GSAP HTML dwarfs a slide) — acceptable now that it
+generates last while the lesson plays.
