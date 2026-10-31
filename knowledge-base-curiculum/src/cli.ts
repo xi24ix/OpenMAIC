@@ -95,7 +95,7 @@ async function main(): Promise<void> {
     if (process.env.KB_BOOTSTRAP_URL) {
       const root = path.resolve(process.env.KB_BOOTSTRAP_ROOT ?? '/app/data/corpus');
       if (dataDir !== path.join(root, 'db') || process.env.KB_DATABASE_URL) throw new Error('Bootstrap requires its own local corpus/db directory');
-      await bootstrapCorpus({ root, url: process.env.KB_BOOTSTRAP_URL, token: process.env.KB_BOOTSTRAP_TOKEN ?? '', sha256: process.env.KB_BOOTSTRAP_SHA256 ?? '' });
+      await bootstrapCorpus({ root, url: process.env.KB_BOOTSTRAP_URL, token: process.env.KB_BOOTSTRAP_TOKEN ?? '', sha256: process.env.KB_BOOTSTRAP_SHA256 ?? '', parts: Number(process.env.KB_BOOTSTRAP_PARTS ?? '1'), partSha256s: process.env.KB_BOOTSTRAP_PART_SHA256S ?? '' });
     }
     const host = option(parsed, 'host', 'KB_HOST', '0.0.0.0')!;
     const port = Number(option(parsed, 'port', 'KB_PORT', '3000'));

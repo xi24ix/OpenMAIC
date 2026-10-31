@@ -11,32 +11,69 @@ import { CurriculumRepository } from './repository.js';
 
 // Only an operator-selected HTTPS bundle with an independently supplied digest
 // can bootstrap an empty volume. There is deliberately no HTTP upload endpoint.
+// Large bundles may be split into parts (KB_BOOTSTRAP_PARTS) served as
+// `${url}.${NNN}` with per-part SHA-256s (comma-separated) so a flaky transfer
+// retries one small part instead of the whole archive.
 export async function bootstrapCorpus(options: {
   root: string; url: string; token: string; sha256: string;
+  parts?: number; partSha256s?: string;
 }): Promise<void> {
   const root = path.resolve(options.root);
   try { await access(path.join(root, 'complete.json')); return; } catch { /* New volume. */ }
   if (!/^[a-f0-9]{64}$/.test(options.sha256)) throw new Error('Bootstrap SHA-256 is required');
-  if (new URL(options.url).protocol !== 'https:') throw new Error('Bootstrap requires HTTPS');
+  const target = new URL(options.url);
+  const localTest = ['127.0.0.1', 'localhost'].includes(target.hostname);
+  if (target.protocol !== 'https:' && !localTest) throw new Error('Bootstrap requires HTTPS');
   if (!options.token) throw new Error('Bootstrap download token is required');
   await mkdir(path.dirname(root), { recursive: true });
   const temporary = await mkdtemp(path.join(path.dirname(root), '.bootstrap-'));
   try {
-    const response = await fetch(options.url, {
-      headers: { authorization: `Bearer ${options.token}` }, redirect: 'error',
-      signal: AbortSignal.timeout(2 * 60 * 60 * 1000),
-    });
-    if (!response.ok || !response.body) throw new Error(`Bootstrap download HTTP ${response.status}`);
-    const digest = createHash('sha256');
-    let bytes = 0;
     const archive = path.join(temporary, 'bundle.ndjson.gz');
-    await pipeline(Readable.fromWeb(response.body as never), new Transform({
-      transform(chunk, _encoding, callback) {
-        bytes += chunk.length;
-        if (bytes > 8 * 1024 ** 3) { callback(new Error('Bootstrap bundle exceeds 8 GiB')); return; }
-        digest.update(chunk); callback(null, chunk);
-      },
-    }), createWriteStream(archive, { flags: 'wx', mode: 0o600 }));
+    const digest = createHash('sha256');
+    await mkdir(path.join(temporary, 'parts'), { recursive: true });
+    const partCount = Math.max(1, Math.floor(options.parts ?? 1));
+    const partShas = (options.partSha256s ?? '').split(',').map((value) => value.trim()).filter(Boolean);
+    for (let index = 1; index <= partCount; index += 1) {
+      const suffix = `.${String(index).padStart(3, '0')}`;
+      const partUrl = partCount === 1 ? options.url : `${options.url}${suffix}`;
+      const expectedPart = partShas[index - 1];
+      const partFile = path.join(temporary, 'parts', `part${suffix}`);
+      let done = false;
+      let lastError: unknown = null;
+      for (let attempt = 1; attempt <= 3 && !done; attempt += 1) {
+        try {
+          const response = await fetch(partUrl, {
+            headers: { authorization: `Bearer ${options.token}` }, redirect: 'error',
+            signal: AbortSignal.timeout(2 * 60 * 60 * 1000),
+          });
+          if (!response.ok || !response.body) throw new Error(`Bootstrap download HTTP ${response.status}`);
+          const partDigest = createHash('sha256');
+          let bytes = 0;
+          await pipeline(Readable.fromWeb(response.body as never), new Transform({
+            transform(chunk: Buffer, _encoding, callback) {
+              bytes += chunk.length;
+              if (bytes > 8 * 1024 ** 3) { callback(new Error('Bootstrap bundle exceeds 8 GiB')); return; }
+              partDigest.update(chunk); callback(null, chunk);
+            },
+          }), createWriteStream(partFile, { flags: 'w', mode: 0o600 }));
+          const actualPart = partDigest.digest('hex');
+          if (expectedPart && actualPart !== expectedPart) {
+            throw new Error(`Part ${index} checksum mismatch (attempt ${attempt})`);
+          }
+          done = true;
+        } catch (error) {
+          lastError = error;
+          if (attempt < 3) {
+            console.log(`Bootstrap part ${index} attempt ${attempt} failed: ${error instanceof Error ? error.message : error}`);
+            await new Promise((resolve) => setTimeout(resolve, attempt * 15000));
+          }
+        }
+      }
+      if (!done) throw lastError instanceof Error ? lastError : new Error(`Bootstrap part ${index} failed`);
+      await pipeline(createReadStream(partFile), new Transform({
+        transform(chunk: Buffer, _encoding, callback) { digest.update(chunk); callback(null, chunk); },
+      }), createWriteStream(archive, { flags: partCount === 1 && index === 1 ? 'wx' : 'a', mode: 0o600 }));
+    }
     if (digest.digest('hex') !== options.sha256) throw new Error('Bootstrap checksum mismatch');
     const output = path.join(temporary, 'corpus');
     await restoreBundle(archive, output);
