@@ -721,11 +721,19 @@ def useful_segment(text: str) -> bool:
     return True
 
 
+def latin_soup_ratio(text: str) -> float:
+    """Share of Latin-1 high bytes: legacy-encoded Arabic decodes to symbol
+    soup in this range («, Ó, Ù …) while real Latin prose stays ASCII."""
+    if not text:
+        return 0.0
+    return sum(1 for ch in text if "\u0080" <= ch <= "\u00FF") / len(text)
+
+
 def extract_page(page: pymupdf.Page, lines: list[OcrLine], page_number: int) -> tuple[list[Block], str, str, list[str]]:
     width, height = page.rect.width, page.rect.height
     native = native_blocks(page)
     native_text = "\n".join(block.text for block in native)
-    prefer_ocr = arabic_ratio(native_text) >= 0.12 or len(native_text.strip()) < 8
+    prefer_ocr = arabic_ratio(native_text) >= 0.12 or len(native_text.strip()) < 8 or latin_soup_ratio(native_text) > 0.15
     warnings: list[str] = []
     if not prefer_ocr:
         segments = [block for block in native if useful_segment(block.text) and not (PAGE_NUMBER_RE.fullmatch(block.text) and (block.bbox[1] > 0.9 or block.bbox[1] + block.bbox[3] < 0.08))]
@@ -1113,6 +1121,18 @@ def main() -> None:
             extraction_lessons.setdefault(lesson.id, {"lessonId": lesson.id, "segments": [], "visualIds": []})
             if not extraction_lessons[lesson.id]["segments"]:
                 warnings.append(f"lesson {lesson.id} has no extracted segments (pages {lesson.start_page}-{lesson.end_page})")
+
+    # Drop lessons that produced neither text segments nor visuals and units
+    # left with no lessons: transcribed section-divider units ("الجزء الأول")
+    # otherwise survive in the catalog with no retrievable content.
+    for unit in units:
+        unit.lessons = [lesson for lesson in unit.lessons
+                        if extraction_lessons[lesson.id]["segments"] or extraction_lessons[lesson.id]["visualIds"]]
+    dropped_units = len(units)
+    units = [unit for unit in units if unit.lessons]
+    dropped_units -= len(units)
+    if dropped_units:
+        warnings.append(f"dropped {dropped_units} unit(s) with no retrievable content")
 
     figures = [figure for page_figures in figures_by_page.values() for figure in page_figures]
     assets = []

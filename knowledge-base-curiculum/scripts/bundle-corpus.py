@@ -25,11 +25,35 @@ def main():
             manifest = json.loads((directory / 'manifest.json').read_text())
             course = manifest['course']
             groups.setdefault((course['grade'], course['semester'], course['subject'], course['track']), []).append(
-                (course['academicYear'], directory))
+                (course['academicYear'], manifest['resource']['kind'], directory))
         keep = set()
         for members in groups.values():
-            newest = max(year for year, _ in members)
-            keep.update(directory for year, directory in members if year == newest)
+            # Prefer the newest edition that actually contains a student book;
+            # a newer workbook alone must not displace the older student book,
+            # because workbook-only courses lose their primary content.
+            student_years = [year for year, kind, _ in members if kind == 'student_book']
+            if student_years:
+                chosen_year = max(student_years)
+            else:
+                teacher_years = [year for year, kind, _ in members if kind == 'teacher_guide']
+                chosen_year = max(teacher_years) if teacher_years else max(year for year, _, _ in members)
+            same_year = [(kind, directory) for year, kind, directory in members if year == chosen_year]
+            students = [directory for kind, directory in same_year if kind == 'student_book']
+            keep.update(directory for _, directory in same_year)
+            # Multiple uploads of the same book (same year, same kind, near
+            # identical page counts) duplicate the whole course content; keep
+            # only the largest extraction.
+            for kind in ('student_book', 'workbook', 'teacher_guide'):
+                same_kind = [(directory, len(json.loads((directory / 'extraction.json').read_text()).get('pages', [])))
+                             for k, directory in same_year if k == kind]
+                if len(same_kind) > 1:
+                    counts = [count for _, count in same_kind]
+                    if max(counts) - min(counts) <= 3:
+                        best = max(same_kind, key=lambda item: item[1])[0]
+                        for directory, _ in same_kind:
+                            if directory is not best:
+                                keep.discard(directory)
+                                print(f'Dropping duplicate upload {directory.name}')
     else:
         keep = None
     seen = {}

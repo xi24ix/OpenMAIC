@@ -6,7 +6,7 @@ services:
   # directories by adding them to this list in the same commit.
   volume-cleanup:
     image: alpine:3.20
-    command: sh -c 'cd /data && ls -d corpus* 2>/dev/null; rm -rf corpus corpus2 corpus3 && echo "volume cleanup done"'
+    command: sh -c 'cd /data && ls -d corpus* 2>/dev/null; rm -rf corpus corpus2 corpus3 corpus4 && echo "volume cleanup done"'
     volumes:
       - curriculum-kb-data:/data
     networks:
