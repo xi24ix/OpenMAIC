@@ -125,3 +125,44 @@ speeches with Fish audio (pinned voice), pacing ≤3 speeches/scene.
 Remaining known issue: the interactive/outro widget scene is still the slowest
 single generation (its GSAP HTML dwarfs a slide) — acceptable now that it
 generates last while the lesson plays.
+
+### 2026-10-31 — Upstream release ports (v1.2.1/v1.3.0) and credit-exhaustion resilience
+
+Studied the upstream releases (v1.3.0 knowledge base + Pro workbench, v1.2.1
+web research, v1.2.0 server-first) and ported the fixes with the most value
+for lesson quality and classroom robustness (commit `6c61bc80`, test follow-up
+`718b51c5`; each carries upstream's tests adapted to our fork):
+
+1. **Slide images contain-fit** (#2004): an image whose aspect ratio differs
+   from the model's box by >10% is now fitted inside the box and centered
+   (object-fit: contain) instead of growing downward over the text below.
+2. **DeepSeek reasoning_content retry** (#2068): a DeepSeek thinking model
+   behind an uncatalogued OpenAI-compatible route (ours) rejects tool-call
+   follow-ups asking for reasoning_content; the transport now re-sends once
+   with an empty reasoning_content on exactly that error.
+3. **Narration keeps Greek symbols** (#2021): speech text is also the
+   caption — π, θ, α, β, λ, ω, Σ and e stay symbols instead of homophones.
+4. **Persistence pool wait bound** (#2093): a request waits a bounded time
+   for a pooled connection — protection for the new parallel scene
+   generation against pool exhaustion.
+5. **Playback recovers from rejected stored actions** (#2014): a stored
+   action that fails is logged and skipped, so later actions still run and
+   playback completes instead of freezing. (Test adapted: our fork still
+   supports Legacy shape presets, so the rejection is exercised through a
+   refusing whiteboard API.)
+
+Skipped for now: the 1.3.0 knowledge-base migration (breaking changes +
+schema work — our fork runs its own curriculum-KB track) and the Pro
+workbench UI features (not part of the headless classroom flow).
+
+**Credit-exhaustion resilience** (commits `7c59eb78`, `3cbb9231`,
+`96ac4b0b`): the OpenRouter account ran to -$0.22 mid-testing and every run
+paused with 402s. The fallback chains existed but a 402 was classified
+terminal. Now: an HTTP 402 or an "Insufficient credits" message is
+fallback-worthy whatever shape the stream error takes (verified live —
+outline, content and actions all degraded to the zero-cost
+`openrouter/free` model with an empty balance and the run kept going), the
+failure names PROVIDER_QUOTA_EXHAUSTED, and the last-resort fallback lands
+on `router:openrouter/free`. Scene images (Seedream) have no free
+alternative: with zero credits a lesson still cannot finish — top up
+OpenRouter (Haiku content costs roughly $0.02 per lesson).
