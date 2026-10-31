@@ -76,6 +76,10 @@ function quotaResponse(body: unknown): boolean {
   if (!isRecord(error)) return false;
   return (
     (typeof error.code === 'string' && QUOTA_CODES.has(error.code)) ||
+    // OpenRouter's credit exhaustion answers HTTP 402 with a numeric code and
+    // an "Insufficient credits" message — an account quota, not a rate limit.
+    error.code === 402 ||
+    (typeof error.message === 'string' && /insufficient credits/i.test(error.message)) ||
     error.type === 'insufficient_quota'
   );
 }

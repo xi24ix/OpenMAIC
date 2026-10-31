@@ -120,6 +120,11 @@ export function isRetryableLlmError(error: unknown): boolean {
   if (!(err instanceof Error)) return false;
 
   if (APICallError.isInstance(err)) {
+    // Credit exhaustion (402) is terminal on the primary account but the
+    // configured fallback may bill a different one (a free tier): the
+    // deployment keeps serving instead of pausing every run. Checked before
+    // the SDK's own isRetryable, which marks payment errors as terminal.
+    if (err.statusCode === 402) return true;
     // The SDK's own classification wins before any message matching: a
     // message-based check first would misread e.g. a 400
     // "Invalid value for 'timeout'" as a transport timeout.
@@ -140,7 +145,13 @@ export function isRetryableLlmError(error: unknown): boolean {
 
   const statusCode = (err as { statusCode?: unknown }).statusCode;
   if (typeof statusCode === 'number') {
-    return statusCode === 408 || statusCode === 409 || statusCode === 429 || statusCode >= 500;
+    return (
+      statusCode === 402 ||
+      statusCode === 408 ||
+      statusCode === 409 ||
+      statusCode === 429 ||
+      statusCode >= 500
+    );
   }
 
   return NETWORK_ERROR_RE.test(err.message);

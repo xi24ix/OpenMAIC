@@ -71,6 +71,16 @@ describe('isRetryableLlmError (real AI SDK errors)', () => {
     expect(isRetryableLlmError(apiError(401, 'unauthorized', false))).toBe(false);
   });
 
+  it('falls back on credit exhaustion (402) even though the SDK marks it terminal', () => {
+    // The primary account is out of credit; the configured fallback may bill a
+    // different one (a free tier), so the deployment keeps serving.
+    expect(isRetryableLlmError(retryError(apiError(402, 'Insufficient credits', false)))).toBe(
+      true,
+    );
+    expect(isRetryableLlmError(apiError(402, 'Insufficient credits'))).toBe(true);
+    expect(isRetryableLlmError(apiError(402, 'Insufficient credits', false))).toBe(true);
+  });
+
   it('falls back to status codes (408/409/429/>=500) when the flag is unset', () => {
     expect(isRetryableLlmError(apiError(408, 'request timeout'))).toBe(true);
     expect(isRetryableLlmError(apiError(409, 'conflict'))).toBe(true);
