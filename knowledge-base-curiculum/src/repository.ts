@@ -291,13 +291,21 @@ export class CurriculumRepository {
        JOIN resources r ON r.resource_id=rv.resource_id
        WHERE cb.course_id=$1 AND cb.lesson_id=$2${versionFilter}
        ORDER BY ${PRIMARY_ORDER_SQL}, r.kind, r.resource_id, cb.block_order`, params);
-    const primaryRows = blocks.rows.filter((row) => primaryKinds.has(row.resource_kind));
-    const supportingRows = blocks.rows.filter((row) => !primaryKinds.has(row.resource_kind) && request.includeSupplementary);
+    let primaryRows = blocks.rows.filter((row) => primaryKinds.has(row.resource_kind));
+    let supportingRows = blocks.rows.filter((row) => !primaryKinds.has(row.resource_kind) && request.includeSupplementary);
     const warnings: string[] = [];
     if (request.allowUnverified) warnings.push('Private evaluation mode is enabled; this context is not publication-ready and remains private reference only.');
     if (request.allowUnverified && activePrimary.some((row) => !row.curriculum_verified || !row.content_verified)) warnings.push('Unverified material included for private evaluation; this context is not publication-ready.');
     if (!request.allowUnverified && activePrimary.some((row) => !row.curriculum_verified || !row.content_verified)) warnings.push('Primary material is awaiting curriculum and content verification.');
-     if (primaryRows.length === 0) warnings.push('Primary lesson content is missing from the active student_book version.');
+    if (primaryRows.length === 0 && supportingRows.length > 0) {
+      // The lesson exists only in a workbook version (workbooks often carry
+      // lessons the student book does not): serve that content as primary.
+      warnings.push('Primary student_book content is missing for this lesson; serving workbook content for it instead.');
+      primaryRows = supportingRows;
+      supportingRows = [];
+      primaryKinds = new Set(['workbook']);
+    }
+    if (primaryRows.length === 0) warnings.push('Primary lesson content is missing from the active student_book version.');
      if (primaryRows.some((row) => row.text_status === 'needs_ocr')) warnings.push('One or more primary blocks need OCR and are not ready.');
      const expectedSegmentCount = Number(lessonRow.expected_segment_count ?? 0);
      const expectedVisualIds = parseJson<string[]>(lessonRow.expected_visual_ids, []);
@@ -385,12 +393,19 @@ export class CurriculumRepository {
        ORDER BY l.lesson_order, ${PRIMARY_ORDER_SQL}, r.kind, r.resource_id, cb.block_order`,
        request.lessonId ? [request.courseId, request.unitId, request.lessonId] : [request.courseId, request.unitId],
     );
-    const primaryRows = blocks.rows.filter((row) => primaryKinds.has(row.resource_kind));
-    const supportingRows = blocks.rows.filter((row) => !primaryKinds.has(row.resource_kind) && request.includeSupplementary);
+    let primaryRows = blocks.rows.filter((row) => primaryKinds.has(row.resource_kind));
+    let supportingRows = blocks.rows.filter((row) => !primaryKinds.has(row.resource_kind) && request.includeSupplementary);
     const warnings: string[] = [];
     if (request.allowUnverified) warnings.push('Private evaluation mode is enabled; this context is not publication-ready and remains private reference only.');
     if (request.allowUnverified && activePrimary.some((row) => !row.curriculum_verified || !row.content_verified)) warnings.push('Unverified material included for private evaluation; this context is not publication-ready.');
     if (!request.allowUnverified && activePrimary.some((row) => !row.curriculum_verified || !row.content_verified)) warnings.push('Primary material is awaiting curriculum and content verification.');
+    if (primaryRows.length === 0 && supportingRows.length > 0) {
+      // The unit exists only in a workbook version: serve that content as primary.
+      warnings.push('Primary student_book content is missing for this unit; serving workbook content for it instead.');
+      primaryRows = supportingRows;
+      supportingRows = [];
+      primaryKinds = new Set(['workbook']);
+    }
     if (primaryRows.length === 0) warnings.push('Primary unit content is missing from the active student_book version.');
     if (primaryRows.some((row) => row.text_status === 'needs_ocr')) warnings.push('One or more primary blocks need OCR and are not ready.');
     const allRows = [...primaryRows, ...supportingRows];

@@ -729,6 +729,21 @@ def latin_soup_ratio(text: str) -> float:
     return sum(1 for ch in text if "\u0080" <= ch <= "\u00FF") / len(text)
 
 
+def dedupe_segments(segments: list[Block]) -> list[Block]:
+    """Drop exact-duplicate segments on the same page: some PDFs carry the same
+    paragraph twice (double text layers or print artifacts), which otherwise
+    doubles the lesson's content in retrieval."""
+    seen: set[str] = set()
+    out: list[Block] = []
+    for segment in segments:
+        if len(segment.text) >= 25 and segment.text in seen:
+            continue
+        if len(segment.text) >= 25:
+            seen.add(segment.text)
+        out.append(segment)
+    return out
+
+
 def extract_page(page: pymupdf.Page, lines: list[OcrLine], page_number: int) -> tuple[list[Block], str, str, list[str]]:
     width, height = page.rect.width, page.rect.height
     native = native_blocks(page)
@@ -736,7 +751,7 @@ def extract_page(page: pymupdf.Page, lines: list[OcrLine], page_number: int) -> 
     prefer_ocr = arabic_ratio(native_text) >= 0.12 or len(native_text.strip()) < 8 or latin_soup_ratio(native_text) > 0.15
     warnings: list[str] = []
     if not prefer_ocr:
-        segments = [block for block in native if useful_segment(block.text) and not (PAGE_NUMBER_RE.fullmatch(block.text) and (block.bbox[1] > 0.9 or block.bbox[1] + block.bbox[3] < 0.08))]
+        segments = dedupe_segments([block for block in native if useful_segment(block.text) and not (PAGE_NUMBER_RE.fullmatch(block.text) and (block.bbox[1] > 0.9 or block.bbox[1] + block.bbox[3] < 0.08))])
         page_text = "\n\n".join(block.text for block in segments)
         return segments, page_text, "native", warnings
 
@@ -773,6 +788,7 @@ def extract_page(page: pymupdf.Page, lines: list[OcrLine], page_number: int) -> 
         warnings.append(f"page {page_number}: dropped {dropped_arabic} OCR-missed native Arabic block(s)")
     segments.extend(group_paragraphs(leftovers))
     segments = [segment for segment in segments if useful_segment(segment.text)]
+    segments = dedupe_segments(segments)
     segments.sort(key=lambda block: reading_key(block.bbox))
     if not segments and native_text.strip():
         segments = [Block(text=native_text, bbox=(0, 0, 1, 1), native_text=native_text, status="native")]

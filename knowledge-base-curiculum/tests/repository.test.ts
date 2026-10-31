@@ -85,8 +85,13 @@ test('gates review, keeps supplements distinct, and scopes asset access', async 
     const primary = await repository.importResource(primaryFixture.manifest, primaryFixture.extraction);
     const supplement = fixture(true, 'c'.repeat(64), 'workbook');
     const supplementResult = await repository.importResource(supplement.manifest, supplement.extraction);
-    const unavailable = await repository.getLessonContext({ courseId: primary.courseId, lessonId: 'l1', maxChars: 500, offset: 0, includeSupplementary: true, allowUnverified: false });
-    assert.equal(unavailable.status, 'not_available');
+    // The unverified student version is gated out, but the verified workbook
+    // that also carries this lesson is served as primary instead of failing.
+    const gated = await repository.getLessonContext({ courseId: primary.courseId, lessonId: 'l1', maxChars: 500, offset: 0, includeSupplementary: true, allowUnverified: false });
+    assert.equal(gated.status, 'ready');
+    assert.ok(gated.primaryContent.length > 0);
+    assert.ok(gated.primaryContent[0].citation.resourceId.endsWith(':resource:workbook'));
+    assert.ok(gated.warnings.some((warning) => warning.includes('serving workbook content')));
     const evaluation = await repository.getLessonContext({ courseId: primary.courseId, lessonId: 'l1', maxChars: 500, offset: 0, includeSupplementary: true, allowUnverified: true });
     assert.equal(evaluation.status, 'partial');
     assert.ok(evaluation.warnings.length);
