@@ -10,12 +10,19 @@ import type { PPTElement } from '@openmaic/dsl';
 const board = vi.hoisted(() => ({
   elements: [] as PPTElement[],
   open: false,
+  /** When set, the whiteboard refuses to store a shape (a rejected stored action). */
+  rejectShapes: false,
 }));
 vi.mock('@/lib/api/stage-api', () => ({
   createStageAPI: () => ({
     whiteboard: {
       get: () => ({ success: true, data: { id: 'board', elements: board.elements } }),
-      addElement: (element: PPTElement) => board.elements.push(element),
+      addElement: (element: PPTElement) => {
+        if (board.rejectShapes && (element as { type?: string }).type === 'shape') {
+          throw new Error('unsupported stored shape');
+        }
+        board.elements.push(element);
+      },
       update: ({ elements }: { elements: PPTElement[] }) => {
         board.elements = elements;
       },
@@ -100,6 +107,7 @@ describe('stored action failure recovery', () => {
     vi.useFakeTimers();
     board.elements = [];
     board.open = false;
+    board.rejectShapes = false;
     vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
@@ -110,12 +118,13 @@ describe('stored action failure recovery', () => {
     vi.restoreAllMocks();
   });
 
-  describe.each([
-    { name: 'unknown shape', params: { shape: 'ellipse' } },
-    { name: 'Native rotation field', params: { shape: 'rectangle', rotate: 30 } },
-  ])('$name', ({ params }) => {
+  describe('a stored shape action the whiteboard rejects', () => {
+    beforeEach(() => {
+      board.rejectShapes = true;
+    });
+
     it('continues normal playback after a rejected stored action and completes once', async () => {
-      const { engine, onComplete, onProgress } = setup(shape(params));
+      const { engine, onComplete, onProgress } = setup(shape({ shape: 'rectangle' }));
       engine.start();
       await vi.runAllTimersAsync();
 
@@ -124,18 +133,18 @@ describe('stored action failure recovery', () => {
       expect(engine.getMode()).toBe('idle');
       expect(onComplete).toHaveBeenCalledTimes(1);
       expect(console.error).toHaveBeenCalledTimes(1);
-      expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Legacy wb_draw_shape'));
+      expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Skipping failed'));
     });
 
     it('recovers seek restoration after a rejected stored action and can resume', async () => {
-      const { engine, onComplete } = setup(shape(params));
+      const { engine, onComplete } = setup(shape({ shape: 'rectangle' }));
 
       await expect(engine.jumpToAction(3, { autoplay: false })).resolves.toBe(true);
       expect(board.elements.map((element) => element.type)).toEqual(['text']);
       expect(engine.getSnapshot().actionIndex).toBe(3);
       expect(onComplete).not.toHaveBeenCalled();
       expect(console.error).toHaveBeenCalledTimes(1);
-      expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Legacy wb_draw_shape'));
+      expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Skipping failed'));
 
       engine.continuePlayback();
       await vi.runAllTimersAsync();
