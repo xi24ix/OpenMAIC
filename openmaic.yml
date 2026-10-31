@@ -22,6 +22,10 @@ providers:
       - anthropic/claude-haiku-5.5
       - deepseek/deepseek-v4.1-flash
       - z-ai/glm-5.3-flash
+      # The zero-cost last resort: when the account's credits run out, the
+      # fallbacks land here and text generation keeps working (images stay
+      # paid and will still refuse).
+      - openrouter/free
 
   # Speech synthesis (the lesson's voice-over): Fish Audio, the operator's
   # reference voice (FISH_VOICE_ID) pinned through `options.voice`, so every
@@ -77,7 +81,7 @@ slots:
   # calls well and answers in seconds; the GLM catches an empty/dead reply.
   llm:
     model: router:deepseek/deepseek-v4.1-flash
-    fallback: router:z-ai/glm-5.3-flash
+    fallback: router:openrouter/free
 
   # The Pro workbench agent needs dependable tool calling.
   agent:
@@ -94,14 +98,14 @@ slots:
   # answers fast; the free GLM catches a failure.
   course.outline:
     model: router:anthropic/claude-haiku-5.5
-    fallback: router:z-ai/glm-5.3-flash
+    fallback: router:openrouter/free
 
   # Scene content — the bottleneck (widget HTML is the longest generation of
   # the run): Haiku writes the GSAP/canvas pages fast and clean, at a fifth of
   # the Gemini flash price; the free GLM catches a failure.
   course.content:
     model: router:anthropic/claude-haiku-5.5
-    fallback: router:z-ai/glm-5.3-flash
+    fallback: router:openrouter/free
 
   # Voice: Fish Audio out, OpenAI in (speech recognition).
   tts: speech-fish:s2.1-pro-free
