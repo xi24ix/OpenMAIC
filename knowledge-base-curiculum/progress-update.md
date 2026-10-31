@@ -30,6 +30,36 @@ what changed, how it was verified, and what comes next. Latest work at the top o
 
 ## Log
 
+### 2026-10-31 — Subagent sweep (~470 calls): 3 missing lessons + 1 duplicate found and fixed
+
+Six parallel QA subagents each probed their assigned courses with 5 random calls
+(3 unit-context + 2 lesson-context, deterministically seeded) plus an asset fetch —
+~470 calls across all 73 courses against the live API with a strict error taxonomy
+(http/not_available/empty_partial/mojibake/heavy_dup/asset/citation).
+
+**Findings:** 3 lesson-context calls answered not_available although content existed
+(G11 biology u1-l11, G12 english u1-l2, G10 english u4) — workbooks declare lessons
+the sibling student book does not, and the context paths counted only
+student_book/teacher_guide rows as primary before answering empty. One French lesson
+served the same paragraph twice (duplicated text layer on the scanned page).
+Everything else clean: 0 http errors, 0 mojibake, 0 heavy dups, 0 bad citations, all
+sampled assets HTTP 200 image/png.
+
+**Fixes (commit `45ff6e69`):** getLessonContext/getUnitContext promote supporting
+(workbook) rows to primary — with an explicit warning — when a lesson or unit has no
+primary content; extract_page dedupes exact-duplicate page segments (25+ chars).
+One repository test updated to the new intended semantics (verified workbook served
+instead of not_available; unverified rows stay gated).
+
+**Deployment:** bundle v5 (2.79 GB, sha256 `be355b2a…6717`) split into 9 verified
+parts (the multi-part bootstrap from the previous round), bootstrapped into
+`/app/data/corpus6` — 9/9 parts, 0 failures.
+
+**Live verification:** coverage 73 courses / 149 units / 1,108 lessons / 170,366
+blocks; G11 biology u1-l11 partial (5 blocks, workbook promoted), G12 english u1-l2
+partial (24 blocks), G10 english u4 partial (2 blocks), French u1-l1 13 blocks with
+0 duplicates; full sweep: **149/149 units serve content — zero not_available**.
+
 ### 2026-10-31 — Content-quality audit: 4 defect classes found and fixed
 
 Random-stratified sampling of the served unit contexts (grades × semesters × subject

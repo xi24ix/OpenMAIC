@@ -25,6 +25,8 @@ Newest entries first.
 | 15 | Live + UI verification | done 2026-10-31 | kwdb coverage 73 courses/1,269 lessons; app picker API returns both terms for every grade, zero dupes; G10 math T2 units render (مصفوفات الأعداد…) |
 | 16 | Content-quality audit + fixes | done 2026-10-31 | Random sampling + full 149-unit sweep; fixed 9 not_available courses, Quran dupes, mojibake books, dead units; 148/149 units serve content; multi-part bootstrap shipped after tunnel corruption |
 | 17 | Backlog after audit | pending | A12: G10 English "Unit Four" unit has no extractable text; A13: G11 math-general workbook course is thin (42% coverage); A14: ~18 books still at 85–94% effective coverage; A5–A6 unchanged |
+| 18 | Subagent API sweep (6 agents, ~470 calls) | done 2026-10-31 | Found 3 workbook-only lessons 404ing + 1 French double-ingested paragraph; all fixed |
+| 19 | Workbook promotion + segment dedupe | done 2026-10-31 | Commit `45ff6e69`; corpus6 live; **149/149 units serve content**; G10 english u4 now serves content (A12 partially resolved); French dupes 6 → 0 |
 
 ## Backlog (user-approved, from the Oct 29 audit)
 
