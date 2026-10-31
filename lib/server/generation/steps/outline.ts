@@ -645,19 +645,31 @@ async function streamOutlines(
     // stage or server-configured provider). A client-supplied x-model
     // with a garbage key must never be allowed to burn the operator's
     // fallback key by failing on purpose.
-    if (!model.serverManaged) return false;
-    if (!shouldFallbackFor(error, text)) return false;
+    if (!model.serverManaged) {
+      log.warn('Outline fallback skipped: the model was not server-resolved');
+      return false;
+    }
+    if (!shouldFallbackFor(error, text)) {
+      log.warn('Outline fallback skipped: the failure is not fallback-worthy', {
+        message: error instanceof Error ? error.message : String(error ?? ''),
+      });
+      return false;
+    }
     let fallback: Awaited<ReturnType<typeof resolveFallbackModel>>;
     try {
       // The slot's own fallback when the model came from a slot.
       const attached = attachedModelFallback(languageModel);
       fallback = attached ? await attached() : await resolveFallbackModel();
-    } catch {
+    } catch (attachError) {
       // Misconfigured fallback provider — keep the real error instead of
       // surfacing e.g. "API key required for provider: …" to the caller.
+      log.warn('Outline fallback unavailable: the fallback model failed to resolve', attachError);
       return false;
     }
-    if (!fallback) return false;
+    if (!fallback) {
+      log.warn('Outline fallback unavailable: the slot carries no fallback model');
+      return false;
+    }
     streamParams = { ...streamParams, model: fallback.model };
     fellBack = true;
     logFallbackFired(
