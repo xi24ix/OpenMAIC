@@ -27,6 +27,7 @@ Newest entries first.
 | 17 | Backlog after audit | pending | A12: G10 English "Unit Four" unit has no extractable text; A13: G11 math-general workbook course is thin (42% coverage); A14: ~18 books still at 85–94% effective coverage; A5–A6 unchanged |
 | 18 | Subagent API sweep (6 agents, ~470 calls) | done 2026-10-31 | Found 3 workbook-only lessons 404ing + 1 French double-ingested paragraph; all fixed |
 | 19 | Workbook promotion + segment dedupe | done 2026-10-31 | Commit `45ff6e69`; corpus6 live; **149/149 units serve content**; G10 english u4 now serves content (A12 partially resolved); French dupes 6 → 0 |
+| 20 | Cheap testing: quick-test scene cap + free HeyGen TTS | done 2026-11-11 | Quick test run toggle (3 scenes vs 8) in the curriculum picker; `heygen-tts` provider (OpenRouter free route); sandbox narrates free via `openmaic.sandbox.yml` (commit `a1f7915d`, `a50fee36`) |
 
 ## Backlog (user-approved, from the Oct 29 audit)
 
@@ -166,3 +167,40 @@ failure names PROVIDER_QUOTA_EXHAUSTED, and the last-resort fallback lands
 on `router:openrouter/free`. Scene images (Seedream) have no free
 alternative: with zero credits a lesson still cannot finish — top up
 OpenRouter (Haiku content costs roughly $0.02 per lesson).
+
+### 2026-11-11 — Cheap platform testing: 3-scene quick test + free HeyGen TTS
+
+The topped-up OpenRouter account burned $20 of $25 within days of repeated
+same-subject curriculum test runs (a full lesson = 8 scenes × Haiku content
++ Seedream images). Changes (commits `90b7477c` carry-over, `a1f7915d`,
+`a50fee36`):
+
+1. **Quick test run** (curriculum picker, client): a "Test run (3 scenes)"
+   toggle on the support step — remembered in localStorage like
+   interactiveMode — caps the run at `maxScenes: 3` (teaching + interactive +
+   quiz, the smallest shape `ensureLessonMix` still guarantees; 2 scenes are
+   degenerate by design). A 3-scene test costs roughly a third of a full
+   8-scene lesson. The stale "up to 3 scenes" hint was corrected in all 12
+   locales ("Full lesson: up to 8 scenes" vs "Quick test: up to 3 scenes").
+2. **HeyGen Voice Turbo free** (`heygen-tts` provider): OpenRouter's
+   OpenAI-compatible `/api/v1/audio/speech` route
+   `heygen/heygen-voice-1-turbo:free` is $0 until 2026-11-30 (verified live:
+   `mp3` is refused with "HeyGen Voice only supports response_format pcm",
+   an explicit `voice` is required, ten default voices, rate reported in the
+   content type `audio/pcm;rate=44100;channels=1`). `generateOpenAITTS`
+   requests `pcm` for heygen models and wraps the samples in a WAV container
+   honouring that rate (`wrapPcmAudioResponse` + `pcmToWav`), so the browser
+   decoder gets playable audio. Registry entry, `DEFAULT_TTS_VOICES`
+   (`nadine`), display name and i18n in all locales; tests in
+   `tests/audio/heygen-tts.test.ts`.
+3. **Sandbox config split**: `openmaic.sandbox.yml` (shipped in the image,
+   Dockerfile) — identical to production's openmaic.yml except the `tts`
+   slot, which narrates through `speech-heygen:heygen/heygen-voice-1-turbo:free`
+   with the pinned default voice `nadine`. Selected on the sandbox Coolify
+   app via `OPENMAIC_CONFIG=openmaic.sandbox.yml`. Production keeps
+   openmaic.yml (Fish Audio, the operator's reference voice) — zero config
+   change there. When the promotion ends, point the sandbox tts slot back at
+   `speech-fish:s2.1-pro-free` (Fish's own free tier).
+
+Untested at write time: an end-to-end sandbox lesson with the toggle on and
+HeyGen narration (deployment queued).
