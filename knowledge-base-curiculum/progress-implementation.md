@@ -27,6 +27,7 @@ Newest entries first.
 | 17 | Backlog after audit | pending | A12: G10 English "Unit Four" unit has no extractable text; A13: G11 math-general workbook course is thin (42% coverage); A14: ~18 books still at 85–94% effective coverage; A5–A6 unchanged |
 | 18 | Subagent API sweep (6 agents, ~470 calls) | done 2026-10-31 | Found 3 workbook-only lessons 404ing + 1 French double-ingested paragraph; all fixed |
 | 19 | Workbook promotion + segment dedupe | done 2026-10-31 | Commit `45ff6e69`; corpus6 live; **149/149 units serve content**; G10 english u4 now serves content (A12 partially resolved); French dupes 6 → 0 |
+| 20 | Independent re-verification (Windows box) | done 2026-11-11 | 18/18 local tests pass; full 149-unit live sweep: 149 serve, 0 not_available, 0 mojibake; 5 cited pages render-verified against source PDFs word-for-word; 3 minor defects found (see log) |
 | 20 | Cheap testing: quick-test scene cap + free HeyGen TTS | done 2026-11-11 | Quick test run toggle (3 scenes vs 8) in the curriculum picker; `heygen-tts` provider (OpenRouter free route); sandbox narrates free via `openmaic.sandbox.yml` (commit `a1f7915d`, `a50fee36`) |
 
 ## Backlog (user-approved, from the Oct 29 audit)
@@ -41,6 +42,7 @@ Newest entries first.
 | A6 | Rotate leaked Supabase/DB credentials in root `last-session-fix-*.json` + redact file | pending |
 | A7 | G10 IT book (3556) has no TOC — source better PDF or hand-build TOC | pending |
 | A8 | Clean old `/app/data/corpus` dir off the Coolify volume | pending |
+| A15 | Filter `Æ`-run OCR garbage (dotted answer-lines) + cross-page header/footer dedupe | pending |
 
 ## Standing workflow (user instruction, 2026-10-30)
 
@@ -49,6 +51,51 @@ share, commit + push to GitHub, then delete local copies (`~/kb-run`, `/tmp/*` t
 databases/assets/bundles/logs) to free the local disk.
 
 ## Log
+
+### 2026-11-11 — Independent re-verification on the Windows box
+
+Full confidence pass over the corpus6 fixes, run from a different machine and
+stack (Node 24 / pdfjs instead of the macOS Vision pipeline):
+
+- **Local suite**: 18/18 tests pass (repository, HTTP/MCP server, bootstrap,
+  PDF extraction). Fresh `pnpm install` needed — the synced node_modules
+  carried only darwin-arm64 binaries.
+- **Live sweep, all 149 units** (`unit-context`, maxChars 3000): 149/149
+  serve content, 0 `not_available`, 0 empty, 0 HTTP errors, 0 mojibake
+  (U+FFFD). Catalog: 73 courses / 149 units / 1,108 lessons; zero
+  (grade,term,subject,track) dupes; both terms present for every grade.
+- **Regression re-check of the 4 fixes**: G11 biology u1-l11 → 29 blocks
+  (workbook promoted); G12 english u1-l2 → 94 blocks; G10 english u4 →
+  serves (2 blocks, 37 chars — still thin, A12 stays open); French u1-l1 →
+  113 blocks, 0 duplicate segments.
+- **Content-vs-book comparison**: token-overlap vs the PDFs' text layers
+  was unreliable (most Kuwait MOE PDFs ship broken ToUnicode maps, so the
+  PDF text layer itself is garbage while the KB's Vision-OCR text is
+  clean — confirmed by rendering). Switched to **visual verification**:
+  rendered cited pages (pdfjs + napi-rs canvas) and compared against the
+  served block text. 5/5 pages match word-for-word:
+  G12 T1 physics p17 (lesson 1-1 الشغل, objectives + شكل 1),
+  G10 T1 math p17 (دالة القيمة المطلقة, term list),
+  G10 T1 biology p17 (تنظيم الغلاف الأحيائي),
+  G10 T2 islamic p21–22 (hadith exercise page),
+  G11 T2 arabic p22 (منبع السحر في القرآن).
+  Citation page numbers point at the correct PDF pages.
+- **New minor defects found**:
+  1. **Æ-garbage blocks**: the 2018/2019 G10 T2 islamic-education book
+     (alktab mirror) yields ~122 blocks of `ÆÆÆ…` — the OCR reads dotted
+     answer-lines (`………`) as `Æ` runs. The per-page dot-leader filter
+     misses them. Fix: treat `Æ`-runs like dot-leaders in `extract_page`.
+  2. **Page furniture repeats**: headers/footers («وزارة التربية Ministry
+     of Education…», «الصف العاشر الفصل الدراسي الأول») repeat across
+     pages in long unit contexts (~1–2% of blocks; cross-page dedupe
+     would clean contexts further). Low severity.
+  3. TOC dot-leader blocks still reach a few fallback courses (G10
+     kuwait-studies u1: 63 leader blocks out of 504). Cosmetic.
+- **Housekeeping**: `KB_BOOTSTRAP_*` env vars are still set on the
+  Coolify app (README says remove them after bootstrap) — cleanup pending.
+
+Verdict: the workbook-promotion and dedupe fixes hold up under independent
+re-testing; unit-level health is confirmed at 149/149.
 
 ### 2026-10-30 — Committed, redeployed from git, live-tested, disk cleaned
 
