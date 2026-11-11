@@ -125,6 +125,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # time; without it the deployment serves no providers and nothing generates.
 # A Coolify/compose bind mount of the same path overrides this copy.
 COPY --from=builder /app/openmaic.yml ./openmaic.yml
+# The sandbox deployment's configuration (selected there by
+# OPENMAIC_CONFIG=openmaic.sandbox.yml): the same providers with the tts slot
+# on HeyGen Voice Turbo free (OpenRouter) instead of Fish Audio.
+COPY --from=builder /app/openmaic.sandbox.yml ./openmaic.sandbox.yml
 
 # The app persists classrooms, classroom media, and usage records under
 # ./data, which docker-compose.yml mounts as the openmaic-data named volume.
