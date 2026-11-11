@@ -84,7 +84,7 @@
     "selectedLessonReady": "This lesson will be retrieved from the selected unit.",
     "preparing": "Preparing lesson...",
     "generate": "Generate lesson",
-    "sceneLimitHint": "Focused generation: up to 3 scenes",
+    "sceneLimitHint": "Vollständige Lektion: bis zu 8 Szenen",
     "progressLabel": "Lesson selection progress",
     "steps": {
       "grade": "Grade",
@@ -102,7 +102,12 @@
     "qualityHint": "Primary textbook content is used, with a clear error when a unit is incomplete or still unavailable for review.",
     "readyStep": "Unit selected",
     "stepHint": "Choose the path that matches your course",
-    "back": "Back"
+    "back": "Back",
+    "sceneLimitTest": "Schnelltest: bis zu 3 Szenen",
+    "testRunLabel": "Schnelltest-Lauf",
+    "testRunBadge": "Spart Credits",
+    "testRunTitle": "Testlauf (3 Szenen)",
+    "testRunHint": "Erzeugt eine kurze 3-Szenen-Lektion, um den Ablauf mit einem Bruchteil der Kosten zu prüfen. Für die volle Lektion ausschalten."
   },
   "toolbar": {
     "pdfParser": "Parser",
@@ -2307,7 +2312,8 @@
         "unconfirmed": "Der Server hat den Import nicht bestätigt."
       }
     },
-    "serverConfiguredAddOwn": "Um eigene Zugangsdaten zu verwenden, füge einen separaten Anbieter hinzu."
+    "serverConfiguredAddOwn": "Um eigene Zugangsdaten zu verwenden, füge einen separaten Anbieter hinzu.",
+    "providerHeygenVoiceTTS": "HeyGen Voice (OpenRouter)"
   },
   "workspace": {
     "untitledCourse": "未命名课堂",

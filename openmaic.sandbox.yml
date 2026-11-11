@@ -1,0 +1,143 @@
+# Sandbox model configuration — selected by `OPENMAIC_CONFIG=openmaic.sandbox.yml`
+# on the sandbox deployment (Coolify app ugdvg1vmdttjtrv7ixl0f0cc).
+#
+# Identical to openmaic.yml except the `tts` slot: the sandbox narrates through
+# HeyGen Voice Turbo (free on OpenRouter until 2026-11-30) instead of Fish
+# Audio, so platform testing generates zero-cost speech. Production keeps
+# openmaic.yml (Fish, the operator's pinned reference voice).
+#
+# One OpenRouter key covers chat, image, video and the sandbox TTS; one OpenAI
+# key covers the voice pipeline fallback (speech synthesis + voice input).
+# Tavily serves web search and the built-in unpdf parser handles document
+# extraction, both keyless of the user. The credentials stay in Coolify
+# environment variables and are referenced as ${VAR}; an unset variable stops
+# the server at startup.
+#
+# All model and media slots are locked (`lock: all`) so every account uses
+# exactly this setup: nobody can replace the deployment's providers with
+# browser-supplied keys or stale workspace settings, and the provider catalog
+# (Ollama, Lemonade, ComfyUI, ...) is not offered in the web settings at all.
+
+providers:
+  # Chat + image + video + free TTS through OpenRouter (one key).
+  router:
+    preset: openrouter
+    apiKey: ${OPENROUTER_API_KEY}
+    models:
+      # The lesson workhorse: Haiku-class quality at flash-tier latency and
+      # $0.10/$0.50 per M tokens — scene HTML, outlines and titles.
+      - anthropic/claude-haiku-5.5
+      - deepseek/deepseek-v4.1-flash
+      - z-ai/glm-5.3-flash
+      # The zero-cost last resort: when the account's credits run out, the
+      # fallbacks land here and text generation keeps working (images stay
+      # paid and will still refuse).
+      - openrouter/free
+
+  # Speech synthesis (the sandbox lesson's voice-over): HeyGen Voice Turbo on
+  # OpenRouter's OpenAI-compatible /audio/speech endpoint — $0 until
+  # 2026-11-30. The default voice `nadine` is pinned through `options.voice`
+  # so every run narrates with that one voice without a browser voice picker.
+  # When the promotion ends, point the tts slot back at speech-fish or speech.
+  speech-heygen:
+    preset: heygen-tts
+    apiKey: ${OPENROUTER_API_KEY}
+    models:
+      - heygen/heygen-voice-1-turbo:free
+    options:
+      voice: nadine
+
+  # Speech synthesis fallback (the lesson's voice-over before fish): OpenAI.
+  speech:
+    preset: openai-tts
+    apiKey: ${OPENAI_API_KEY}
+    models:
+      - gpt-4o-mini-tts
+
+  # Speech synthesis (Fish Audio, the production voice): kept configured so a
+  # sandbox run can be pointed back at it by editing the tts slot below.
+  speech-fish:
+    preset: fish-tts
+    apiKey: ${FISH_API_KEY}
+    models:
+      - s2.1-pro-free
+    options:
+      voice: ${FISH_VOICE_ID}
+
+  # Voice input (speech recognition): OpenAI.
+  transcription:
+    preset: openai-whisper
+    apiKey: ${OPENAI_API_KEY}
+    models:
+      - gpt-4o-mini-transcribe
+
+  # Scene images: OpenRouter's image endpoint.
+  images:
+    preset: openrouter-image
+    apiKey: ${OPENROUTER_API_KEY}
+    models:
+      - bytedance-seed/seedream-5-0-pro
+
+  # Scene video: OpenRouter's video endpoint.
+  videos:
+    preset: openrouter-video
+    apiKey: ${OPENROUTER_API_KEY}
+    models:
+      - bytedance/seedance-2.5
+
+  # Web search: Tavily.
+  search:
+    preset: tavily
+    apiKey: ${TAVILY_API_KEY}
+
+  # Document parsing: the built-in unpdf extractor (no key needed).
+  sources:
+    preset: unpdf
+
+slots:
+  # The default chat model: every chat slot without its own assignment below
+  # follows it (classroom chat, scene actions). Deepseek handles the short
+  # calls well and answers in seconds; the GLM catches an empty/dead reply.
+  llm:
+    model: router:deepseek/deepseek-v4.1-flash
+    fallback: router:openrouter/free
+
+  # The Pro workbench agent needs dependable tool calling.
+  agent:
+    model: router:deepseek/deepseek-v4.1-flash
+    api: openai-completions
+
+  # Web-search query rewriting and the agent roster: tiny calls the free GLM
+  # flash answers in seconds.
+  course.research: router:z-ai/glm-5.3-flash
+  course.agents: router:z-ai/glm-5.3-flash
+
+  # Course outlines and scene titles: structured JSON the deepseek flash route
+  # kept truncating into fragments. Haiku follows the outline contract and
+  # answers fast; the free GLM catches a failure.
+  course.outline:
+    model: router:anthropic/claude-haiku-5.5
+    fallback: router:openrouter/free
+
+  # Scene content — the bottleneck (widget HTML is the longest generation of
+  # the run): Haiku writes the GSAP/canvas pages fast and clean, at a fifth of
+  # the Gemini flash price; the free GLM catches a failure.
+  course.content:
+    model: router:anthropic/claude-haiku-5.5
+    fallback: router:openrouter/free
+
+  # Voice: HeyGen Voice Turbo free on the sandbox (zero-cost testing);
+  # production narrates through Fish Audio (openmaic.yml).
+  tts: speech-heygen:heygen/heygen-voice-1-turbo:free
+  asr: transcription:gpt-4o-mini-transcribe
+
+  # Media: OpenRouter.
+  image: images:bytedance-seed/seedream-5-0-pro
+  video: videos:bytedance/seedance-2.5
+
+  # Research and document extraction.
+  webSearch: search
+  document: sources
+
+lock: all
+allowUserKeys: false

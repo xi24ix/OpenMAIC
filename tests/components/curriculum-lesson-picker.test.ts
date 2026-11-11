@@ -52,6 +52,11 @@ const translations: Record<string, string> = {
   'curriculum.supportDescriptions.adhd': 'Short cycles',
   'curriculum.supportDescriptions.learning-difficulties': 'Guided practice',
   'curriculum.optional': 'Optional',
+  'curriculum.testRunLabel': 'Quick test run',
+  'curriculum.testRunBadge': 'Saves credits',
+  'curriculum.testRunTitle': 'Test run (3 scenes)',
+  'curriculum.testRunHint': 'A short 3-scene lesson at a fraction of the cost.',
+  'curriculum.sceneLimitTest': 'Quick test: up to 3 scenes',
   'curriculum.motionLabel': 'Animated lesson',
   'curriculum.motionHint': 'Keep the animated classroom pipeline',
   'curriculum.qualityHint': 'Use source evidence',
@@ -272,6 +277,20 @@ describe('CurriculumLessonPicker', () => {
     await settle();
 
     expect(fetchMock).toHaveBeenCalledTimes(3);
+
+    // The quick-test toggle flips to the cheap 3-scene run and is remembered.
+    const toggle = document.body.querySelector<HTMLButtonElement>(
+      '[data-testid="curriculum-test-run-toggle"]',
+    );
+    if (!(toggle instanceof HTMLButtonElement)) throw new Error('Missing test-run toggle');
+    expect(toggle.getAttribute('aria-checked')).toBe('false');
+    await click('[data-testid="curriculum-test-run-toggle"]');
+    expect(
+      document.body.querySelector<HTMLButtonElement>('[data-testid="curriculum-test-run-toggle"]')
+        ?.getAttribute('aria-checked'),
+    ).toBe('true');
+    expect(localStorage.getItem('curriculum-test-run')).toBe('true');
+
     await click('[data-testid="curriculum-generate-button"]');
     await settle();
 
@@ -281,6 +300,7 @@ describe('CurriculumLessonPicker', () => {
       expect.objectContaining({
         request: expect.objectContaining({ supportProfile: 'autism', lessonId: 'lesson-3-1' }),
         prepared,
+        testRun: true,
       }),
     );
   });

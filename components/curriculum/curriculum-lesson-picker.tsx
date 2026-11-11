@@ -145,6 +145,9 @@ const STEP_ORDER: PickerStep[] = [
   'support',
 ];
 
+/** The remembered quick-test choice: a cheap 3-scene run while iterating. */
+const TEST_RUN_STORAGE_KEY = 'curriculum-test-run';
+
 function canonicalSubject(subject: string): string {
   return SUBJECT_ID_META[subject] ?? subject;
 }
@@ -200,6 +203,8 @@ export function CurriculumLessonPicker({
   onGenerate: (input: {
     request: CurriculumGenerationRequest;
     prepared: CurriculumGenerationPreparation;
+    /** A cheap quick-test run: the lesson is capped to 3 scenes. */
+    testRun: boolean;
   }) => Promise<void>;
 }) {
   const { t, locale } = useI18n();
@@ -228,6 +233,26 @@ export function CurriculumLessonPicker({
   const [preparationWarnings, setPreparationWarnings] = useState<string[]>([]);
   const [preparationError, setPreparationError] = useState<string | null>(null);
   const [generationError, setGenerationError] = useState<string | null>(null);
+  // The quick-test choice survives reloads (localStorage, like interactiveMode):
+  // while iterating on the platform the cheap run is the default shape of a test.
+  const [testRun, setTestRun] = useState(false);
+
+  useEffect(() => {
+    try {
+      setTestRun(localStorage.getItem(TEST_RUN_STORAGE_KEY) === 'true');
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const toggleTestRun = (value: boolean) => {
+    setTestRun(value);
+    try {
+      localStorage.setItem(TEST_RUN_STORAGE_KEY, String(value));
+    } catch {
+      /* ignore */
+    }
+  };
 
   const loadCatalog = useCallback(async () => {
     if (catalog || loadingCatalog) return;
@@ -437,7 +462,7 @@ export function CurriculumLessonPicker({
         preparedPreview && preparedPreviewKey === preparationKey
           ? preparedPreview
           : await loadPreparation(request);
-      await onGenerate({ request, prepared });
+      await onGenerate({ request, prepared, testRun });
       setOpen(false);
     } catch (error) {
       const preparationFailure = error as PreparationError;
@@ -886,6 +911,52 @@ export function CurriculumLessonPicker({
                         ))}
                       </div>
                     </section>
+                    <section aria-labelledby="curriculum-test-run-heading">
+                      <div className="flex items-center justify-between gap-3">
+                        <SectionHeading
+                          id="curriculum-test-run-heading"
+                          label={t('curriculum.testRunLabel')}
+                        />
+                        <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+                          {t('curriculum.testRunBadge')}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={testRun}
+                        data-testid="curriculum-test-run-toggle"
+                        onClick={() => toggleTestRun(!testRun)}
+                        className={cn(
+                          'mt-3 flex w-full items-start gap-3 rounded-2xl border p-3.5 text-start transition-all active:scale-[0.99]',
+                          testRun
+                            ? 'border-emerald-500/40 bg-emerald-500/8'
+                            : 'border-border/60 bg-background hover:border-primary/30',
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            'mt-0.5 flex h-6 w-10 shrink-0 items-center rounded-full p-0.5 transition-colors',
+                            testRun ? 'bg-emerald-500' : 'bg-muted-foreground/30',
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              'size-5 rounded-full bg-background shadow transition-transform',
+                              testRun && 'translate-x-4 rtl:-translate-x-4',
+                            )}
+                          />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block text-sm font-bold">
+                            {t('curriculum.testRunTitle')}
+                          </span>
+                          <span className="mt-0.5 block text-[11px] leading-relaxed text-muted-foreground">
+                            {t('curriculum.testRunHint')}
+                          </span>
+                        </span>
+                      </button>
+                    </section>
                     {generationError ? (
                       <p
                         className="rounded-2xl border border-destructive/20 bg-destructive/6 p-3 text-xs break-words text-destructive"
@@ -918,7 +989,9 @@ export function CurriculumLessonPicker({
                       {preparing ? t('curriculum.preparing') : t('curriculum.generate')}
                     </button>
                     <p className="text-center text-[11px] text-muted-foreground">
-                      {t('curriculum.sceneLimitHint')}
+                      {t(
+                        testRun ? 'curriculum.sceneLimitTest' : 'curriculum.sceneLimitHint',
+                      )}
                     </p>
                   </div>
                 ) : null}

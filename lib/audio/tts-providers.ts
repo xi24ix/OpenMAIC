@@ -309,6 +309,11 @@ export async function generateTTS(
       case 'openai-tts':
         return await generateOpenAITTS(config, text, signal);
 
+      // HeyGen Voice (OpenRouter) speaks the OpenAI-compatible /audio/speech
+      // contract; its pcm-only responses are wrapped into WAV by that path.
+      case 'heygen-tts':
+        return await generateOpenAITTS(config, text, signal);
+
       case 'logfare-tts':
         return await generateLogfareTTS(config, text, signal);
 
@@ -373,7 +378,17 @@ async function generateOpenAITTS(
   text: string,
   signal: AbortSignal,
 ): Promise<TTSGenerationResult> {
-  const baseUrl = config.baseUrl || TTS_PROVIDERS['openai-tts'].defaultBaseUrl;
+  // The provider's own registry default (the heygen-tts entry points at
+  // OpenRouter), falling back to OpenAI's endpoint for the bare openai-tts id.
+  const baseUrl =
+    config.baseUrl || TTS_PROVIDERS[config.providerId as 'openai-tts']?.defaultBaseUrl ||
+    TTS_PROVIDERS['openai-tts'].defaultBaseUrl;
+
+  // PCM-only routes (HeyGen Voice on OpenRouter rejects `mp3` with a 400)
+  // are asked for raw samples, which are wrapped into a WAV container below —
+  // headerless PCM arrives mislabelled and fails in the browser's decoder.
+  const pcmOnly = /^heygen\//.test(config.modelId ?? '');
+  const responseFormat = pcmOnly ? 'pcm' : 'mp3';
 
   // Use gpt-4o-mini-tts for best quality and intelligent realtime applications
   const response = await ttsFetch(config, `${baseUrl}/audio/speech`, {
@@ -393,7 +408,7 @@ async function generateOpenAITTS(
       // `pcm`, which arrives headerless, gets labelled mp3 below, and fails in
       // the client with "no supported source was found". Naming the format
       // removes the guess. Providers that ignore the field are unaffected.
-      response_format: 'mp3',
+      response_format: responseFormat,
     }),
     signal,
   });
@@ -409,7 +424,68 @@ async function generateOpenAITTS(
     );
   }
 
+  if (pcmOnly) return await wrapPcmAudioResponse(response, 'OpenAI');
   return await validateTTSAudioResponse(response, 'OpenAI');
+}
+
+/**
+ * Wrap a PCM-only TTS response into a WAV container.
+ *
+ * The route reports the sample layout in its content type
+ * (`audio/pcm;rate=44100;channels=1`); the rate is honoured so the speech
+ * keeps its natural pitch and pacing, defaulting to 44.1 kHz mono when the
+ * header omits it. Samples are assumed 16-bit little-endian, the rate these
+ * routes ship.
+ */
+async function wrapPcmAudioResponse(
+  response: Response,
+  provider: string,
+): Promise<TTSGenerationResult> {
+  const contentType = (response.headers.get('content-type') || '').toLowerCase();
+  const rateMatch = /rate=(\d+)/.exec(contentType);
+  const channelsMatch = /channels=(\d+)/.exec(contentType);
+  const sampleRate = rateMatch ? Number.parseInt(rateMatch[1]!, 10) : 44100;
+  const channels = channelsMatch ? Number.parseInt(channelsMatch[1]!, 10) : 1;
+
+  const arrayBuffer = await response.arrayBuffer();
+  const pcm = new Uint8Array(arrayBuffer);
+  if (pcm.byteLength === 0) {
+    throw new TTSInvalidResponseError(
+      provider,
+      `${provider} TTS returned an empty audio response (0 bytes)`,
+    );
+  }
+
+  return { audio: pcmToWav(pcm, sampleRate, channels), format: 'wav' };
+}
+
+/** Wrap 16-bit little-endian PCM samples in a minimal RIFF/WAVE container. */
+function pcmToWav(pcm: Uint8Array, sampleRate: number, channels: number): Uint8Array {
+  const bytesPerSample = 2;
+  const blockAlign = channels * bytesPerSample;
+  const byteRate = sampleRate * blockAlign;
+  const header = new ArrayBuffer(44);
+  const view = new DataView(header);
+  const writeAscii = (offset: number, text: string) => {
+    for (let i = 0; i < text.length; i += 1) view.setUint8(offset + i, text.charCodeAt(i));
+  };
+  writeAscii(0, 'RIFF');
+  view.setUint32(4, 36 + pcm.byteLength, true);
+  writeAscii(8, 'WAVE');
+  writeAscii(12, 'fmt ');
+  view.setUint32(16, 16, true); // PCM format chunk size
+  view.setUint16(20, 1, true); // format tag: PCM
+  view.setUint16(22, channels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, 16, true); // bits per sample
+  writeAscii(36, 'data');
+  view.setUint32(40, pcm.byteLength, true);
+  const wav = new Uint8Array(44 + pcm.byteLength);
+  wav.set(new Uint8Array(header), 0);
+  wav.set(pcm, 44);
+  return wav;
 }
 
 async function generateLogfareTTS(

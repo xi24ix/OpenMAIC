@@ -92,6 +92,7 @@ export type BuiltInTTSProviderId =
   | 'google-tts'
   | 'lemonade-tts'
   | 'fish-tts'
+  | 'heygen-tts'
   | 'browser-native-tts'
   | 'logfare-tts';
 

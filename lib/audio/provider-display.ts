@@ -34,6 +34,7 @@ const TTS_PROVIDER_NAME_KEYS: Record<string, string> = {
   'google-tts': 'settings.providerGoogleTTS',
   'lemonade-tts': 'settings.providerLemonadeTTS',
   'fish-tts': 'settings.providerFishAudioTTS',
+  'heygen-tts': 'settings.providerHeygenVoiceTTS',
   'browser-native-tts': 'settings.providerBrowserNativeTTS',
 };
 

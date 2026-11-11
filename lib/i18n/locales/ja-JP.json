@@ -23,7 +23,11 @@
     "prepareFailed": "Couldn't prepare this curriculum lesson.",
     "generationFailed": "The lesson could not be started. Check the model setup and try again.",
     "audienceLabel": "Who is this lesson for?",
-    "audiences": { "student": "Student", "parent": "Parent", "teacher": "Teacher" },
+    "audiences": {
+      "student": "Student",
+      "parent": "Parent",
+      "teacher": "Teacher"
+    },
     "audienceDescriptions": {
       "student": "A direct, learner-facing lesson",
       "parent": "A lesson with a short support note",
@@ -48,7 +52,11 @@
     "gradeShort": "High school",
     "trackLabel": "Choose a track",
     "trackHint": "Choose the track that matches your book.",
-    "tracks": { "general": "General", "scientific": "Scientific", "literary": "Literary" },
+    "tracks": {
+      "general": "General",
+      "scientific": "Scientific",
+      "literary": "Literary"
+    },
     "subjectLabel": "Choose a subject",
     "chooseSubjectHint": "Pick a subject to see its available terms and books.",
     "chooseTrack": "Show subjects available in this track",
@@ -76,7 +84,7 @@
     "selectedLessonReady": "This lesson will be retrieved from the selected unit.",
     "preparing": "Preparing lesson...",
     "generate": "Generate lesson",
-    "sceneLimitHint": "Focused generation: up to 3 scenes",
+    "sceneLimitHint": "フルレッスン：最大8シーン",
     "progressLabel": "Lesson selection progress",
     "steps": {
       "grade": "Grade",
@@ -94,7 +102,12 @@
     "qualityHint": "Primary textbook content is used, with a clear error when a unit is incomplete or still unavailable for review.",
     "readyStep": "Unit selected",
     "stepHint": "Choose the path that matches your course",
-    "back": "Back"
+    "back": "Back",
+    "sceneLimitTest": "クイックテスト：最大3シーン",
+    "testRunLabel": "クイックテスト実行",
+    "testRunBadge": "クレジット節約",
+    "testRunTitle": "テスト実行（3シーン）",
+    "testRunHint": "少ないコストで動作を確認できるよう、3シーンの短いレッスンを生成します。フルレッスンにはオフにしてください。"
   },
   "toolbar": {
     "pdfParser": "パーサー",
@@ -2299,7 +2312,8 @@
         "unconfirmed": "サーバーがインポートを確認しませんでした。"
       }
     },
-    "serverConfiguredAddOwn": "独自の認証情報を使うには、別のプロバイダーを追加してください。"
+    "serverConfiguredAddOwn": "独自の認証情報を使うには、別のプロバイダーを追加してください。",
+    "providerHeygenVoiceTTS": "HeyGen Voice (OpenRouter)"
   },
   "workspace": {
     "untitledCourse": "未命名课堂",

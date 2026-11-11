@@ -23,7 +23,11 @@
     "prepareFailed": "Couldn't prepare this curriculum lesson.",
     "generationFailed": "The lesson could not be started. Check the model setup and try again.",
     "audienceLabel": "Who is this lesson for?",
-    "audiences": { "student": "Student", "parent": "Parent", "teacher": "Teacher" },
+    "audiences": {
+      "student": "Student",
+      "parent": "Parent",
+      "teacher": "Teacher"
+    },
     "audienceDescriptions": {
       "student": "A direct, learner-facing lesson",
       "parent": "A lesson with a short support note",
@@ -48,7 +52,11 @@
     "gradeShort": "High school",
     "trackLabel": "Choose a track",
     "trackHint": "Choose the track that matches your book.",
-    "tracks": { "general": "General", "scientific": "Scientific", "literary": "Literary" },
+    "tracks": {
+      "general": "General",
+      "scientific": "Scientific",
+      "literary": "Literary"
+    },
     "subjectLabel": "Choose a subject",
     "chooseSubjectHint": "Pick a subject to see its available terms and books.",
     "chooseTrack": "Show subjects available in this track",
@@ -76,7 +84,7 @@
     "selectedLessonReady": "This lesson will be retrieved from the selected unit.",
     "preparing": "Preparing lesson...",
     "generate": "Generate lesson",
-    "sceneLimitHint": "Focused generation: up to 3 scenes",
+    "sceneLimitHint": "完整課程：最多 8 個場景",
     "progressLabel": "Lesson selection progress",
     "steps": {
       "grade": "Grade",
@@ -94,7 +102,12 @@
     "qualityHint": "Primary textbook content is used, with a clear error when a unit is incomplete or still unavailable for review.",
     "readyStep": "Unit selected",
     "stepHint": "Choose the path that matches your course",
-    "back": "Back"
+    "back": "Back",
+    "sceneLimitTest": "快速測試：最多 3 個場景",
+    "testRunLabel": "快速測試執行",
+    "testRunBadge": "節省額度",
+    "testRunTitle": "測試執行（3 個場景）",
+    "testRunHint": "產生一個 3 場景的短課程，以極低成本驗證流程。要產生完整課程請關閉此選項。"
   },
   "toolbar": {
     "pdfParser": "解析器",
@@ -2284,7 +2297,8 @@
         "unconfirmed": "伺服器未確認已匯入。"
       }
     },
-    "serverConfiguredAddOwn": "如需使用自己的憑證，請新增一個供應商。"
+    "serverConfiguredAddOwn": "如需使用自己的憑證，請新增一個供應商。",
+    "providerHeygenVoiceTTS": "HeyGen Voice (OpenRouter)"
   },
   "workspace": {
     "untitledCourse": "未命名课堂",

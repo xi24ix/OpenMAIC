@@ -23,7 +23,11 @@
     "prepareFailed": "Couldn't prepare this curriculum lesson.",
     "generationFailed": "The lesson could not be started. Check the model setup and try again.",
     "audienceLabel": "Who is this lesson for?",
-    "audiences": { "student": "Student", "parent": "Parent", "teacher": "Teacher" },
+    "audiences": {
+      "student": "Student",
+      "parent": "Parent",
+      "teacher": "Teacher"
+    },
     "audienceDescriptions": {
       "student": "A direct, learner-facing lesson",
       "parent": "A lesson with a short support note",
@@ -48,7 +52,11 @@
     "gradeShort": "High school",
     "trackLabel": "Choose a track",
     "trackHint": "Choose the track that matches your book.",
-    "tracks": { "general": "General", "scientific": "Scientific", "literary": "Literary" },
+    "tracks": {
+      "general": "General",
+      "scientific": "Scientific",
+      "literary": "Literary"
+    },
     "subjectLabel": "Choose a subject",
     "chooseSubjectHint": "Pick a subject to see its available terms and books.",
     "chooseTrack": "Show subjects available in this track",
@@ -76,7 +84,7 @@
     "selectedLessonReady": "This lesson will be retrieved from the selected unit.",
     "preparing": "Preparing lesson...",
     "generate": "Generate lesson",
-    "sceneLimitHint": "Focused generation: up to 3 scenes",
+    "sceneLimitHint": "Lección completa: hasta 8 escenas",
     "progressLabel": "Lesson selection progress",
     "steps": {
       "grade": "Grade",
@@ -94,7 +102,12 @@
     "qualityHint": "Primary textbook content is used, with a clear error when a unit is incomplete or still unavailable for review.",
     "readyStep": "Unit selected",
     "stepHint": "Choose the path that matches your course",
-    "back": "Back"
+    "back": "Back",
+    "sceneLimitTest": "Prueba rápida: hasta 3 escenas",
+    "testRunLabel": "Ejecución de prueba rápida",
+    "testRunBadge": "Ahorra créditos",
+    "testRunTitle": "Ejecución de prueba (3 escenas)",
+    "testRunHint": "Genera una lección corta de 3 escenas para verificar el flujo por una fracción del costo. Desactívalo para la lección completa."
   },
   "toolbar": {
     "pdfParser": "Analizador",
@@ -2299,7 +2312,8 @@
         "unconfirmed": "El servidor no confirmó que se importara."
       }
     },
-    "serverConfiguredAddOwn": "Para usar tus propias credenciales, agrega un proveedor aparte."
+    "serverConfiguredAddOwn": "Para usar tus propias credenciales, agrega un proveedor aparte.",
+    "providerHeygenVoiceTTS": "HeyGen Voice (OpenRouter)"
   },
   "workspace": {
     "untitledCourse": "未命名课堂",

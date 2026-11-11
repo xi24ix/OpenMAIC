@@ -947,11 +947,14 @@ function HomePage() {
 
         <CurriculumLessonPicker
           disabled={preparingGenerate}
-          onGenerate={async ({ prepared }) => {
+          onGenerate={async ({ prepared, testRun }) => {
+            // A quick test run is capped to 3 scenes (teaching + interactive +
+            // quiz — the smallest shape the lesson mix still guarantees), so
+            // repeated platform tests cost a fraction of a full 8-scene lesson.
             const started = await handleGenerate({
               requirement: prepared.requirement,
               skillIds: prepared.skillIds,
-              maxScenes: 8,
+              maxScenes: testRun ? 3 : 8,
               sourceVisuals: prepared.visuals,
               interactive: true,
             });

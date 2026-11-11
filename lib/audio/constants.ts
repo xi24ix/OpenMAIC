@@ -1226,6 +1226,39 @@ export const TTS_PROVIDERS: Record<BuiltInTTSProviderId, TTSProviderConfig> = {
     speedRange: { min: 0.5, max: 2.0, default: 1.0 },
   },
 
+  /**
+   * HeyGen Voice through OpenRouter's OpenAI-compatible /audio/speech
+   * endpoint. The `heygen/heygen-voice-1-turbo:free` route is $0 until
+   * 2026-11-30 (OpenRouter promotion): 10 default voices, 39 languages,
+   * 5000 characters per request. PCM-only — `generateOpenAITTS` requests
+   * `pcm` for it and wraps the samples in a WAV container for the browser.
+   */
+  'heygen-tts': {
+    id: 'heygen-tts',
+    name: 'HeyGen Voice (OpenRouter)',
+    requiresApiKey: true,
+    defaultBaseUrl: 'https://openrouter.ai/api/v1',
+    models: [{ id: 'heygen/heygen-voice-1-turbo:free', name: 'HeyGen Voice Turbo (free)' }],
+    defaultModelId: 'heygen/heygen-voice-1-turbo:free',
+    // OpenRouter's free route exposes the ten default HeyGen voices; every
+    // voice speaks all 39 supported languages (Arabic included), so they are
+    // listed multilingual rather than per-language.
+    voices: [
+      { id: 'nadine', name: 'Nadine', language: 'multilingual', gender: 'female' },
+      { id: 'tabitha', name: 'Tabitha', language: 'multilingual', gender: 'female' },
+      { id: 'noelle', name: 'Noelle', language: 'multilingual', gender: 'female' },
+      { id: 'meredith', name: 'Meredith', language: 'multilingual', gender: 'female' },
+      { id: 'sabrina', name: 'Sabrina', language: 'multilingual', gender: 'female' },
+      { id: 'bram', name: 'Bram', language: 'multilingual', gender: 'male' },
+      { id: 'gareth', name: 'Gareth', language: 'multilingual', gender: 'male' },
+      { id: 'lucian', name: 'Lucian', language: 'multilingual', gender: 'male' },
+      { id: 'weston', name: 'Weston', language: 'multilingual', gender: 'male' },
+      { id: 'vincent', name: 'Vincent', language: 'multilingual', gender: 'male' },
+    ],
+    supportedFormats: ['wav'],
+    speedRange: { min: 0.5, max: 2.0, default: 1.0 },
+  },
+
   'browser-native-tts': {
     id: 'browser-native-tts',
     name: '浏览器原生 (Web Speech API)',
@@ -1623,6 +1656,7 @@ export const DEFAULT_TTS_VOICES: Record<BuiltInTTSProviderId, string> = {
   'google-tts': 'Kore',
   'lemonade-tts': 'af_heart',
   'fish-tts': 'default',
+  'heygen-tts': 'nadine',
   'browser-native-tts': 'default',
   'logfare-tts': 'default',
 };
@@ -1639,6 +1673,7 @@ export const DEFAULT_TTS_MODELS: Record<BuiltInTTSProviderId, string> = {
   'google-tts': 'gemini-3.1-flash-tts-preview',
   'lemonade-tts': 'kokoro-v1',
   'fish-tts': 's2.1-pro',
+  'heygen-tts': 'heygen/heygen-voice-1-turbo:free',
   'browser-native-tts': '',
   'logfare-tts': 'aura-2-en',
 };

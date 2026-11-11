@@ -23,7 +23,11 @@
     "prepareFailed": "Couldn't prepare this curriculum lesson.",
     "generationFailed": "The lesson could not be started. Check the model setup and try again.",
     "audienceLabel": "Who is this lesson for?",
-    "audiences": { "student": "Student", "parent": "Parent", "teacher": "Teacher" },
+    "audiences": {
+      "student": "Student",
+      "parent": "Parent",
+      "teacher": "Teacher"
+    },
     "audienceDescriptions": {
       "student": "A direct, learner-facing lesson",
       "parent": "A lesson with a short support note",
@@ -48,7 +52,11 @@
     "gradeShort": "High school",
     "trackLabel": "Choose a track",
     "trackHint": "Choose the track that matches your book.",
-    "tracks": { "general": "General", "scientific": "Scientific", "literary": "Literary" },
+    "tracks": {
+      "general": "General",
+      "scientific": "Scientific",
+      "literary": "Literary"
+    },
     "subjectLabel": "Choose a subject",
     "chooseSubjectHint": "Pick a subject to see its available terms and books.",
     "chooseTrack": "Show subjects available in this track",
@@ -76,7 +84,7 @@
     "selectedLessonReady": "This lesson will be retrieved from the selected unit.",
     "preparing": "Preparing lesson...",
     "generate": "Generate lesson",
-    "sceneLimitHint": "Focused generation: up to 3 scenes",
+    "sceneLimitHint": "전체 레슨: 최대 8개 장면",
     "progressLabel": "Lesson selection progress",
     "steps": {
       "grade": "Grade",
@@ -94,7 +102,12 @@
     "qualityHint": "Primary textbook content is used, with a clear error when a unit is incomplete or still unavailable for review.",
     "readyStep": "Unit selected",
     "stepHint": "Choose the path that matches your course",
-    "back": "Back"
+    "back": "Back",
+    "sceneLimitTest": "빠른 테스트: 최대 3개 장면",
+    "testRunLabel": "빠른 테스트 실행",
+    "testRunBadge": "크레딧 절약",
+    "testRunTitle": "테스트 실행 (3개 장면)",
+    "testRunHint": "적은 비용으로 흐름을 확인할 수 있도록 3개 장면의 짧은 레슨을 생성합니다. 전체 레슨에는 끄세요."
   },
   "toolbar": {
     "pdfParser": "파서",
@@ -2299,7 +2312,8 @@
         "unconfirmed": "서버가 가져오기를 확인하지 않았습니다."
       }
     },
-    "serverConfiguredAddOwn": "본인 자격 증명을 사용하려면 별도의 제공업체를 추가하세요."
+    "serverConfiguredAddOwn": "본인 자격 증명을 사용하려면 별도의 제공업체를 추가하세요.",
+    "providerHeygenVoiceTTS": "HeyGen Voice (OpenRouter)"
   },
   "workspace": {
     "untitledCourse": "未命名课堂",
