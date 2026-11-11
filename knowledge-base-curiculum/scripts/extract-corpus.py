@@ -61,7 +61,7 @@ def infer_track(record: dict) -> str:
     # The MOE inventory omits the track from some records. The verified Grade
     # 11 mathematics pilot is identified as scientific on the book cover even
     # though its inventory scope only says grade-11.
-    if int(record.get("id", 0)) == 3627:
+    if str(record.get("id", "")) == "3627":
         return "scientific"
     if record.get("_track"):
         return str(record["_track"])
@@ -139,7 +139,7 @@ def main() -> None:
     records = [record for record in load_records(args.inventory) if not is_index_only(record)]
     if args.book_id:
         wanted = set(args.book_id)
-        records = [record for record in records if int(record["id"]) in wanted]
+        records = [record for record in records if str(record["id"]) in wanted]
     if args.limit:
         records = records[: args.limit]
     records.sort(key=lambda record: (record["scope"]["gradeLabel"], record["scope"]["term"], record["scope"]["subjectLabel"], str(record["id"])))

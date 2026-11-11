@@ -68,7 +68,7 @@ describe('scene content step', () => {
     );
   });
 
-  function input(): SceneContentInput {
+  function input(overrides: Partial<SceneContentInput> = {}): SceneContentInput {
     return {
       outline: body.outline,
       pdfImages: body.pdfImages,
@@ -76,6 +76,7 @@ describe('scene content step', () => {
       languageDirective: body.languageDirective,
       targetLanguage: '',
       model: visionModel,
+      ...overrides,
     };
   }
 
@@ -107,5 +108,21 @@ describe('scene content step', () => {
       reason: 'generation-failed',
       message: 'Failed to generate content: Leaves',
     });
+  });
+
+  it('assigns an authenticated curriculum visual when the outline omitted an image id', async () => {
+    const resolveVisionImages = vi.fn(mocks.resolveVisionImagesStub);
+    const result = await generateSceneContent(
+      input({
+        outline: { ...outline, suggestedImageIds: undefined },
+        preferredImageIds: ['img_1'],
+      }),
+      { log: testLogger(), resolveVisionImages },
+    );
+
+    expect(result.effectiveOutline.suggestedImageIds).toEqual(['img_1']);
+    const [effectiveOutline, , options] = mocks.generateSceneContent.mock.calls[0]!;
+    expect(effectiveOutline.suggestedImageIds).toEqual(['img_1']);
+    expect(options.assignedImages.map((img: PdfImage) => img.id)).toEqual(['img_1']);
   });
 });

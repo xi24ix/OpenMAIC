@@ -60,6 +60,8 @@ export interface SceneContentInput {
   requirements?: UserRequirements;
   /** The learner's locale, when known. */
   targetLanguage?: string;
+  /** Prefer authenticated curriculum visual ids when the outline omitted an assignment. */
+  preferredImageIds?: readonly string[];
   /** The model of the outline type's scene-content stage. */
   model: StepLanguageModel;
 }
@@ -154,9 +156,26 @@ export async function generateSceneContent(
 
   // ── Apply fallbacks ──
   const vocationalActive = resolveVocationalActive(requirements);
-  const effectiveOutline = applyOutlineFallbacks(outline, !!languageModel, {
+  let effectiveOutline = applyOutlineFallbacks(outline, !!languageModel, {
     allowProceduralSkill: vocationalActive,
   });
+
+  // A curriculum run may carry authenticated textbook visuals even when the
+  // outline model describes a visual lesson without returning suggested ids.
+  // Keep the source asset in the generated lesson rather than silently
+  // downloading it and then dropping it before scene generation.
+  const preferredImageId = input.preferredImageIds?.find((id) =>
+    pdfImages?.some((image) => image.id === id),
+  );
+  if (
+    preferredImageId &&
+    (!effectiveOutline.suggestedImageIds || effectiveOutline.suggestedImageIds.length === 0)
+  ) {
+    effectiveOutline = {
+      ...effectiveOutline,
+      suggestedImageIds: [preferredImageId],
+    };
+  }
 
   // ── Filter images assigned to this outline ──
   let assignedImages: PdfImage[] | undefined;

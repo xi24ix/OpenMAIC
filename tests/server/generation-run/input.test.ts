@@ -106,6 +106,24 @@ describe('run input', () => {
     ).toMatchObject({ ok: false, message: /sourceVisuals/ });
   });
 
+  it('accepts the scoped ids emitted by the curriculum knowledge base', () => {
+    const id = 'course-6a26a4effb5ab28c750fe7ff1b2e292d8529db46:resource:book-3627:version:c1a5510af5e629707d73acded29aace23e8ac265c61b3007:asset:p94-fig1';
+    expect(
+      parseRunInput({
+        requirement: 'Teach the selected textbook lesson',
+        sourceVisuals: [
+          {
+            id,
+            assetPath: '/v1/assets/course-6a26a4effb5ab28c750fe7ff1b2e292d8529db46%3Aresource%3Abook-3627%3Aversion%3Ac1a5510af5e629707d73acded29aace23e8ac265c61b3007%3Aasset%3Ap94-fig1',
+            page: 94,
+            kind: 'illustration',
+            caption: 'صورة من صفحة 94',
+          },
+        ],
+      }),
+    ).toMatchObject({ ok: true, value: { sourceVisuals: [expect.objectContaining({ id })] } });
+  });
+
   it('keeps releaseMaterials only for a run with materials', () => {
     expect(
       parseRunInput({

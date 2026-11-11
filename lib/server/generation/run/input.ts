@@ -24,7 +24,10 @@ const MAX_PRESET_AGENTS = 20;
 const MAX_SKILLS = 5;
 const MAX_REQUESTED_SCENES = 100;
 const MAX_SOURCE_VISUALS = 8;
-const MAX_SOURCE_VISUAL_ID_CHARS = 128;
+// Scoped curriculum asset ids include the course, resource, version, and raw
+// asset id. Those authenticated identifiers are intentionally longer than a
+// normal generated-agent id, but remain bounded by the request body cap.
+const MAX_SOURCE_VISUAL_ID_CHARS = 512;
 const MAX_SOURCE_VISUAL_PATH_CHARS = 512;
 const MAX_SOURCE_VISUAL_TEXT_CHARS = 500;
 const AGENT_ID_PATTERN = /^[A-Za-z0-9_.:-]{1,128}$/;

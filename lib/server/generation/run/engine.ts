@@ -568,6 +568,7 @@ async function executeClaimedRun(
               agents: agents().agents.agents,
               languageDirective,
               designDirective,
+              preferredImageIds: input.sourceVisuals?.map((visual) => visual.id),
               // The first scene is generated with the session's requirements;
               // the classroom generates the rest with the task-engine flag only.
               requirements:
@@ -896,9 +897,7 @@ async function executeClaimedRun(
       await Promise.all((input.skillIds ?? []).map((ref) => findSkill(ref, owner)))
     ).flatMap((skill) => (skill && isOutlineSkill(skill) ? [skill] : []));
     const skillContext = skills.length
-      ? skills
-          .map((skill) => skillOutlineContext(skill, { includeConstraints: true }))
-          .join('\n\n')
+      ? skills.map((skill) => skillOutlineContext(skill, { includeConstraints: true })).join('\n\n')
       : undefined;
     let result: OutlineResult;
     const callOutline = () =>
@@ -944,6 +943,9 @@ async function executeClaimedRun(
       normalized = normalizeSceneOutlines(result.outlines);
     }
     if (!normalized.ok) throw new Error(`The generated outline is unusable: ${normalized.message}`);
+    // The mix guarantee first (a converted scene's title rides along), then the
+    // title guarantee: an outline model that answers with the image prompt as
+    // the scene's title gets learner-facing names in the teaching language.
     // The classroom opens on the fast scenes: the heavy animation-explainer
     // (whoever wrote it first) moves to the end. Then the mix guarantee (a
     // converted scene's title rides along), then the title guarantee: an

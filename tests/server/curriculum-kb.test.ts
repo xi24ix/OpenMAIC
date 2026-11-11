@@ -119,4 +119,25 @@ describe('curriculum lesson preparation', () => {
     expect(prepared.requirement).toContain('Focus the lesson on this selected lesson');
     expect(prepared.requirement).toContain('Source-grounded mathematics content.');
   });
+
+  it('caps large curriculum evidence before it reaches the generation-run input limit', () => {
+    const prepared = formatCurriculumGenerationPreparation(
+      {
+        ...context,
+        primaryContent: Array.from({ length: 100 }, (_, index) => ({
+          id: `block-${index}`,
+          text: `Long source-grounded block ${index} `.repeat(30),
+          textStatus: 'native',
+          citation: { title: 'Mathematics student book', kind: 'student_book', page: index + 1 },
+        })),
+      },
+      request('none'),
+    );
+
+    expect(prepared.requirement.length).toBeLessThanOrEqual(20_000);
+    expect(prepared.warnings).toContain(
+      'The retrieved curriculum evidence was shortened to fit the generation request limit.',
+    );
+    expect(prepared.requirement).toContain('[evidence shortened]');
+  });
 });
