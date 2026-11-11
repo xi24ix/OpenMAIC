@@ -264,3 +264,7 @@ HeyGen narration (deployment queued).
 - `/api/health` → 200, tts capability on, PARALLEL_SCENE_CONCURRENCY=3.
 - Production was NOT redeployed with the sandbox config (openmaic.yml is
   untouched); prod keeps Fish Audio with the operator's pinned voice.
+- Production (app.zobeidi.com) was then redeployed on the same code
+  (`163a239c`) and verified: `/api/health` → 200, all capabilities on,
+  prewarm concurrency 3 — unchanged narration config, plus the new
+  quick-test toggle and heygen provider available there.
