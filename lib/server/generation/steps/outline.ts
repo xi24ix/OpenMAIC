@@ -61,7 +61,7 @@ import {
   type WorkspaceStepContext,
 } from './context';
 
-const MAX_STREAM_RETRIES = 2;
+const MAX_STREAM_RETRIES = 1;
 // Hard ceiling on the accumulated stream buffer. Legitimate outline JSON is
 // small (tens of KB); anything past this is a runaway/degenerate generation
 // and must not be allowed to grow the heap unbounded.
@@ -627,6 +627,9 @@ async function streamOutlines(
         // Tear down the upstream LLM request when the caller goes away,
         // instead of letting it run to completion for nobody.
         abortSignal: signal,
+        // The outline step owns the retry budget below; disable the SDK's
+        // per-stream retries so one retry cannot multiply into three requests.
+        maxRetries: 0,
       }
     : {
         model: languageModel,
@@ -634,6 +637,8 @@ async function streamOutlines(
         prompt: prompts.user,
         maxOutputTokens: modelInfo?.outputWindow,
         abortSignal: signal,
+        // Keep network retries inside the explicit, bounded outline policy.
+        maxRetries: 0,
       };
   let fellBack = false;
   // Shared decision (shared retryable-error + empty-output check) and the

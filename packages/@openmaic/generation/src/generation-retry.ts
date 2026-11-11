@@ -18,7 +18,7 @@ export interface GenerationRetryOptions<T> {
   onRetry?: (event: GenerationRetryEvent) => Promise<void> | void;
 }
 
-const DEFAULT_MAX_RETRIES = 5;
+const DEFAULT_MAX_RETRIES = 2;
 const DEFAULT_BASE_DELAY_MS = 1000;
 const DEFAULT_MAX_DELAY_MS = 16000;
 const RETRYABLE_STATUS_CODES = new Set([408, 409, 425, 429]);

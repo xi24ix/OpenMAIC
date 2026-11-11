@@ -20,8 +20,8 @@ import { upstreamHttpStatus } from '@/lib/server/llm-error-response';
 
 /** 1.1.x's browser retries for the first scene. */
 export const FIRST_SCENE_MAX_RETRIES = 2;
-/** 1.1.x's browser retries for every later scene (the withGenerationRetry default). */
-export const SCENE_MAX_RETRIES = 5;
+/** Two retries after the first attempt for every later scene. */
+export const SCENE_MAX_RETRIES = 2;
 
 /**
  * A failure carrying the status the step's route would have answered, for
