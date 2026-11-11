@@ -251,3 +251,16 @@ same-subject curriculum test runs (a full lesson = 8 scenes × Haiku content
 
 Untested at write time: an end-to-end sandbox lesson with the toggle on and
 HeyGen narration (deployment queued).
+
+**Verified live (sandbox deployment `a50fee36`):**
+
+- Boot clean with `OPENMAIC_CONFIG=openmaic.sandbox.yml`; container check
+  confirms the env var is set, `/app/openmaic.sandbox.yml` is in the image
+  and its `tts` slot is `speech-heygen:heygen/heygen-voice-1-turbo:free`.
+- `/api/generate/tts` through the resolved heygen slot returns format `wav`,
+  a RIFF/WAVE container at 44100 Hz / mono / 16-bit (the rate the route
+  reports), ~7.25 s of Arabic narration from a one-sentence request — the
+  pcm→WAV wrap is browser-decodable and the call is $0.
+- `/api/health` → 200, tts capability on, PARALLEL_SCENE_CONCURRENCY=3.
+- Production was NOT redeployed with the sandbox config (openmaic.yml is
+  untouched); prod keeps Fish Audio with the operator's pinned voice.
