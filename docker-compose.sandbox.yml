@@ -18,6 +18,10 @@ services:
       # Headless verification identity: the anonymous single owner serves the
       # sandbox's one course library. The sandbox URL is throwaway; delete it.
       - OWNER_SINGLE_USER=true
+      # The curriculum picker calls the authenticated KB from the app server.
+      # Pass both values through from the Coolify resource environment.
+      - CURRICULUM_KB_URL=${CURRICULUM_KB_URL:-https://kwdb.zobeidi.com}
+      - CURRICULUM_KB_TOKEN=${CURRICULUM_KB_TOKEN}
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - TAVILY_API_KEY=${TAVILY_API_KEY}
