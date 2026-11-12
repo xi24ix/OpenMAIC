@@ -1,6 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'motion/react';
+import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   ArrowLeft,
@@ -144,6 +145,40 @@ const STEP_ORDER: PickerStep[] = [
   'lesson',
   'support',
 ];
+
+const SUBJECT_CARD_IMAGE: Record<string, string> = {
+  arabic: 'subject-arabic',
+  english: 'subject-english',
+  mathematics: 'subject-math',
+  statistics: 'subject-statistics',
+  physics: 'subject-physics',
+  chemistry: 'subject-chemistry',
+  biology: 'subject-biology',
+  'information-technology': 'subject-computing',
+  geography: 'subject-geography',
+  french: 'subject-french',
+  'islamic-education': 'subject-islamic-education',
+  quran: 'subject-quran',
+  'kuwait-studies': 'subject-kuwait-studies',
+  'islamic-history': 'subject-islamic-history',
+  'modern-world-history': 'subject-modern-history',
+  philosophy: 'subject-philosophy',
+  'psychology-sociology': 'subject-psychology',
+  'constitution-human-rights': 'subject-constitution',
+  geology: 'subject-geology',
+  'geography-economics': 'subject-geography-economics',
+};
+
+const GRADE_CARD_IMAGE: Record<number, string> = {
+  10: '/curriculum-cards/grade-10.png',
+  11: '/curriculum-cards/grade-11.png',
+  12: '/curriculum-cards/grade-12.png',
+};
+
+function subjectCardImage(subject: string): string | undefined {
+  const image = SUBJECT_CARD_IMAGE[canonicalSubject(subject)];
+  return image ? `/curriculum-cards/${image}.png` : undefined;
+}
 
 /** The remembered quick-test choice: a cheap 3-scene run while iterating. */
 const TEST_RUN_STORAGE_KEY = 'curriculum-test-run';
@@ -581,7 +616,7 @@ export function CurriculumLessonPicker({
                     title={t('curriculum.gradeLabel')}
                     hint={t('curriculum.gradeHint')}
                   >
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                       {grades.map((value) => (
                         <button
                           key={value}
@@ -606,25 +641,37 @@ export function CurriculumLessonPicker({
                             setStep(nextTracks.length > 1 ? 'track' : 'subject');
                           }}
                           className={cn(
-                            'group relative min-h-28 touch-manipulation select-none overflow-hidden rounded-3xl border p-4 text-start transition-all active:scale-[0.99] hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10',
+                            'group relative flex min-h-28 touch-manipulation select-none items-center gap-3 overflow-hidden rounded-3xl border p-3 text-start transition-all active:scale-[0.99] hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:p-4',
                             grade === value
                               ? 'border-primary bg-primary/8 text-primary shadow-lg shadow-primary/10'
                               : 'border-border/60 bg-background hover:border-primary/30',
                           )}
                         >
-                          <span className="absolute -right-3 -top-5 text-7xl font-black text-primary/5 transition-transform group-hover:scale-110">
-                            {value}
-                          </span>
-                          <span className="relative block text-3xl font-black tracking-tight">
-                            {value}
-                          </span>
-                          <span className="relative mt-1 block text-xs text-muted-foreground">
-                            {t('curriculum.gradeShort')}
+                          {GRADE_CARD_IMAGE[value] ? (
+                            <span className="relative h-[76px] w-[68px] shrink-0 overflow-hidden rounded-2xl bg-slate-950 shadow-sm ring-1 ring-white/10">
+                              <Image
+                                src={GRADE_CARD_IMAGE[value]!}
+                                alt=""
+                                fill
+                                sizes="68px"
+                                className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                              />
+                            </span>
+                          ) : (
+                            <span className="flex size-[68px] shrink-0 items-center justify-center rounded-2xl bg-primary/8 text-2xl font-black text-primary">
+                              {value}
+                            </span>
+                          )}
+                          <span className="relative min-w-0 flex-1">
+                            <span className="block text-2xl font-black tracking-tight">{value}</span>
+                            <span className="mt-1 block text-xs text-muted-foreground">
+                              {t('curriculum.gradeShort')}
+                            </span>
                           </span>
                           <ChevronRight
                             className={cn(
-                              'absolute bottom-4 size-4 text-primary/60 transition-transform group-hover:translate-x-1',
-                              isArabic ? 'left-4 rotate-180' : 'right-4',
+                              'size-4 shrink-0 text-primary/60 transition-transform group-hover:translate-x-1',
+                              isArabic && 'rotate-180 group-hover:-translate-x-1',
                             )}
                             aria-hidden="true"
                           />
@@ -679,7 +726,9 @@ export function CurriculumLessonPicker({
                               setStep('term');
                             }}
                             icon={<Icon className="size-5" aria-hidden="true" />}
+                            imageSrc={subjectCardImage(value)}
                             title={subjectLabel(value, locale)}
+                            eyebrow={t(`curriculum.tracks.${track}`)}
                             description={t('curriculum.chooseSubject')}
                           />
                         );
@@ -736,7 +785,9 @@ export function CurriculumLessonPicker({
                             setStep('unit');
                           }}
                           icon={<BookMarked className="size-5" aria-hidden="true" />}
+                          imageSrc={subjectCardImage(course.subject)}
                           title={courseEdition(course, locale)}
+                          eyebrow={`${t('curriculum.gradeShort')} ${course.grade} · ${t(`curriculum.tracks.${course.track}`)}`}
                           description={`${subjectLabel(course.subject, locale)} · ${t('curriculum.term', { term: course.semester })} · ${t('curriculum.unitCount', { count: course.units.length })}`}
                         />
                       ))}
@@ -783,7 +834,7 @@ export function CurriculumLessonPicker({
                         title={t('curriculum.wholeUnit')}
                         description={t('curriculum.wholeUnitDescription')}
                       />
-                      {selectedUnit.lessons.map((lesson) => (
+                      {selectedUnit.lessons.map((lesson, index) => (
                         <ChoiceCard
                           key={lesson.id}
                           data-testid={`curriculum-lesson-${lesson.id}`}
@@ -793,6 +844,7 @@ export function CurriculumLessonPicker({
                             setStep('support');
                           }}
                           icon={<BookOpen className="size-5" aria-hidden="true" />}
+                          eyebrow={`${t('curriculum.lessonLabel')} ${index + 1}`}
                           title={lesson.title}
                           description={lesson.objectives[0] ?? t('curriculum.lessonDescription')}
                         />
@@ -1094,6 +1146,8 @@ function ChoiceCard({
   selected,
   onClick,
   icon,
+  imageSrc,
+  eyebrow,
   title,
   description,
 }: {
@@ -1101,6 +1155,8 @@ function ChoiceCard({
   selected: boolean;
   onClick: () => void;
   icon?: ReactNode;
+  imageSrc?: string;
+  eyebrow?: string;
   title: string;
   description: string;
 }) {
@@ -1111,28 +1167,53 @@ function ChoiceCard({
       aria-pressed={selected}
       onClick={onClick}
       className={cn(
-        'group flex min-h-24 touch-manipulation select-none items-start gap-3 rounded-3xl border p-4 text-start transition-all active:scale-[0.99] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/8',
+        'group relative flex min-h-24 touch-manipulation select-none items-center gap-3 rounded-2xl border p-3 text-start transition-all active:scale-[0.99] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:p-3.5',
         selected
-          ? 'border-primary bg-primary/8 text-primary shadow-md shadow-primary/10'
+          ? 'border-primary/60 bg-primary/[0.045] text-primary shadow-md shadow-primary/10 ring-1 ring-primary/15'
           : 'border-border/60 bg-background hover:border-primary/30',
       )}
     >
-      <span
-        className={cn(
-          'mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-2xl border transition-transform group-hover:scale-105',
-          selected
-            ? 'border-primary/25 bg-primary/12'
-            : 'border-border/60 bg-muted/40 text-muted-foreground',
-        )}
-      >
-        {selected ? <Check className="size-4" aria-hidden="true" /> : icon}
-      </span>
-      <span className="min-w-0">
+      {imageSrc ? (
+        <span className="relative h-[78px] w-[62px] shrink-0 overflow-hidden rounded-xl bg-slate-950 shadow-sm ring-1 ring-black/5">
+          <Image
+            src={imageSrc}
+            alt=""
+            fill
+            sizes="62px"
+            className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
+          />
+          {selected ? (
+            <span className="absolute bottom-1 end-1 flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow">
+              <Check className="size-3" aria-hidden="true" />
+            </span>
+          ) : null}
+        </span>
+      ) : (
+        <span
+          className={cn(
+            'flex size-11 shrink-0 items-center justify-center rounded-xl border transition-transform group-hover:scale-105',
+            selected
+              ? 'border-primary/25 bg-primary/12'
+              : 'border-border/60 bg-muted/40 text-muted-foreground',
+          )}
+        >
+          {selected ? <Check className="size-4" aria-hidden="true" /> : icon}
+        </span>
+      )}
+      <span className="min-w-0 flex-1">
+        {eyebrow ? (
+          <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            {eyebrow}
+          </span>
+        ) : null}
         <span className="block break-words text-sm font-bold leading-snug">{title}</span>
         <span className="mt-1 block text-[11px] leading-relaxed text-muted-foreground">
           {description}
         </span>
       </span>
+      {!imageSrc && selected ? (
+        <Check className="size-4 shrink-0 text-primary" aria-hidden="true" />
+      ) : null}
     </button>
   );
 }
@@ -1160,7 +1241,7 @@ function UnitCard({
       aria-pressed={selected}
       onClick={onClick}
       className={cn(
-        'group flex min-h-28 touch-manipulation select-none items-start gap-3 rounded-3xl border p-4 text-start transition-all active:scale-[0.99] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/8',
+        'group flex min-h-28 touch-manipulation select-none items-start gap-3 rounded-3xl border p-4 text-start transition-all active:scale-[0.99] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
         selected
           ? 'border-primary bg-primary/8 text-primary shadow-md shadow-primary/10'
           : 'border-border/60 bg-background hover:border-primary/30',
@@ -1172,7 +1253,7 @@ function UnitCard({
           selected ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground',
         )}
       >
-        {unit.order + 1}
+        {unit.order > 0 ? unit.order : 1}
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2 text-sm font-bold">
@@ -1189,7 +1270,7 @@ function UnitCard({
             />
           )}
         </span>
-        <span className="mt-2 block text-[11px] text-muted-foreground">
+        <span className="mt-2 inline-flex rounded-full bg-muted px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
           {t('curriculum.lessonCount', { count: unit.lessons.length })}
         </span>
       </span>
