@@ -28,12 +28,23 @@ The review covered the lesson-generation runner, step retry wrappers, outline st
 - **Trigger:** A retryable transport/provider failure occurs during the outline stream. `streamLLM` forwards the default SDK retry budget, then `streamOutlines` retries the failed stream itself.
 - **Fix:** Disabled SDK-level retries for outline streams and reduced explicit same-model retries to one. The step now permits two primary requests and one fallback request.
 
+## B4 — Every curriculum deployment deletes the live database [FIXED]
+
+- **File:** `knowledge-base-curiculum/compose.yaml:9`
+- **Severity:** critical
+- **What is wrong:** The one-shot `volume-cleanup` container deletes `corpus5`, while Coolify configures `KB_BOOTSTRAP_ROOT=/app/data/corpus5` and stores the live PGlite database and assets there. Each database deployment therefore erases the active corpus and depends on a separate multi-gigabyte bootstrap download to recover it.
+- **Trigger:** Deploy the `kuwait-curriculum-kb` Coolify application. Its cleanup service removes `corpus5` from the persistent volume before the API starts; if the configured bootstrap host is unreachable, the service remains unavailable with HTTP 503.
+- **Fix:** Removed the live `corpus5` directory from the cleanup command. The existing Coolify volume still needs restoration from the configured corpus bundle after this deployment incident.
+
 ## Operational findings
 
 - Coolify was reachable through the Coolify MCP configuration already present in `opencode.json`. The production `openmaic` application and the `open-m-a-i-c...` sandbox application were both stopped when inspected.
 - The latest listed production deployment used commit `163a239c`; the latest listed sandbox deployment used `a50fee36`.
 - Both applications have the same `OPENROUTER_API_KEY` value (compared by fingerprint only). If the Haiku requests were sent through OpenRouter, either deployment would charge the same OpenRouter account. Coolify could not return the stopped applications' runtime logs, so the originating deployment cannot be determined from the available evidence.
 - The supplied probe excerpt shows clean raw model output, but does not include the app's corresponding stream diagnostics or a server log trace. It therefore does not identify which deployment made the failed requests.
+- The sandbox initially had no curriculum KB credentials, so its catalog endpoint returned `503 not_configured`. Read-only KB access was added to sandbox for the requested test.
+- The curriculum database application tracks `xi24ix/OpenMAIC.git:main`; its corpus is held on a persistent Coolify volume and is intentionally absent from Git. The live API catalog returned 73 courses before the redeploy.
+- The database redeploy exposed B4: its cleanup step removed the active `corpus5` data directory, and bootstrap then failed because the configured temporary `trycloudflare.com` host no longer resolved. Production app remains stopped. The local v5 corpus bundle matches the deployment's configured full-bundle checksum; database restoration is being handled before production is brought up.
 
 ## Summary
 
@@ -42,5 +53,6 @@ The review covered the lesson-generation runner, step retry wrappers, outline st
 | B1 [FIXED] | `lib/server/generation/run/retry.ts:24` | high | Later scene steps now allow three total attempts. |
 | B2 [FIXED] | `packages/@openmaic/generation/src/generation-retry.ts:21` | high | Default generation retry budget now allows three total requests. |
 | B3 [FIXED] | `lib/server/generation/steps/outline.ts:721` | high | Outline streams no longer stack explicit retries with SDK retries. |
+| B4 [FIXED] | `knowledge-base-curiculum/compose.yaml:9` | critical | Database deployment cleanup now preserves the live `corpus5` volume directory. |
 
-**Total bugs: 3**
+**Total bugs: 4**
