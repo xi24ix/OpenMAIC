@@ -36,6 +36,14 @@ The review covered the lesson-generation runner, step retry wrappers, outline st
 - **Trigger:** Deploy the `kuwait-curriculum-kb` Coolify application. Its cleanup service removes `corpus5` from the persistent volume before the API starts; if the configured bootstrap host is unreachable, the service remains unavailable with HTTP 503.
 - **Fix:** Removed the live `corpus5` directory from the cleanup command. The existing Coolify volume still needs restoration from the configured corpus bundle after this deployment incident.
 
+## B5 — Curriculum requests can leave the picker loading forever [FIXED]
+
+- **File:** `lib/server/curriculum-kb.ts:139`
+- **Severity:** medium
+- **What is wrong:** Catalog, unit-context, and visual requests to the curriculum service had no network deadline. If the KB stops responding during startup or a network stall, the API route remains pending and the picker stays on its loading spinner instead of showing an error.
+- **Trigger:** Open the curriculum picker while the KB host accepts a request but does not complete its response; `/api/curriculum/catalog` awaits the fetch indefinitely.
+- **Fix:** Added 15-second per-request timeouts and a 45-second total deadline for paginated unit-context retrieval.
+
 ## Operational findings
 
 - Coolify was reachable through the Coolify MCP configuration already present in `opencode.json`. The production `openmaic` application and the `open-m-a-i-c...` sandbox application were both stopped when inspected.
@@ -45,6 +53,7 @@ The review covered the lesson-generation runner, step retry wrappers, outline st
 - The sandbox initially had no curriculum KB credentials, so its catalog endpoint returned `503 not_configured`. Read-only KB access was added to sandbox for the requested test.
 - The curriculum database application tracks `xi24ix/OpenMAIC.git:main`; its corpus is held on a persistent Coolify volume and is intentionally absent from Git. The live API catalog returned 73 courses before the redeploy.
 - The database redeploy exposed B4: its cleanup step removed the active `corpus5` data directory, and bootstrap then failed because the configured temporary `trycloudflare.com` host no longer resolved. Production app remains stopped. The local v5 corpus bundle matches the deployment's configured full-bundle checksum; database restoration is being handled before production is brought up.
+- The sandbox picker screenshot showed its catalog request still loading while the curriculum API was unavailable. B5 now bounds these downstream requests so this outage path returns a visible error instead of hanging indefinitely.
 
 ## Summary
 
@@ -54,5 +63,6 @@ The review covered the lesson-generation runner, step retry wrappers, outline st
 | B2 [FIXED] | `packages/@openmaic/generation/src/generation-retry.ts:21` | high | Default generation retry budget now allows three total requests. |
 | B3 [FIXED] | `lib/server/generation/steps/outline.ts:721` | high | Outline streams no longer stack explicit retries with SDK retries. |
 | B4 [FIXED] | `knowledge-base-curiculum/compose.yaml:9` | critical | Database deployment cleanup now preserves the live `corpus5` volume directory. |
+| B5 [FIXED] | `lib/server/curriculum-kb.ts:139` | medium | Curriculum API requests now time out instead of leaving the picker loading forever. |
 
-**Total bugs: 4**
+**Total bugs: 5**

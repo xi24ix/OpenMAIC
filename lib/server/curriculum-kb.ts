@@ -102,6 +102,8 @@ export interface CurriculumGenerationPreparation {
 }
 
 const DEFAULT_KB_URL = 'https://kwdb.zobeidi.com';
+const CURRICULUM_KB_REQUEST_TIMEOUT_MS = 15_000;
+const CURRICULUM_KB_CONTEXT_TIMEOUT_MS = 45_000;
 
 function kbConfig(): { baseUrl: string; token: string } {
   const baseUrl = (process.env.CURRICULUM_KB_URL ?? process.env.KB_URL ?? DEFAULT_KB_URL).replace(
@@ -134,6 +136,7 @@ async function requestKb<T>(pathname: string, init?: RequestInit): Promise<T> {
   try {
     response = await fetch(`${baseUrl}${pathname}`, {
       ...init,
+      signal: init?.signal ?? AbortSignal.timeout(CURRICULUM_KB_REQUEST_TIMEOUT_MS),
       cache: 'no-store',
       headers: {
         accept: 'application/json',
@@ -191,6 +194,7 @@ export async function curriculumVisualAsset(
     const separator = assetPath.includes('?') ? '&' : '?';
     response = await fetch(`${baseUrl}${assetPath}${separator}allowUnverified=true`, {
       cache: 'no-store',
+      signal: AbortSignal.timeout(CURRICULUM_KB_REQUEST_TIMEOUT_MS),
       headers: { authorization: `Bearer ${token}` },
     });
   } catch {
@@ -243,9 +247,11 @@ export async function curriculumUnitContext(
   };
   const pages: CurriculumUnitContext[] = [];
   let offset = 0;
+  const contextSignal = AbortSignal.timeout(CURRICULUM_KB_CONTEXT_TIMEOUT_MS);
   for (let pageNumber = 0; pageNumber < 20; pageNumber += 1) {
     const context = await requestKb<CurriculumUnitContext>('/v1/unit-context', {
       method: 'POST',
+      signal: contextSignal,
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ ...baseRequest, offset }),
     });
