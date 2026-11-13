@@ -76,36 +76,47 @@ providers:
     preset: unpdf
 
 slots:
+  # Fallback rounds route to the pinned GLM flash, not the openrouter/free
+  # wildcard: the wildcard hands the call to a random free model that answers
+  # slowly and loosely (the observed outline stalls — ~40s per fallback round
+  # and fragments), while glm-5.3-flash is near-free ($0.04/$0.08 per M
+  # tokens, fractions of a cent per fallback call) and answers in seconds.
+  # The openrouter/free wildcard stays in the provider list as the manual
+  # zero-credit option; a pinned fallback at absolute zero credits surfaces
+  # the quota refusal instead of silently degrading — which is the honest
+  # behavior.
+  #
   # The default chat model: every chat slot without its own assignment below
   # follows it (classroom chat, scene actions). Deepseek handles the short
-  # calls well and answers in seconds; the GLM catches an empty/dead reply.
+  # calls well and answers in seconds; the GLM flash catches an empty/dead
+  # reply in seconds too.
   llm:
     model: router:deepseek/deepseek-v4.1-flash
-    fallback: router:openrouter/free
+    fallback: router:z-ai/glm-5.3-flash
 
   # The Pro workbench agent needs dependable tool calling.
   agent:
     model: router:deepseek/deepseek-v4.1-flash
     api: openai-completions
 
-  # Web-search query rewriting and the agent roster: tiny calls the free GLM
+  # Web-search query rewriting and the agent roster: tiny calls the GLM
   # flash answers in seconds.
   course.research: router:z-ai/glm-5.3-flash
   course.agents: router:z-ai/glm-5.3-flash
 
   # Course outlines and scene titles: structured JSON the deepseek flash route
   # kept truncating into fragments. Haiku follows the outline contract and
-  # answers fast; the free GLM catches a failure.
+  # answers fast; the GLM flash catches a failure.
   course.outline:
     model: router:anthropic/claude-haiku-5.5
-    fallback: router:openrouter/free
+    fallback: router:z-ai/glm-5.3-flash
 
   # Scene content — the bottleneck (widget HTML is the longest generation of
   # the run): Haiku writes the GSAP/canvas pages fast and clean, at a fifth of
-  # the Gemini flash price; the free GLM catches a failure.
+  # the Gemini flash price; the GLM flash catches a failure.
   course.content:
     model: router:anthropic/claude-haiku-5.5
-    fallback: router:openrouter/free
+    fallback: router:z-ai/glm-5.3-flash
 
   # Voice: Fish Audio out, OpenAI in (speech recognition).
   tts: speech-fish:s2.1-pro-free

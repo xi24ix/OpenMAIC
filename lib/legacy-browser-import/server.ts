@@ -24,6 +24,7 @@ import {
 import { HttpRuntimeStore } from '@openmaic/storage/runtime/http';
 
 import { getDocumentStore, type AppStage } from '@/lib/document-store';
+import { clientDocumentRequestTimeoutMs } from '@/lib/document-store/request-timeout';
 import { validateAppScene, validateAppStage } from '@/lib/document-store/validators';
 import type { FolderRecord } from '@/lib/types/folder';
 import type { AppScene } from '@/lib/types/stage';
@@ -184,11 +185,17 @@ export function connectImportServer(
       cache: 'no-store',
       headers: { ...fence, ...(init.headers as Record<string, string> | undefined) },
     });
+  // Same posture as the app's own persistence bootstrap: the deployment may
+  // disable the client-side deadline (or raise the floor) through
+  // NEXT_PUBLIC_DOCUMENT_REQUEST_TIMEOUT_MS; a legacy import pushing a large
+  // library must not be aborted mid-transfer by the floor either.
+  const requestTimeoutMs = clientDocumentRequestTimeoutMs();
   const documents = getDocumentStore({
     store: new HttpDocumentStore<AppScene, AppStage>({
       baseUrl: '/api/persistence',
       fetch: fetchImpl,
       headers: () => fence,
+      ...(requestTimeoutMs === undefined ? {} : { requestTimeoutMs }),
       validateScene: validateAppScene,
       validateStage: validateAppStage,
     }),

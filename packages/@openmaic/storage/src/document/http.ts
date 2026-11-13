@@ -78,8 +78,16 @@ export class HttpDocumentStoreError extends Error {
  * settles at all — the autosave holds at most one save in flight and starts
  * the next one only once that promise settles, so a request that hangs
  * forever strands every later save for the life of the page, silently.
+ *
+ * The floor is deliberately generous: a legitimate read can sit well past
+ * thirty seconds when the server is busy (a generation run writing scenes and
+ * narration to the same process that serves the document), and aborting such
+ * a read throws away work the server is about to hand back. Two minutes
+ * still catches a request that never settles — the strand-above — while
+ * leaving every plausible busy moment alone. Deployments that want a
+ * different posture pass `requestTimeoutMs`; `<= 0` disables the bound.
  */
-const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
+const DEFAULT_REQUEST_TIMEOUT_MS = 120_000;
 
 /**
  * The upload throughput a request's budget is sized against, in bytes per

@@ -40,6 +40,13 @@ export const defaultPersistencePool: PersistencePoolFactory = (connectionString)
   new Pool({
     connectionString,
     connectionTimeoutMillis: PERSISTENCE_POOL_CONNECTION_TIMEOUT_MS,
+    // `pg`'s default (10) is below what one busy process needs: a generation
+    // run writes scenes, narration bytes and run events through this same
+    // pool while document reads, runtime sessions and the library list are
+    // served from it. Queued acquires are invisible (the acquire timeout
+    // answers them only after ten seconds, as a late 500), so give the pool
+    // headroom instead of letting callers queue.
+    max: 25,
   });
 
 /**

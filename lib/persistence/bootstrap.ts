@@ -6,6 +6,7 @@ import {
   configureDocumentStorage,
   type DocumentStorageOptions,
 } from '@/lib/document-store/config';
+import { clientDocumentRequestTimeoutMs } from '@/lib/document-store/request-timeout';
 import {
   assertAssetPoolStorageConfigurable,
   configureAssetPoolStorage,
@@ -69,10 +70,18 @@ if (typeof window !== 'undefined') {
     store: () => new HttpRuntimeStore({ baseUrl: '/api/persistence' }),
     learnerKey: getPersistenceLearnerKey,
   };
+  // The deployment's own posture: `0` disables the client-side deadline
+  // entirely (the app's server answers document reads from the same process
+  // that runs generation, so a busy moment may keep a read pending past any
+  // fixed bound). Unset, the package floor applies.
+  const documentRequestTimeoutMs = clientDocumentRequestTimeoutMs();
   const documentOptions: DocumentStorageOptions = {
     store: ({ validateScene, validateStage }) =>
       new HttpDocumentStore({
         baseUrl: '/api/persistence',
+        ...(documentRequestTimeoutMs === undefined
+          ? {}
+          : { requestTimeoutMs: documentRequestTimeoutMs }),
         validateScene,
         validateStage,
       }),

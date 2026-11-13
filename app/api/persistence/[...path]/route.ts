@@ -488,15 +488,28 @@ export async function handlePersistenceRequest(
   deps: PersistenceRequestDeps = {},
 ): Promise<Response> {
   const requestId = persistenceRequestId(request);
+  const startedAt = Date.now();
   const response = await handlePersistenceRequestInner(request, deps);
+  const elapsedMs = Date.now() - startedAt;
+  const path = new URL(request.url).pathname;
   if (response.status >= 500) {
-    const path = new URL(request.url).pathname;
     const code = await responseErrorCode(response);
     log.error(`${request.method} ${path} -> ${response.status} ${code} (requestId=${requestId})`);
+  } else if (elapsedMs >= SLOW_PERSISTENCE_REQUEST_LOG_MS) {
+    // A slow but successful request is the symptom a stall leaves behind:
+    // without this line, a minute-long document read that still succeeded
+    // (or a client-side deadline that fired first) is invisible in the
+    // logs, and "the page took minutes" has nothing to point at.
+    log.warn(
+      `${request.method} ${path} -> ${response.status} slow: ${elapsedMs}ms (requestId=${requestId})`,
+    );
   }
   response.headers.set('x-request-id', requestId);
   return response;
 }
+
+/** Requests answered slower than this are logged, so a stall leaves evidence. */
+const SLOW_PERSISTENCE_REQUEST_LOG_MS = 3_000;
 
 async function handlePersistenceRequestInner(
   request: Request,
