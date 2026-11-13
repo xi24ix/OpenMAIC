@@ -132,7 +132,17 @@ export async function generateWithOpenRouterImage(
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(`OpenRouter image generation failed (${response.status}): ${text}`);
+    // Carrying the status on the error lets the failure classifiers
+    // (`upstreamHttpStatus` / `isUpstreamQuotaExhausted`) read the provider's
+    // answer the same way they read the LLM adapters' — a quota 402 or a 429
+    // then reaches the media checkpoint with its real code, not a generic one.
+    const error = new Error(
+      `OpenRouter image generation failed (${response.status}): ${text}`,
+    ) as Error & {
+      status?: number;
+    };
+    error.status = response.status;
+    throw error;
   }
 
   const data: OpenRouterImageResponse = await response.json();

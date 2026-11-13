@@ -8,10 +8,12 @@
  * description and key points, so everything the classroom shows stays in the
  * teaching language.
  *
- * The guarantee runs on the outline the ENGINE generated (the auto-confirm
- * path and the outline a `wait` run reviews), never on an outline the owner
- * edited and confirmed: an edit expresses the owner's intent.
+ * The visual-coverage guarantee ({@link ensureSceneVisuals}) rides the same
+ * pass and the same rule: it runs on the outline the ENGINE generated, never
+ * on an outline the owner edited and confirmed.
  */
+import { randomBytes } from 'node:crypto';
+
 import type { SceneOutline } from '@/lib/types/generation';
 
 /** Scenes the intro explosion already cut into phases (and the cover) are not conversion candidates. */
@@ -51,7 +53,8 @@ function asInteractive(outline: SceneOutline): SceneOutline {
 
 /** One quiz from a teaching slide's own teaching content and language. */
 function asQuiz(outline: SceneOutline): SceneOutline {
-  const points = outline.keyPoints.length > 0 ? outline.keyPoints : [outline.description].filter(Boolean);
+  const points =
+    outline.keyPoints.length > 0 ? outline.keyPoints : [outline.description].filter(Boolean);
   return {
     ...outline,
     id: `${outline.id}-check`,
@@ -141,4 +144,92 @@ export function ensureLessonMix(
   }
 
   return result.map((outline, index) => ({ ...outline, order: index }));
+}
+
+/**
+ * The media-generation budget the outline schema enforces on one outline
+ * (`normalizeSceneOutlines` slices past it): the visual guarantee stops
+ * injecting at the same ceiling rather than committing an outline the
+ * schema would trim.
+ */
+const MAX_TOTAL_MEDIA_GENERATIONS = 20;
+
+/**
+ * Whether a scene's outline already plans a visual: a generated image/video
+ * request, or a source image the material analysis found. Interactive and
+ * PBL scenes do not need the check — their widget/project content is the
+ * visual — and quizzes are deliberately exempt (a quiz is a text
+ * assessment; the design keeps it one).
+ */
+function isVisualScene(outline: SceneOutline): boolean {
+  if (outline.type !== 'slide') return true;
+  return (
+    (outline.mediaGenerations?.length ?? 0) > 0 || (outline.suggestedImageIds?.length ?? 0) > 0
+  );
+}
+
+/**
+ * The image request a bare teaching slide gets: art direction built from the
+ * slide's own teaching content (the subject first, then the key points it
+ * must cover), closed with the style and label-language rules the outline
+ * snippet demands of the model's own requests. An empty slide (no title, no
+ * description, no key points) has nothing to illustrate and stays bare —
+ * there is no honest prompt for it.
+ */
+function asVisualSlide(outline: SceneOutline, designDirective: string | undefined): SceneOutline {
+  const subject = outline.description?.trim() || outline.title?.trim();
+  const points = outline.keyPoints
+    .map((point) => point.trim())
+    .filter(Boolean)
+    .slice(0, 3);
+  if (!subject && points.length === 0) return outline;
+  const prompt = [
+    `Educational illustration for a lesson slide${subject ? ` about: ${subject}` : ''}`,
+    points.length > 0 ? `The image must visually cover: ${points.join('; ')}.` : '',
+    'Clean modern flat vector illustration, strong focal subject, consistent palette, no watermark.',
+    'If the image contains any text or labels, write all of them in the course teaching language.',
+    designDirective ? `Match this design direction: ${designDirective}` : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  return {
+    ...outline,
+    mediaGenerations: [
+      ...(outline.mediaGenerations ?? []),
+      {
+        type: 'image',
+        prompt,
+        elementId: `gen_img_${randomBytes(6).toString('base64url')}`,
+        aspectRatio: '16:9' as const,
+      },
+    ],
+  };
+}
+
+/**
+ * The visual-coverage guarantee: every teaching slide a run commits plans at
+ * least one visual, so the classroom never opens a scene that renders as
+ * bare text. The outline prompts ask the model for this (the image
+ * instructions carry the per-slide quota), but an outline model that answers
+ * with text-only slides — the common drift — used to pass every check. One
+ * slide at a time, in outline order, a bare slide gets one image request
+ * derived from its own teaching content, until the media budget the schema
+ * enforces is reached. The pass never touches interactive, PBL or quiz
+ * scenes, and never removes a planned visual.
+ */
+export function ensureSceneVisuals(
+  outlines: readonly SceneOutline[],
+  context: { designDirective?: string } = {},
+): SceneOutline[] {
+  let budget =
+    MAX_TOTAL_MEDIA_GENERATIONS -
+    outlines.reduce((count, outline) => count + (outline.mediaGenerations?.length ?? 0), 0);
+  if (budget <= 0) return [...outlines];
+  return outlines.map((outline) => {
+    if (isVisualScene(outline)) return outline;
+    const injected = asVisualSlide(outline, context.designDirective);
+    if (injected === outline) return outline;
+    budget -= 1;
+    return injected;
+  });
 }

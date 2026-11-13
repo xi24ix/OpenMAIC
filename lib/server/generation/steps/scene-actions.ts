@@ -64,10 +64,7 @@ const SPEECH_CAPS: Record<SceneOutline['type'], number> = {
   pbl: 4,
 };
 
-export function capSpeechActions(
-  actions: readonly Action[],
-  type: SceneOutline['type'],
-): Action[] {
+export function capSpeechActions(actions: readonly Action[], type: SceneOutline['type']): Action[] {
   const cap = SPEECH_CAPS[type];
   const speechIndexes = actions.flatMap((action, index) =>
     action.type === 'speech' ? [index] : [],
@@ -170,6 +167,7 @@ export async function generateSceneActions(
     | GeneratedInteractiveContent
     | GeneratedPBLContent;
 
+  const actionsStartedAt = Date.now();
   const actions = await generateActions(outline, generationContent, aiCall, {
     ctx: generationCtx,
     agents,
@@ -177,7 +175,9 @@ export async function generateSceneActions(
     languageDirective,
   });
 
-  log.info(`Generated ${actions.length} actions for: "${outline.title}"`);
+  log.info(
+    `Generated ${actions.length} actions for: "${outline.title}" in ${Date.now() - actionsStartedAt}ms`,
+  );
 
   // ── Speech ration: the prompts ask for quick pacing, this enforces it ──
   const rationedActions = capSpeechActions(actions, outline.type);

@@ -144,6 +144,7 @@ export async function synthesizeNarration(
     },
   };
 
+  const clipStartedAt = Date.now();
   ctx.log.info(
     `Generating TTS: provider=${ttsProviderId}, model=${config.modelId || 'default'}, voice=${ttsVoice}, ` +
       `registeredVoiceId=${voxcpmRegisteredVoiceId || 'none'}, audioId=${audioId}, textLen=${text.length}`,
@@ -152,6 +153,7 @@ export async function synthesizeNarration(
   // Generate audio
   authorizeMediaModel(connection, 'tts', config.modelId);
   const { audio, format } = await generateTTS(config, text);
+  ctx.log.info(`TTS clip done: audioId=${audioId} in ${Date.now() - clipStartedAt}ms`);
 
   void recordGenerationUsage({
     kind: 'tts',

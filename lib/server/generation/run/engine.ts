@@ -67,11 +67,7 @@ import type {
 } from '@/lib/server/generation/steps/scene-actions';
 import type { SceneContentResult } from '@/lib/server/generation/steps/scene-content';
 import type { SpeechAction } from '@/lib/types/action';
-import type {
-  ImageMapping,
-  PdfImage,
-  UserRequirements,
-} from '@/lib/types/generation';
+import type { ImageMapping, PdfImage, UserRequirements } from '@/lib/types/generation';
 import { storeGeneratedAsset } from '@/lib/server/store-generated-asset';
 import { getGenerationRunHooks } from '@/lib/server/generation-run-hooks/registry';
 import {
@@ -122,10 +118,7 @@ import {
   type RunMediaItem,
   type RunStep,
 } from './plan';
-import {
-  ensureLessonMix,
-  moveExplainersToEnd,
-} from './lesson-mix';
+import { ensureLessonMix, ensureSceneVisuals, moveExplainersToEnd } from './lesson-mix';
 import {
   FIRST_SCENE_MAX_RETRIES,
   SCENE_MAX_RETRIES,
@@ -944,21 +937,22 @@ async function executeClaimedRun(
     }
     if (!normalized.ok) throw new Error(`The generated outline is unusable: ${normalized.message}`);
     // The mix guarantee first (a converted scene's title rides along), then the
-    // title guarantee: an outline model that answers with the image prompt as
-    // the scene's title gets learner-facing names in the teaching language.
+    // visual guarantee (a bare slide gets its image request), then the title
+    // guarantee: an outline model that answers with the image prompt as the
+    // scene's title gets learner-facing names in the teaching language.
     // The classroom opens on the fast scenes: the heavy animation-explainer
-    // (whoever wrote it first) moves to the end. Then the mix guarantee (a
-    // converted scene's title rides along), then the title guarantee: an
-    // outline model that answers with the image prompt as the scene's title
-    // gets learner-facing names in the teaching language.
+    // (whoever wrote it first) moves to the end.
     result = {
       ...result,
       outlines: await services.retitleOutlines(
         owner,
         {
-          outlines: ensureLessonMix(
-            moveExplainersToEnd(normalized.value.slice(0, input.maxScenes ?? 100)),
-            input.maxScenes,
+          outlines: ensureSceneVisuals(
+            ensureLessonMix(
+              moveExplainersToEnd(normalized.value.slice(0, input.maxScenes ?? 100)),
+              input.maxScenes,
+            ),
+            { designDirective: result.designDirective },
           ),
           ...(result.languageDirective ? { languageDirective: result.languageDirective } : {}),
           requirement: input.requirement,

@@ -205,11 +205,14 @@ export class TTSInvalidResponseError extends Error {
 /**
  * Per-request bound for one TTS provider call, ported from the reference
  * runtime's TTS bounds (30s request timeouts on the managed TTS clients).
+ * Deliberately BELOW the run's per-clip 30s deadline (run/deadline.ts): the
+ * provider timeout must fire first, so a hung upstream classifies as a TTS
+ * provider failure instead of racing the outer deadline.
  * Overridable via `TTS_REQUEST_TIMEOUT_MS` (ms) for deployments with slower
  * upstreams; a hung provider fails the call with this error instead of
  * wedging the session.
  */
-const DEFAULT_TTS_REQUEST_TIMEOUT_MS = 30_000;
+const DEFAULT_TTS_REQUEST_TIMEOUT_MS = 25_000;
 
 function ttsRequestTimeoutMs(): number {
   const raw = process.env.TTS_REQUEST_TIMEOUT_MS?.trim();
@@ -381,7 +384,8 @@ async function generateOpenAITTS(
   // The provider's own registry default (the heygen-tts entry points at
   // OpenRouter), falling back to OpenAI's endpoint for the bare openai-tts id.
   const baseUrl =
-    config.baseUrl || TTS_PROVIDERS[config.providerId as 'openai-tts']?.defaultBaseUrl ||
+    config.baseUrl ||
+    TTS_PROVIDERS[config.providerId as 'openai-tts']?.defaultBaseUrl ||
     TTS_PROVIDERS['openai-tts'].defaultBaseUrl;
 
   // PCM-only routes (HeyGen Voice on OpenRouter rejects `mp3` with a 400)

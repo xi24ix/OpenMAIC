@@ -309,6 +309,7 @@ export async function generateSceneContent(
   const generatedMediaMapping: ImageMapping = {};
 
   // ── Generate content ──
+  const contentStartedAt = Date.now();
   log.info(
     `Generating content: "${effectiveOutline.title}" (${effectiveOutline.type}) [model=${modelString}]`,
   );
@@ -348,6 +349,8 @@ export async function generateSceneContent(
     );
   }
 
-  log.info(`Content generated successfully: "${effectiveOutline.title}"`);
+  log.info(
+    `Content generated successfully: "${effectiveOutline.title}" in ${Date.now() - contentStartedAt}ms`,
+  );
   return { content, effectiveOutline };
 }

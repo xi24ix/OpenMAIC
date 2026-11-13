@@ -31,3 +31,19 @@ A widget that "works" but looks like a 2005 dashboard fails this pipeline as muc
 - Loading/empty/error states exist and use the same palette (spinner or skeleton bars, not invented colors).
 - Failure feedback is supporting, never guilt-tripping: green = correct/done, amber = check again, red = unsafe/wrong.
 - Mobile safety: 44px min touch targets, collapsible panels, no horizontal scroll, canvas resizes with container.
+
+### Hand-drawn (doodle) vocabulary — a coherent alternative when the subject calls for it
+
+When the design directive's concept or the topic suits a hand-drawn feel (history, storytelling, human/animal subjects, processes "drawn" for the learner), a doodle system is a first-class style — but it is a SYSTEM, not an excuse for sloppiness:
+
+- Flat single-color fills + bold 3–4px near-black outlines on every shape; simple geometric forms, oversized and simplified. ZERO gradients, ZERO shadows, ZERO textures — flatness is the style's identity, and mixing glossy + doodle is a failure.
+- People are bold stick figures with large round heads, dot eyes, thick expressive brows; color-coding carries state (red = heat/embarrassment, white = neutral).
+- Backgrounds are single flat color blocks: white default; a green floor strip = ground; blue sky + green ground = outdoors; orange = sunset/fire/old; blue = underwater; beige = desert/cave.
+- On-screen keywords in a wide marker-style weight, top-of-frame, red/black/yellow only; diagonal arrows (black or yellow) point AT things with a short capital label beside the arrowhead; thought bubbles are classic clouds with 1–2 words inside.
+- Motion matches the marker metaphor: strokes draw in (`strokeDashoffset`), elements pop with slight wobble-then-settle (a small `back.out`), never smooth cinematic eases.
+
+### On-screen Arabic & RTL text (all widgets)
+
+- Strip diacritics (tashkeel) and tatweel (ـ) from rendered on-screen words; keep `؟`/`!` only as the final mark of a phrase.
+- Western digits `0–9` by default; each number in its own short group.
+- RTL reveals run right-to-left; copy the course's own spelling letter-for-letter — never normalize, translate or "fix" the teaching language's words on screen.

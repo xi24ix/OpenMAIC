@@ -52,6 +52,14 @@ Build ONE master timeline with 4 labeled phases. Each phase is one idea. Total o
 | Count-up | Number for 0→target, ~1s, `power2.out`, snap:true integers |
 | Progress bar / donut fill | scaleX or stroke draw when revealed |
 
+### Arabic & RTL on-screen text (when the teaching language is RTL)
+
+- Sequential word reveals run **right-to-left** (`flex-direction: row-reverse` or explicit order) — a left-to-right pop-in of Arabic words reads broken.
+- Strip diacritics (tashkeel) and tatweel (ـ) from rendered on-screen words — they break glyph shaping and kerning under scale animation. Punctuation stays out of animated words; `؟` and `!` may appear only as the final mark of a phrase.
+- Western digits `0–9` by default (they render more reliably at scale); every number sits in its own short group.
+- Copy on-screen words letter-for-letter from the Scene Information's terminology — never "correct", normalize, or translate the teaching language's own spelling.
+- One short text group per beat (≤ 3 animated words); the rest of the sentence stays as a static supporting line. Word-by-word animation is the accent, not the norm.
+
 ### Composition (frames are scenes, not web pages)
 
 - Fill the stage: hero text spans 60–80% of width, entrance padding 60–140px.

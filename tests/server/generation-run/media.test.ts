@@ -96,6 +96,45 @@ describe('the media lane', () => {
     expect(mediaFailure(timeout, 'video')).toEqual({ message: timeout.message });
   });
 
+  it('classifies a provider answer that carries its status: quota, rate limit, upstream', () => {
+    const quota = Object.assign(
+      new Error(
+        'OpenRouter image generation failed (402): {"error":{"message":"Insufficient credits…"}}',
+      ),
+      {
+        status: 402,
+      },
+    );
+    expect(mediaFailure(quota, 'image')).toEqual({
+      message:
+        "The image provider's account cannot pay for generation right now (insufficient credits or an exhausted plan)",
+      errorCode: 'PROVIDER_QUOTA_EXHAUSTED',
+    });
+    // OpenRouter's credit refusal also travels without a status property when
+    // the adapter read the error body — the message carries it.
+    expect(
+      mediaFailure(new Error('OpenRouter error: Insufficient credits. Add more…'), 'image'),
+    ).toEqual({
+      message:
+        "The image provider's account cannot pay for generation right now (insufficient credits or an exhausted plan)",
+      errorCode: 'PROVIDER_QUOTA_EXHAUSTED',
+    });
+    const rate = Object.assign(new Error('OpenRouter image generation failed (429): slow down'), {
+      status: 429,
+    });
+    expect(mediaFailure(rate, 'image')).toEqual({
+      message: 'The image provider is rate limiting; try again shortly',
+      errorCode: 'RATE_LIMITED',
+    });
+    const upstream = Object.assign(new Error('OpenRouter image generation failed (503): down'), {
+      status: 503,
+    });
+    expect(mediaFailure(upstream, 'image')).toEqual({
+      message: 'The image provider failed (status 503)',
+      errorCode: 'UPSTREAM_ERROR',
+    });
+  });
+
   it('reports the states a client renders, with the Retry rule of the browser', () => {
     expect(
       runMediaStates(

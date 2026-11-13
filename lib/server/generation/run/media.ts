@@ -33,6 +33,7 @@ import { assetPrincipalForOwner } from '@/lib/persistence/owner-assets';
 import { getServerPersistenceProvider } from '@/lib/persistence/server-provider';
 import { classifyHostFailure } from '@/lib/server/generation-run-hooks/runtime';
 import { StepRefusal } from '@/lib/server/generation/steps/context';
+import { isUpstreamQuotaExhausted, upstreamHttpStatus } from '@/lib/server/llm-error-response';
 import { storeGeneratedAsset } from '@/lib/server/store-generated-asset';
 import type { Scene } from '@/lib/types/stage';
 
@@ -170,6 +171,26 @@ export function mediaFailure(
       errorCode: 'CONTENT_SENSITIVE',
     };
   }
+  // A provider answer the adapters surface as a plain error: classify it the
+  // way the LLM steps classify theirs, so the element shows WHY it failed (a
+  // quota state says "add credits", not "generation failed") and the retry
+  // rules can tell a transient state from a permanent one.
+  const status = upstreamHttpStatus(error);
+  if (isUpstreamQuotaExhausted(error)) {
+    return {
+      message: `The ${mediaType} provider's account cannot pay for generation right now (insufficient credits or an exhausted plan)`,
+      errorCode: 'PROVIDER_QUOTA_EXHAUSTED',
+    };
+  }
+  if (status !== undefined) {
+    return {
+      message:
+        status === 429
+          ? `The ${mediaType} provider is rate limiting; try again shortly`
+          : `The ${mediaType} provider failed (status ${status})`,
+      errorCode: status === 429 ? 'RATE_LIMITED' : 'UPSTREAM_ERROR',
+    };
+  }
   return { message: `${label} generation failed` };
 }
 
@@ -243,60 +264,157 @@ export function endsLane(error: unknown, signal: AbortSignal): boolean {
 }
 
 /**
- * Generate the run's media work in outline order until none is left, one
- * item at a time. A failure of one item is that item's; what the lane throws
- * is either what ends it ({@link endsLane}) or a fault outside any item (the
- * slots could not be read, a placement write failed), which the engine
- * answers by failing the work left, never the run.
+ * The failure codes the lane itself retries once before handing the item to a
+ * manual Retry: a provider that is rate limiting or answered a transient 5xx
+ * usually answers the second roll. A quota state is NOT here — the image
+ * step's own fallback-model roll is the one second chance a quota gets, and
+ * a failure past it is the account's, not the lane's, to fix.
+ */
+const IN_LANE_RETRYABLE_CODES = new Set(['RATE_LIMITED', 'UPSTREAM_ERROR']);
+
+/** How many times the lane may START one item: the first try plus one transient retry. */
+const MAX_ITEM_ATTEMPTS = 2;
+
+/** The pause before an item the lane already tried once is picked again. */
+const RETRY_BACKOFF_MS = 3_000;
+
+/**
+ * How many items the lane generates at once: `MEDIA_CONCURRENCY`, clamped to
+ * 1–4, default 1 (the serial lane). Each worker holds one item; placements
+ * still serialize through the engine's write chain, so concurrency only
+ * overlaps the provider waits, never the course writes.
+ */
+export function getMediaConcurrency(): number {
+  const raw = Number(process.env.MEDIA_CONCURRENCY);
+  if (!Number.isFinite(raw)) return 1;
+  return Math.max(1, Math.min(4, Math.trunc(raw)));
+}
+
+/** An abort-aware pause; resolves (early) when the signal fires. */
+function laneSleep(ms: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve) => {
+    if (signal.aborted) return resolve();
+    const done = () => {
+      signal.removeEventListener('abort', done);
+      clearTimeout(timer);
+      resolve();
+    };
+    const timer = setTimeout(done, ms);
+    signal.addEventListener('abort', done);
+  });
+}
+
+/**
+ * Generate the run's media work in outline order, up to
+ * `MEDIA_CONCURRENCY` items at once (one worker per slot). A failure of one
+ * item is that item's; a transient failure (rate limit, 5xx) gets one more
+ * roll after a backoff. What the lane throws is either what ends it
+ * ({@link endsLane}) or a fault outside any item (the slots could not be
+ * read, a placement write failed), which the engine answers by failing the
+ * work left, never the run.
  */
 export async function runMediaLane(ctx: MediaLaneContext): Promise<void> {
   await ctx.refreshOwner();
   const connections = await ctx.services.mediaConnections(ctx.owner());
   const checkpointOf = (item: RunMediaItem) =>
     ctx.steps.get(mediaStepId(item.request.elementId)) as GenerationRunMediaCheckpoint | undefined;
-  const attempted = new Set<string>();
-  for (;;) {
-    if (ctx.signal.aborted || ctx.stopping()) return;
-    const item = ctx.items.find(
-      (candidate) =>
-        isMediaWork(checkpointOf(candidate)) && !attempted.has(candidate.request.elementId),
-    );
-    if (!item) return;
-    attempted.add(item.request.elementId);
-    ctx.onItemStarted?.(item);
-    await ctx.refreshOwner();
-    const outcome = await generateItem(ctx, item, checkpointOf(item)!, connections);
-    if (outcome.stored) {
-      // Placing is not part of the item's failure: bytes that are stored stay
-      // stored when a placement write fails, and are placed later.
-      await placeStored(ctx, item.request.elementId, outcome.stored);
-      continue;
+  // Shared lane state. `inFlightIds` keeps two workers off one item; pick and
+  // mark happen in one synchronous block, so no await can double-take.
+  const attempts = new Map<string, number>();
+  const inFlightIds = new Set<string>();
+  const shared = { inFlight: 0, faulted: false, storageFull: false };
+  const pick = (): RunMediaItem | null => {
+    for (const candidate of ctx.items) {
+      const id = candidate.request.elementId;
+      if (inFlightIds.has(id)) continue;
+      if ((attempts.get(id) ?? 0) >= MAX_ITEM_ATTEMPTS) continue;
+      const checkpoint = checkpointOf(candidate);
+      if (isMediaWork(checkpoint)) return candidate;
+      if (
+        checkpoint?.status === 'failed' &&
+        checkpoint.errorCode !== undefined &&
+        IN_LANE_RETRYABLE_CODES.has(checkpoint.errorCode)
+      ) {
+        return candidate;
+      }
     }
-    if (!outcome.storageFull) continue;
-    // The store had no room: the pass stops, as the browser's does, and the
-    // items it has not reached show that reason with a Retry. The browser
-    // keeps that state in memory and a later load of the course generates
-    // them; a run has no later load, so the state is recorded instead.
-    const rest = ctx.items.filter((candidate) => checkpointOf(candidate)?.status === 'queued');
-    if (rest.length === 0) return;
-    const failed = rest.map((candidate) => {
-      const checkpoint: GenerationRunMediaCheckpoint = {
-        mediaType: candidate.request.type,
-        status: 'failed',
-        message: `Asset storage is full; the ${candidate.request.type} was not generated`,
-        errorCode: ASSET_QUOTA_EXCEEDED,
-      };
-      return { id: mediaStepId(candidate.request.elementId), checkpoint, candidate };
-    });
-    await ctx.commit({
-      steps: failed.map(({ id, checkpoint }) => ({ id, output: checkpoint })),
-      events: failed.map(({ candidate, checkpoint }) =>
-        mediaEvent(candidate.request.elementId, checkpoint),
-      ),
-    });
-    log.warn(`run ${ctx.runId}: asset storage is full; stopping the media pass`);
-    return;
-  }
+    return null;
+  };
+  const worker = async (): Promise<void> => {
+    for (;;) {
+      if (ctx.signal.aborted || ctx.stopping() || shared.faulted || shared.storageFull) return;
+      const item = pick();
+      if (!item) {
+        // Nothing to take now; another worker's item may still return here —
+        // its transient failure re-pools it — so an idle worker waits while
+        // anything is in flight anywhere and exits when the lane has drained.
+        if (shared.inFlight === 0) return;
+        await laneSleep(500, ctx.signal);
+        continue;
+      }
+      const id = item.request.elementId;
+      attempts.set(id, (attempts.get(id) ?? 0) + 1);
+      inFlightIds.add(id);
+      const retrying = checkpointOf(item)?.status === 'failed';
+      shared.inFlight += 1;
+      try {
+        if (retrying) {
+          // A transient failure getting its second roll: give the provider room.
+          await laneSleep(RETRY_BACKOFF_MS, ctx.signal);
+          if (ctx.signal.aborted || ctx.stopping() || shared.faulted) return;
+        }
+        ctx.onItemStarted?.(item);
+        await ctx.refreshOwner();
+        const outcome = await generateItem(ctx, item, checkpointOf(item)!, connections);
+        if (outcome.stored) {
+          // Placing is not part of the item's failure: bytes that are stored
+          // stay stored when a placement write fails, and are placed later.
+          await placeStored(ctx, id, outcome.stored);
+        } else if (outcome.storageFull) {
+          shared.storageFull = true;
+        }
+      } catch (error) {
+        // A fault outside any item (the lease, the course, a slot read, a
+        // placement write): the lane is over. Workers already holding an item
+        // finish it; no worker picks again.
+        shared.faulted = true;
+        throw error;
+      } finally {
+        shared.inFlight -= 1;
+        inFlightIds.delete(id);
+      }
+    }
+  };
+  const results = await Promise.allSettled(
+    Array.from({ length: getMediaConcurrency() }, () => worker()),
+  );
+  const fault = results.find(
+    (outcome): outcome is PromiseRejectedResult => outcome.status === 'rejected',
+  );
+  if (fault) throw fault.reason;
+  if (!shared.storageFull) return;
+  // The store had no room: the pass stops, as the browser's does, and the
+  // items it has not reached show that reason with a Retry. The browser
+  // keeps that state in memory and a later load of the course generates
+  // them; a run has no later load, so the state is recorded instead.
+  const rest = ctx.items.filter((candidate) => checkpointOf(candidate)?.status === 'queued');
+  if (rest.length === 0) return;
+  const failed = rest.map((candidate) => {
+    const checkpoint: GenerationRunMediaCheckpoint = {
+      mediaType: candidate.request.type,
+      status: 'failed',
+      message: `Asset storage is full; the ${candidate.request.type} was not generated`,
+      errorCode: ASSET_QUOTA_EXCEEDED,
+    };
+    return { id: mediaStepId(candidate.request.elementId), checkpoint, candidate };
+  });
+  await ctx.commit({
+    steps: failed.map(({ id, checkpoint }) => ({ id, output: checkpoint })),
+    events: failed.map(({ candidate, checkpoint }) =>
+      mediaEvent(candidate.request.elementId, checkpoint),
+    ),
+  });
+  log.warn(`run ${ctx.runId}: asset storage is full; stopping the media pass`);
 }
 
 /**
@@ -346,6 +464,7 @@ async function generateItem(
   // The task a takeover found submitted: its wait is resumed.
   const task = checkpoint.status === 'submitted' ? checkpoint.task : undefined;
   let posterAssetId: string | undefined;
+  const itemStartedAt = Date.now();
   try {
     if (!task) await record({ mediaType, status: 'generating' });
     const fence = (tx: Parameters<typeof fenceGenerationRunWriteIn>[0]) =>
@@ -451,6 +570,9 @@ async function generateItem(
       return { storageFull: true };
     }
     ctx.steps.set(stepId, storedCheckpoint);
+    log.info(
+      `run ${ctx.runId}: ${mediaType} ${elementId} stored in ${Date.now() - itemStartedAt}ms`,
+    );
     return { stored: storedCheckpoint! };
   } catch (error) {
     await releasePoster(ctx, posterAssetId);
