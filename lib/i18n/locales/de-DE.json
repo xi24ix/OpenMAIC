@@ -2476,5 +2476,24 @@
         "materialExtraction": null
       }
     }
+  },
+  "composerLearner": {
+    "trigger": "Lernende & Stil",
+    "title": "Lernende & Lehrstil",
+    "audience": "Für wen ist die Lektion?",
+    "audienceStudent": "Schüler/in",
+    "audienceParent": "Eltern",
+    "audienceTeacher": "Lehrkraft",
+    "support": "Lernunterstützung",
+    "supportGeneral": "Allgemein",
+    "supportAutism": "Autismus-Unterstützung",
+    "supportAdhd": "ADHS / Aufmerksamkeit",
+    "supportLearning": "Lernschwierigkeiten",
+    "supportHint": "Diese Optionen verändern den Unterrichtsstil — es wird nichts diagnostiziert.",
+    "style": "Lehrstil",
+    "styleClassic": "Klassisch",
+    "styleInteractive": "Interaktiv",
+    "styleGame": "Spielbasiert",
+    "styleAnimation": "Animationsbasiert"
   }
 }

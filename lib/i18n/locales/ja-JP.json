@@ -2476,5 +2476,24 @@
         "materialExtraction": null
       }
     }
+  },
+  "composerLearner": {
+    "trigger": "学習者とスタイル",
+    "title": "学習者と指導スタイル",
+    "audience": "このレッスンは誰のために？",
+    "audienceStudent": "学生",
+    "audienceParent": "保護者",
+    "audienceTeacher": "教師",
+    "support": "学習サポート",
+    "supportGeneral": "一般",
+    "supportAutism": "自閉症サポート",
+    "supportAdhd": "ADHD・注意",
+    "supportLearning": "学習の困難",
+    "supportHint": "これらの選択は指導の方法を変えます — 診断ではありません。",
+    "style": "指導スタイル",
+    "styleClassic": "クラシック",
+    "styleInteractive": "インタラクティブ",
+    "styleGame": "ゲーム型",
+    "styleAnimation": "アニメーション"
   }
 }

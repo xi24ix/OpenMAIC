@@ -2476,5 +2476,24 @@
         "materialExtraction": null
       }
     }
+  },
+  "composerLearner": {
+    "trigger": "學習者與風格",
+    "title": "學習者與教學風格",
+    "audience": "這堂課為誰而設？",
+    "audienceStudent": "學生",
+    "audienceParent": "家長",
+    "audienceTeacher": "教師",
+    "support": "學習支援",
+    "supportGeneral": "一般",
+    "supportAutism": "自閉症支援",
+    "supportAdhd": "ADHD / 注意力",
+    "supportLearning": "學習困難",
+    "supportHint": "這些選項會改變課程的授課方式 — 不作任何診斷。",
+    "style": "教學風格",
+    "styleClassic": "經典",
+    "styleInteractive": "互動",
+    "styleGame": "遊戲式",
+    "styleAnimation": "動畫為主"
   }
 }

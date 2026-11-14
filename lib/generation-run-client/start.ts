@@ -77,6 +77,14 @@ export async function startClassicRun(input: {
   sourceVisuals?: readonly GenerationSourceVisual[];
   interactive: boolean;
   taskEngine: boolean;
+  /** Who the lesson serves (the composer's learner popover). */
+  audience?: 'student' | 'parent' | 'teacher';
+  /** Learning-support profile the composer selected. */
+  supportProfile?: 'none' | 'autism' | 'adhd' | 'learning-difficulties';
+  /** The composer's teaching-style pick beyond the plain interactive toggle. */
+  teachingStyle?: 'game' | 'animation';
+  /** True when the requirement already came prepared (the curriculum picker). */
+  requirementPrepared?: boolean;
   capabilities: ModelCapabilities;
 }): Promise<RunSnapshot> {
   const agents = await selectedRunAgents();
@@ -101,6 +109,12 @@ export async function startClassicRun(input: {
     ...(input.sourceVisuals?.length ? { sourceVisuals: [...input.sourceVisuals] } : {}),
     interactive: input.interactive,
     taskEngine: input.taskEngine,
+    ...(input.audience && input.audience !== 'student' ? { audience: input.audience } : {}),
+    ...(input.supportProfile && input.supportProfile !== 'none'
+      ? { supportProfile: input.supportProfile }
+      : {}),
+    ...(input.teachingStyle ? { teachingStyle: input.teachingStyle } : {}),
+    ...(input.requirementPrepared ? { requirementPrepared: true } : {}),
     agents,
     ...(learnerProfile ? { learnerProfile } : {}),
     ...(voice ? { voice } : {}),

@@ -10,7 +10,7 @@
  * once on the stage's fallback model, and every retry is reported as an event.
  */
 import { attachedModelFallback } from '@/lib/ai/model-fallbacks';
-import { streamLLM } from '@/lib/ai/llm';
+import { callLLM, streamLLM } from '@/lib/ai/llm';
 import {
   resolveFallbackModel,
   shouldFallbackFor,
@@ -33,10 +33,7 @@ import {
   type DesignDirective,
 } from '@openmaic/generation';
 import { MAX_PDF_CONTENT_CHARS, MAX_VISION_IMAGES } from '@/lib/constants/generation';
-import {
-  MAX_OUTLINE_SCENES,
-  normalizeSceneOutlines,
-} from '@/lib/server/generation/outline-schema';
+import { MAX_OUTLINE_SCENES, normalizeSceneOutlines } from '@/lib/server/generation/outline-schema';
 import { nanoid } from 'nanoid';
 import type {
   UserRequirements,
@@ -424,8 +421,19 @@ async function prepareOutline(
   input: OutlineInput,
   ctx: OwnerStepContext & WorkspaceStepContext,
 ): Promise<PreparedOutline> {
-  const { requirements, pdfText, pdfImages, imageMapping, researchContext, agents, model } = input;
+  const { pdfText, pdfImages, imageMapping, researchContext, agents, model } = input;
   const { modelInfo, modelString } = model;
+  // A short free-prompt request gets one bounded enrichment pass into a
+  // structured teaching brief before the outline prompt is built (see
+  // enrichRequirement). Prepared requirements — the curriculum picker's —
+  // are already grounded and pass through untouched.
+  const requirements: UserRequirements =
+    input.requirements.requirementPrepared === true
+      ? input.requirements
+      : {
+          ...input.requirements,
+          requirement: await enrichRequirement(input.requirements.requirement, model, ctx),
+        };
 
   // Build user profile string for language inference context
   const userProfileText =
@@ -544,7 +552,7 @@ async function prepareOutline(
   // summary and the quiz — so an over-budget plan loses its tail).
   const sceneCountTarget = input.maxScenes
     ? `Plan about ${Math.min(input.maxScenes, MAX_OUTLINE_SCENES)} scenes in total (never more).`
-    : 'Plan 6-10 scenes in total, scaling with the breadth of the subject.';
+    : 'Plan 5-7 scenes in total: short enough that a learner stays curious to the end, long enough to teach the subject with the engagement rhythm. Scale within that band with the breadth of the subject; do not pad.';
 
   // images removed, mapping naming only resolved ids) so its placeholder
   // text never promises an image this step will not attach.
@@ -977,4 +985,67 @@ export async function generateOutlines(
   ctx: OwnerStepContext<OutlineEvent> & WorkspaceStepContext<OutlineEvent>,
 ): Promise<OutlineResult> {
   return streamOutlines(await prepareOutline(input, ctx), ctx);
+}
+
+/** The longest free-prompt requirement the enrichment still bothers with: a longer one already carries structure. */
+const ENRICHMENT_MAX_REQUIREMENT_CHARS = 800;
+/** The one-shot enrichment call's deadline; the raw requirement is the fallback, so failing is free. */
+const ENRICHMENT_TIMEOUT_MS = 20_000;
+const ENRICHMENT_SYSTEM = `You turn a short lesson request into a compact teaching brief for a lesson-outline planner. Answer with 4 short labeled lines, nothing else:
+OBJECTIVE: what the learner will be able to do after the lesson (one sentence)
+TOPICS: 3-5 sub-topics to cover, comma-separated, in teaching order
+ENGAGEMENT: one concrete interactive/visual idea that fits the subject (what the learner selects, moves, builds or watches move)
+TONE: one sentence on tone and level for the audience.
+Write in the same language as the request. Never invent facts, curriculum standards or brand names. Never answer with anything but the four lines.`;
+
+/**
+ * One bounded requirement-enrichment call for SHORT free-prompt requests: the
+ * outline planner does far better from a structured brief ("objective, topics,
+ * engagement, tone") than from a one-liner like "علمني الجاذبية". Skipped for
+ * prepared requirements (the curriculum picker already grounds them), for long
+ * ones (structure already present), and on any failure — the raw requirement
+ * is the fallback, so the step can never become worse at generating because
+ * of this call. One attempt, no retries: the outline's own retry budget is
+ * what protects the run, and doubling it here would double the outline's
+ * worst case for a nice-to-have.
+ */
+async function enrichRequirement(
+  requirement: string,
+  model: StepLanguageModel,
+  ctx: OwnerStepContext & WorkspaceStepContext,
+): Promise<string> {
+  const raw = requirement.trim();
+  if (raw.length >= ENRICHMENT_MAX_REQUIREMENT_CHARS) return requirement;
+  const { log, signal } = ctx;
+  const startedAt = Date.now();
+  try {
+    const timeout = AbortSignal.timeout(ENRICHMENT_TIMEOUT_MS);
+    const abortSignal = signal ? AbortSignal.any([signal, timeout]) : timeout;
+    const result = await callLLM(
+      {
+        model: model.model,
+        system: ENRICHMENT_SYSTEM,
+        prompt: raw,
+        maxOutputTokens: 400,
+        abortSignal,
+        maxRetries: 0,
+        temperature: 0.4,
+      },
+      'outline-requirement-enrichment',
+    );
+    const text = (result.text ?? '').trim();
+    if (!text || text.length > 2_000 || /^(OBJECTIVE|TOPICS)/i.test(text) === false) {
+      // Not the four-line shape (a refusal, chatter, a wrong language wrapper):
+      // the raw requirement is safer than a malformed brief.
+      log.warn(
+        `Requirement enrichment skipped: the answer did not fit the brief shape (textLen=${text.length})`,
+      );
+      return requirement;
+    }
+    log.info(`Requirement enriched in ${Date.now() - startedAt}ms (textLen=${text.length})`);
+    return `## Teaching Brief (auto-prepared from the request)\n\n${text}\n\n## Original Request\n\n${raw}`;
+  } catch (error) {
+    log.warn('Requirement enrichment skipped:', error);
+    return requirement;
+  }
 }

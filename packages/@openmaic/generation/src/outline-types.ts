@@ -28,6 +28,14 @@ export interface UserRequirements {
   webSearch?: boolean;
   interactiveMode?: boolean;
   taskEngineMode?: boolean;
+  /** A teaching-style bias the composer picked (game-led or animation-led). */
+  teachingStyle?: 'game' | 'animation';
+  /**
+   * True when the caller prepared the requirement itself (the curriculum
+   * picker builds a structured, curriculum-grounded brief): the outline
+   * step's requirement-enrichment call is skipped for it.
+   */
+  requirementPrepared?: boolean;
 }
 
 export interface WidgetOutline {

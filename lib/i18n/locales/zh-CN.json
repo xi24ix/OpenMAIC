@@ -2476,5 +2476,24 @@
         "materialExtraction": null
       }
     }
+  },
+  "composerLearner": {
+    "trigger": "学习者和风格",
+    "title": "学习者与教学风格",
+    "audience": "这节课为谁而设？",
+    "audienceStudent": "学生",
+    "audienceParent": "家长",
+    "audienceTeacher": "教师",
+    "support": "学习支持",
+    "supportGeneral": "通用",
+    "supportAutism": "自闭症支持",
+    "supportAdhd": "ADHD / 注意力",
+    "supportLearning": "学习困难",
+    "supportHint": "这些选项改变课程的授课方式 — 不作任何诊断。",
+    "style": "教学风格",
+    "styleClassic": "经典",
+    "styleInteractive": "互动",
+    "styleGame": "游戏式",
+    "styleAnimation": "动画为主"
   }
 }

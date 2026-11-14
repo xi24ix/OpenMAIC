@@ -100,6 +100,31 @@ export interface GenerationRunInput {
   agents: GenerationRunAgents;
   learnerProfile?: { nickname?: string; bio?: string };
   /**
+   * Who the lesson serves (the curriculum picker's audience, opened up to
+   * free-prompt runs): it shapes the outline's language and framing. Absent =
+   * the student default.
+   */
+  audience?: 'student' | 'parent' | 'teacher';
+  /**
+   * Learning-support profile the composer selected (the curriculum picker's
+   * support needs, opened up the same way): it injects the matching support
+   * instructions and attaches the `learner-support-*` skills. Absent/'none' =
+   * universal-design supports only.
+   */
+  supportProfile?: 'none' | 'autism' | 'adhd' | 'learning-difficulties';
+  /**
+   * The composer's teaching-style pick beyond the plain interactive toggle:
+   * a game-led or animation-led lesson. Both imply interactive planning;
+   * absent = the standard mix.
+   */
+  teachingStyle?: 'game' | 'animation';
+  /**
+   * True when the caller already prepared a structured, curriculum-grounded
+   * requirement (the curriculum picker): the requirement-enrichment call is
+   * skipped for it — enhancing a prepared brief would only blur it.
+   */
+  requirementPrepared?: boolean;
+  /**
    * How the outline is confirmed:
    * - `wait` holds the run for a `confirm-outline` command;
    * - `countdown` holds it for {@link OUTLINE_AUTO_CONFIRM_MS}, then the run

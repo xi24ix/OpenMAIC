@@ -2476,5 +2476,24 @@
         "materialExtraction": null
       }
     }
+  },
+  "composerLearner": {
+    "trigger": "Estudiante y estilo",
+    "title": "Estudiante y estilo de enseñanza",
+    "audience": "¿Para quién es esta lección?",
+    "audienceStudent": "Estudiante",
+    "audienceParent": "Familia",
+    "audienceTeacher": "Docente",
+    "support": "Apoyo para el aprendizaje",
+    "supportGeneral": "General",
+    "supportAutism": "Apoyo autismo",
+    "supportAdhd": "TDAH / atención",
+    "supportLearning": "Dificultades de aprendizaje",
+    "supportHint": "Estas opciones cambian cómo enseña la lección — nada se diagnostica.",
+    "style": "Estilo de enseñanza",
+    "styleClassic": "Clásico",
+    "styleInteractive": "Interactivo",
+    "styleGame": "Basado en juegos",
+    "styleAnimation": "Con animación"
   }
 }

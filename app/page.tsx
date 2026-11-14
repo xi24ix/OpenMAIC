@@ -41,7 +41,12 @@ import { SettingsDialog } from '@/components/settings';
 import { GenerationToolbar } from '@/components/generation/generation-toolbar';
 import { SkillPicker, type GenerationSkill } from '@/components/generation/skill-picker';
 import { CurriculumLessonPicker } from '@/components/curriculum/curriculum-lesson-picker';
-import { AgentBar } from '@/components/agent/agent-bar';
+import {
+  LearnerOptionsButton,
+  readLearnerOptions,
+  writeLearnerOptions,
+  type LearnerOptions,
+} from '@/components/generation/learner-options-button';
 import { useTheme } from '@/lib/hooks/use-theme';
 import {
   courseGenerationUsable,
@@ -111,7 +116,6 @@ import {
   shouldShowVocationalTestUi,
 } from '@/lib/config/feature-flags';
 import { useImportPptx } from '@/lib/import/use-import-pptx';
-import { InteractiveModeButton } from '@/components/generation/interactive-mode-button';
 import { ProBadge } from '@/components/workbench/ProBadge';
 import { arrivedByProSwap, startProSwap } from '@/lib/workbench/pro-swap';
 import {
@@ -122,6 +126,7 @@ import {
 const log = createLogger('Home');
 
 const RECENT_OPEN_STORAGE_KEY = 'recentClassroomsOpen';
+/** The old interactive toggle's key, migrated into the learner popover once. */
 const INTERACTIVE_MODE_STORAGE_KEY = 'interactiveModeEnabled';
 
 // PPTX import is still scaffolding: `useImportPptx` has no `onImported` consumer
@@ -134,13 +139,11 @@ let workbenchRuntimeCache: boolean | null = null;
 
 interface FormState {
   requirement: string;
-  interactiveMode: boolean;
   vocationalTestMode: boolean;
 }
 
 const initialFormState: FormState = {
   requirement: '',
-  interactiveMode: false,
   vocationalTestMode: false,
 };
 
@@ -211,6 +214,22 @@ function HomePage() {
     }
   };
 
+  // The composer's learner options (who the lesson serves, support needs,
+  // teaching style), persisted device-local like the rest of the composer
+  // state. A browser that only ever used the old interactive toggle migrates
+  // into the popover as the `interactive` style.
+  const [learner, setLearner] = useState<LearnerOptions>(() => {
+    try {
+      return readLearnerOptions();
+    } catch {
+      return { audience: 'student', supportProfile: 'none', teachingStyle: 'classic' };
+    }
+  });
+  const updateLearner = (next: LearnerOptions) => {
+    setLearner(next);
+    writeLearnerOptions(next);
+  };
+
   // Hydrate client-only state after mount (avoids SSR mismatch)
   useEffect(() => {
     try {
@@ -221,8 +240,8 @@ function HomePage() {
     }
     try {
       const savedInteractiveMode = localStorage.getItem(INTERACTIVE_MODE_STORAGE_KEY);
-      if (savedInteractiveMode === 'true') {
-        setForm((prev) => ({ ...prev, interactiveMode: true }));
+      if (savedInteractiveMode === 'true' && localStorage.getItem('learnerOptions') === null) {
+        updateLearner({ ...learner, teachingStyle: 'interactive' });
       }
     } catch {
       /* localStorage unavailable */
@@ -537,12 +556,6 @@ function HomePage() {
 
   const updateForm = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-    try {
-      if (field === 'interactiveMode')
-        localStorage.setItem(INTERACTIVE_MODE_STORAGE_KEY, String(value));
-    } catch {
-      /* ignore */
-    }
   };
 
   // Attached materials upload and extract at once; Generate waits for them.
@@ -603,9 +616,17 @@ function HomePage() {
         skillIds: [...(overrides?.skillIds ?? selectedSkills.map((skill) => skill.id))],
         maxScenes: overrides?.maxScenes,
         sourceVisuals: overrides?.sourceVisuals,
+        // Interactive, game and animation styles all plan interactive scenes;
+        // game and animation additionally bias WHICH widgets the outline plans.
         interactive:
-          overrides?.interactive ?? (form.vocationalTestMode ? true : form.interactiveMode),
+          overrides?.interactive ??
+          (form.vocationalTestMode ? true : learner.teachingStyle !== 'classic'),
         taskEngine: form.vocationalTestMode,
+        ...(learner.audience !== 'student' ? { audience: learner.audience } : {}),
+        ...(learner.supportProfile !== 'none' ? { supportProfile: learner.supportProfile } : {}),
+        ...(learner.teachingStyle === 'game' || learner.teachingStyle === 'animation'
+          ? { teachingStyle: learner.teachingStyle }
+          : {}),
         capabilities,
       });
       router.push(`/generation-preview?run=${encodeURIComponent(run.id)}`);
@@ -822,12 +843,11 @@ function HomePage() {
           )}
         >
           <div data-pro-morph="composer" className="aurora-composer w-full max-w-[820px]">
-            {/* ── Greeting + Profile + Agents ── */}
+            {/* ── Greeting + Profile ── */}
+            {/* The classroom's agent roster (who speaks, which voice) stays in
+                the classroom; the composer no longer previews agent avatars. */}
             <div className="relative z-20 flex items-start justify-between">
               <GreetingBar />
-              <div className="pr-3 pt-3.5 shrink-0 max-[1100px]:hidden">
-                <AgentBar />
-              </div>
             </div>
 
             {/* Textarea */}
@@ -896,17 +916,20 @@ function HomePage() {
                 disabled={preparingGenerate}
               />
 
-              {/* Interactive mode toggle */}
+              {/* Learner & teaching style: who the lesson serves, support
+                  needs, and which style leads (classic / interactive / game /
+                  animation). Folds the old interactive toggle into one
+                  control; the run input carries the picks to every step. */}
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <InteractiveModeButton
-                    pressed={form.interactiveMode}
-                    label={t('toolbar.interactiveModeLabel')}
-                    onPressedChange={(pressed) => updateForm('interactiveMode', pressed)}
+                  <LearnerOptionsButton
+                    value={learner}
+                    onChange={updateLearner}
+                    disabled={preparingGenerate}
                   />
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">
-                  {t('toolbar.interactiveModeHint')}
+                  {t('composerLearner.trigger')}
                 </TooltipContent>
               </Tooltip>
 

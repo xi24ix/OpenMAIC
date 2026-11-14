@@ -2476,5 +2476,24 @@
         "materialExtraction": null
       }
     }
+  },
+  "composerLearner": {
+    "trigger": "학습자 및 스타일",
+    "title": "학습자와 교수 스타일",
+    "audience": "이 레슨은 누구를 위한 것인가요?",
+    "audienceStudent": "학생",
+    "audienceParent": "학부모",
+    "audienceTeacher": "교사",
+    "support": "학습 지원",
+    "supportGeneral": "일반",
+    "supportAutism": "자폐 지원",
+    "supportAdhd": "ADHD·주의력",
+    "supportLearning": "학습 어려움",
+    "supportHint": "이 옵션들은 수업 방식을 바꿉니다 — 진단이 아닙니다.",
+    "style": "교수 스타일",
+    "styleClassic": "기본",
+    "styleInteractive": "인터랙티브",
+    "styleGame": "게임 기반",
+    "styleAnimation": "애니메이션"
   }
 }

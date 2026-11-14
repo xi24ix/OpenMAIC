@@ -2505,5 +2505,24 @@
         "materialExtraction": null
       }
     }
+  },
+  "composerLearner": {
+    "trigger": "المتعلم والنمط",
+    "title": "المتعلم ونمط التدريس",
+    "audience": "لمن هذا الدرس؟",
+    "audienceStudent": "طالب",
+    "audienceParent": "ولي أمر",
+    "audienceTeacher": "معلم",
+    "support": "دعم التعلم",
+    "supportGeneral": "عام",
+    "supportAutism": "دعم التوحّد",
+    "supportAdhd": "الانتباه والتنظيم",
+    "supportLearning": "صعوبات التعلم",
+    "supportHint": "تغيّر هذه الخيارات طريقة التدريس — لا تشخيص لأي حالة.",
+    "style": "نمط التدريس",
+    "styleClassic": "عادي",
+    "styleInteractive": "تفاعلي",
+    "styleGame": "لعبة",
+    "styleAnimation": "تحريك"
   }
 }

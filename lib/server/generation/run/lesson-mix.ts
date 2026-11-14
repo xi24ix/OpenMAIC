@@ -88,6 +88,81 @@ export function moveExplainersToEnd(outlines: readonly SceneOutline[]): SceneOut
 }
 
 /**
+ * The widget a rhythm conversion builds, rotating by position so a lesson
+ * alternates HOW the learner does things (explore a map, drive a simulation,
+ * watch a concept move) instead of repeating one interaction. A game-shaped
+ * teaching style leads with the playable widgets; every rotation keeps to
+ * widget types whose minimal widgetOutline the content generator fills from
+ * the slide's own teaching content.
+ */
+const RHYTHM_ROTATION: Record<
+  'classic' | 'game' | 'animation',
+  readonly NonNullable<SceneOutline['widgetType']>[]
+> = {
+  classic: ['diagram', 'simulation', 'animation-explainer'],
+  game: ['simulation', 'game', 'diagram'],
+  animation: ['animation-explainer', 'simulation', 'diagram'],
+};
+
+/** The minimal widget outline each rotation pick needs (the concept comes from the slide). */
+function rhythmWidgetOutline(
+  widgetType: NonNullable<SceneOutline['widgetType']>,
+  concept: string,
+): SceneOutline['widgetOutline'] {
+  switch (widgetType) {
+    case 'diagram':
+      return { concept, diagramType: 'mindmap' };
+    case 'game':
+      return { gameType: 'quiz', concept };
+    default:
+      return { concept };
+  }
+}
+
+/**
+ * The engagement-rhythm guarantee: the outline prompt asks the model to never
+ * place two pure-teaching slides back to back (a boredom run — the learner
+ * quits), and this pass enforces it in code on the same engine-generated
+ * outlines the mix guarantee runs on. Every convertible slide that directly
+ * follows another teaching slide becomes the interactive scene the rhythm
+ * asks for, its widget rotating by position and teaching style, its title,
+ * description and key points riding along so everything stays in the
+ * teaching language. The first slide of each pair always survives: a lesson
+ * still needs its explanations.
+ */
+export function ensureEngagementRhythm(
+  outlines: readonly SceneOutline[],
+  context: { teachingStyle?: 'game' | 'animation' } = {},
+): SceneOutline[] {
+  const rotation = RHYTHM_ROTATION[context.teachingStyle ?? 'classic'];
+  const result = [...outlines];
+  let widgetIndex = 0;
+  let conversions = 0;
+  for (let i = 1; i < result.length - 1; i += 1) {
+    const previous = result[i - 1]!;
+    const current = result[i]!;
+    const previousIsTeaching = previous.type === 'slide' && !previous.widgetType;
+    if (!previousIsTeaching || !isConvertible(current)) continue;
+    const widgetType = rotation[widgetIndex % rotation.length]!;
+    widgetIndex += 1;
+    conversions += 1;
+    const concept = current.description?.trim() || current.title?.trim() || 'the lesson map';
+    result[i] = {
+      ...current,
+      type: 'interactive',
+      widgetType,
+      widgetOutline: rhythmWidgetOutline(widgetType, concept),
+      mediaGenerations: undefined,
+      suggestedImageIds: undefined,
+    };
+  }
+  if (conversions > 0) {
+    return result.map((outline, index) => ({ ...outline, order: index }));
+  }
+  return result;
+}
+
+/**
  * Fill a slide-heavy outline's mix: one interactive scene among the middle
  * teaching scenes, and one quiz built from a teaching scene just before the
  * end. Slides a finite budget left over keep the summary instruction light:

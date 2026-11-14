@@ -316,7 +316,7 @@ const MAX_GENERATION_REQUIREMENT_CHARS = 20_000;
 const EVIDENCE_TRUNCATION_WARNING =
   'The retrieved curriculum evidence was shortened to fit the generation request limit.';
 
-function audienceInstruction(audience: CurriculumGenerationRequest['audience']): string {
+export function audienceInstruction(audience: CurriculumGenerationRequest['audience']): string {
   switch (audience) {
     case 'parent':
       return 'The lesson is being prepared by a parent for a student. Keep the learner-facing language direct, and include one short note for the parent on how to support without giving the answer.';
@@ -327,7 +327,7 @@ function audienceInstruction(audience: CurriculumGenerationRequest['audience']):
   }
 }
 
-function supportInstruction(profile: CurriculumGenerationRequest['supportProfile']): string {
+export function supportInstruction(profile: CurriculumGenerationRequest['supportProfile']): string {
   switch (profile) {
     case 'autism':
       return 'Use predictable structure, explicit transitions, low-sensory visual hierarchy, literal and unambiguous language, one task at a time, optional response modes, and a clear success criterion. Do not infer or claim a diagnosis; adapt the lesson to the selected support needs.';
@@ -338,6 +338,61 @@ function supportInstruction(profile: CurriculumGenerationRequest['supportProfile
     default:
       return 'Use universal-design supports: clear objectives, readable structure, multiple ways to engage and respond, and a short check for understanding.';
   }
+}
+
+/**
+ * The built-in learner-support skills a support profile maps to — the same
+ * ids the curriculum preparation attaches, so the composer's learner popover
+ * rides the identical skill machinery for free-prompt runs.
+ */
+export function supportProfileSkillIds(
+  profile: CurriculumGenerationRequest['supportProfile'],
+): string[] {
+  switch (profile) {
+    case 'autism':
+      return ['learner-support-autism'];
+    case 'adhd':
+      return ['learner-support-adhd'];
+    case 'learning-difficulties':
+      return ['learner-support-learning-difficulties'];
+    default:
+      return [];
+  }
+}
+
+/**
+ * The learner directives a free-prompt run carries (audience, support,
+ * teaching style), as one prompt block. The curriculum path composes the same
+ * instructions into its prepared requirement; this is the free-prompt
+ * equivalent, prepended by the engine at the runRequirements seam so the
+ * outline, content and actions steps all read it.
+ */
+export function learnerDirectiveBlock(input: {
+  audience?: CurriculumGenerationRequest['audience'];
+  supportProfile?: CurriculumGenerationRequest['supportProfile'];
+  teachingStyle?: 'game' | 'animation';
+}): string {
+  const parts: string[] = [];
+  if (input.audience) {
+    parts.push(`AUDIENCE: ${audienceInstruction(input.audience)}`);
+  }
+  if (input.supportProfile && input.supportProfile !== 'none') {
+    parts.push(
+      `LEARNER SUPPORT (selected by the user — honor it without diagnosing): ${supportInstruction(input.supportProfile)}`,
+    );
+  }
+  if (input.teachingStyle === 'game') {
+    parts.push(
+      'TEACHING STYLE — GAME-BASED: bias practice scenes toward playable widgets (game, simulation); frame checks as challenges with score or immediate feedback; keep the lesson playful without letting the game replace the teaching.',
+    );
+  } else if (input.teachingStyle === 'animation') {
+    parts.push(
+      'TEACHING STYLE — ANIMATION-LED: bias explanations toward animated scenes (animation-explainer, 3D visualization, procedural motion) over static text; each concept moves, draws or builds itself on screen.',
+    );
+  }
+  return parts.length > 0
+    ? `\n\n## Learner & Teaching Directives (user-selected)\n\n${parts.join('\n')}`
+    : '';
 }
 
 function sourceBlock(block: CurriculumContextBlock): string {

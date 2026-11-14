@@ -2476,5 +2476,24 @@
         "materialExtraction": null
       }
     }
+  },
+  "composerLearner": {
+    "trigger": "Ученик и стиль",
+    "title": "Ученик и стиль обучения",
+    "audience": "Для кого этот урок?",
+    "audienceStudent": "Ученик",
+    "audienceParent": "Родитель",
+    "audienceTeacher": "Учитель",
+    "support": "Поддержка обучения",
+    "supportGeneral": "Общая",
+    "supportAutism": "Поддержка при аутизме",
+    "supportAdhd": "СДВГ / внимание",
+    "supportLearning": "Трудности обучения",
+    "supportHint": "Эти параметры меняют подачу урока — диагноз не ставится.",
+    "style": "Стиль обучения",
+    "styleClassic": "Классический",
+    "styleInteractive": "Интерактивный",
+    "styleGame": "Игровой",
+    "styleAnimation": "Анимационный"
   }
 }

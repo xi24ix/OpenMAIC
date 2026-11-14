@@ -2505,5 +2505,24 @@
         "materialExtraction": null
       }
     }
+  },
+  "composerLearner": {
+    "trigger": "Learner & style",
+    "title": "Learner & teaching style",
+    "audience": "Who is this lesson for?",
+    "audienceStudent": "Student",
+    "audienceParent": "Parent",
+    "audienceTeacher": "Teacher",
+    "support": "Learning support",
+    "supportGeneral": "General",
+    "supportAutism": "Autism support",
+    "supportAdhd": "ADHD / attention",
+    "supportLearning": "Learning difficulties",
+    "supportHint": "These options change how the lesson teaches — nothing is diagnosed.",
+    "style": "Teaching style",
+    "styleClassic": "Classic",
+    "styleInteractive": "Interactive",
+    "styleGame": "Game-based",
+    "styleAnimation": "Animation-led"
   }
 }

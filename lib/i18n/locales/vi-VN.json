@@ -2476,5 +2476,24 @@
         "materialExtraction": null
       }
     }
+  },
+  "composerLearner": {
+    "trigger": "Người học & phong cách",
+    "title": "Người học & phong cách dạy học",
+    "audience": "Bài học này dành cho ai?",
+    "audienceStudent": "Học sinh",
+    "audienceParent": "Phụ huynh",
+    "audienceTeacher": "Giáo viên",
+    "support": "Hỗ trợ học tập",
+    "supportGeneral": "Chung",
+    "supportAutism": "Hỗ trợ tự kỷ",
+    "supportAdhd": "ADHD / chú ý",
+    "supportLearning": "Khó khăn học tập",
+    "supportHint": "Các lựa chọn này đổi cách dạy — không chẩn đoán nào được đưa ra.",
+    "style": "Phong cách dạy học",
+    "styleClassic": "Cổ điển",
+    "styleInteractive": "Tương tác",
+    "styleGame": "Dựa trên trò chơi",
+    "styleAnimation": "Dẫn bằng hoạt hình"
   }
 }

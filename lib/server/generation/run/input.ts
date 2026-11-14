@@ -36,6 +36,35 @@ const MAX_VOICE_ID_CHARS = 256;
 /** Command ids are the caller's idempotency keys. */
 const COMMAND_ID_PATTERN = /^[A-Za-z0-9_.:-]{1,128}$/;
 
+/** The audiences, support profiles and teaching styles a run may name (the curriculum picker's sets). */
+const AUDIENCES: readonly NonNullable<GenerationRunInput['audience']>[] = [
+  'student',
+  'parent',
+  'teacher',
+];
+const SUPPORT_PROFILES: readonly NonNullable<GenerationRunInput['supportProfile']>[] = [
+  'none',
+  'autism',
+  'adhd',
+  'learning-difficulties',
+];
+const TEACHING_STYLES: readonly NonNullable<GenerationRunInput['teachingStyle']>[] = [
+  'game',
+  'animation',
+];
+
+function optionalEnum<T extends string>(
+  value: unknown,
+  field: string,
+  allowed: readonly T[],
+): Parsed<T | undefined> {
+  if (value === undefined) return { ok: true, value: undefined };
+  if (typeof value !== 'string' || !allowed.includes(value as T)) {
+    return { ok: false, message: `${field} must be one of: ${allowed.join(', ')}` };
+  }
+  return { ok: true, value: value as T };
+}
+
 export { MAX_OUTLINE_JSON_BYTES, MAX_OUTLINE_SCENES } from '@/lib/server/generation/outline-schema';
 
 /** The request's JSON body, or a refusal (413 for a body over `maxBytes`, 400 for malformed JSON). */
@@ -213,6 +242,15 @@ export function parseRunInput(raw: unknown): Parsed<GenerationRunInput> {
   const taskEngine = optionalBoolean(body.taskEngine, 'taskEngine');
   if (!taskEngine.ok) return taskEngine;
 
+  const audience = optionalEnum(body.audience, 'audience', AUDIENCES);
+  if (!audience.ok) return audience;
+  const supportProfile = optionalEnum(body.supportProfile, 'supportProfile', SUPPORT_PROFILES);
+  if (!supportProfile.ok) return supportProfile;
+  const teachingStyle = optionalEnum(body.teachingStyle, 'teachingStyle', TEACHING_STYLES);
+  if (!teachingStyle.ok) return teachingStyle;
+  const requirementPrepared = optionalBoolean(body.requirementPrepared, 'requirementPrepared');
+  if (!requirementPrepared.ok) return requirementPrepared;
+
   let agents: GenerationRunInput['agents'] = { mode: 'auto' };
   if (body.agents !== undefined) {
     const value = record(body.agents);
@@ -300,6 +338,12 @@ export function parseRunInput(raw: unknown): Parsed<GenerationRunInput> {
       taskEngine: taskEngine.value,
       agents,
       ...(learnerProfile ? { learnerProfile } : {}),
+      ...(audience.value ? { audience: audience.value } : {}),
+      ...(supportProfile.value && supportProfile.value !== 'none'
+        ? { supportProfile: supportProfile.value }
+        : {}),
+      ...(teachingStyle.value ? { teachingStyle: teachingStyle.value } : {}),
+      ...(requirementPrepared.value ? { requirementPrepared: true } : {}),
       outlineReview,
       ...(voice ? { voice } : {}),
       ...(releaseMaterials.value && materialIds.length > 0 ? { releaseMaterials: true } : {}),

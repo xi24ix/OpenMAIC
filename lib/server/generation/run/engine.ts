@@ -57,7 +57,11 @@ import { findSkill, isOutlineSkill, skillOutlineContext } from '@/lib/server/age
 import { BUILT_IN_AGENTS } from '@/lib/orchestration/registry/built-in';
 import type { AgentConfig } from '@/lib/orchestration/registry/types';
 import { generateClassroomId } from '@/lib/server/classroom-persistence';
-import { curriculumVisualAsset } from '@/lib/server/curriculum-kb';
+import {
+  curriculumVisualAsset,
+  learnerDirectiveBlock,
+  supportProfileSkillIds,
+} from '@/lib/server/curriculum-kb';
 import { normalizeSceneOutlines } from '@/lib/server/generation/outline-schema';
 import type { StepContext } from '@/lib/server/generation/steps/context';
 import type { OutlineEvent, OutlineResult } from '@/lib/server/generation/steps/outline';
@@ -118,7 +122,12 @@ import {
   type RunMediaItem,
   type RunStep,
 } from './plan';
-import { ensureLessonMix, ensureSceneVisuals, moveExplainersToEnd } from './lesson-mix';
+import {
+  ensureEngagementRhythm,
+  ensureLessonMix,
+  ensureSceneVisuals,
+  moveExplainersToEnd,
+} from './lesson-mix';
 import {
   FIRST_SCENE_MAX_RETRIES,
   SCENE_MAX_RETRIES,
@@ -225,13 +234,21 @@ export function learnerProfileText(input: GenerationRunInput): string | undefine
 
 /** The requirements the outline and the first scene are generated with. */
 export function runRequirements(input: GenerationRunInput, webSearch: boolean): UserRequirements {
+  // The composer's learner directives ride the requirement text itself, so
+  // every step that reads the requirement (outline, content, actions, the
+  // research query rewrite) honors what the user selected. The stored run
+  // input keeps the raw requirement; only the prompt-facing view carries the
+  // block.
+  const directives = learnerDirectiveBlock(input);
   return {
-    requirement: input.requirement,
+    requirement: directives ? `${directives}\n\n${input.requirement}` : input.requirement,
     ...(input.learnerProfile?.nickname ? { userNickname: input.learnerProfile.nickname } : {}),
     ...(input.learnerProfile?.bio ? { userBio: input.learnerProfile.bio } : {}),
     ...(webSearch ? { webSearch: true } : {}),
     ...(input.interactive ? { interactiveMode: true } : {}),
     ...(input.taskEngine ? { taskEngineMode: true } : {}),
+    ...(input.teachingStyle ? { teachingStyle: input.teachingStyle } : {}),
+    ...(input.requirementPrepared ? { requirementPrepared: true } : {}),
   };
 }
 
@@ -887,7 +904,11 @@ async function executeClaimedRun(
       }
     };
     const skills = (
-      await Promise.all((input.skillIds ?? []).map((ref) => findSkill(ref, owner)))
+      await Promise.all(
+        [...(input.skillIds ?? []), ...supportProfileSkillIds(input.supportProfile ?? 'none')].map(
+          (ref) => findSkill(ref, owner),
+        ),
+      )
     ).flatMap((skill) => (skill && isOutlineSkill(skill) ? [skill] : []));
     const skillContext = skills.length
       ? skills.map((skill) => skillOutlineContext(skill, { includeConstraints: true })).join('\n\n')
@@ -949,7 +970,10 @@ async function executeClaimedRun(
         {
           outlines: ensureSceneVisuals(
             ensureLessonMix(
-              moveExplainersToEnd(normalized.value.slice(0, input.maxScenes ?? 100)),
+              ensureEngagementRhythm(
+                moveExplainersToEnd(normalized.value.slice(0, input.maxScenes ?? 100)),
+                { teachingStyle: input.teachingStyle },
+              ),
               input.maxScenes,
             ),
             { designDirective: result.designDirective },
