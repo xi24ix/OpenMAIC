@@ -1,8 +1,17 @@
 # Bug report
 
-Review date: 2026-11-12
+Review date: 2026-11-12 (B1–B6) · Incident addendum: 2026-11-14 (B7)
 
 The review covered the lesson-generation runner, step retry wrappers, outline streaming, owner authentication on model-generation routes, and the Supabase profile migration/RLS policies. The observed Coolify state and shared provider credentials are recorded after the bug list; they are operational findings, not code defects.
+
+## B7 — Two concurrent Docker builds starved the production host into a hard outage [FIXED]
+
+- **Location:** Coolify deploy orchestration (external configuration; no repository file). Triggered from the Coolify MCP/API on 2026-11-13.
+- **Severity:** critical
+- **What is wrong:** The production `openmaic` app and the sandbox `open-m-a-i-c.git` app were deployed at the same moment. Both build from the same repo (`xi24ix/OpenMAIC:main`) on the same Oracle free-tier ARM host (`concurrent_builds=2` permits it), and two simultaneous Next.js Docker builds + pnpm installs exhausted the host: no ICMP, no TCP on any port (app, sibling apps, Coolify itself) for ~25 minutes until the instance was hard-reset from the Oracle console. `reboot_required: true` OS updates were applied during the recovery reboot.
+- **Trigger:** Triggering `POST /deploy?uuid=` for two applications tracking the same commit without waiting for the first build to settle.
+- **Fix (operational rule):** Deploy ONE application at a time — trigger production, wait for its deployment to reach a terminal state, then trigger the sandbox. Never queue both. (A structural fix would be a separate build server or a CPU/memory cap on build containers; not yet applied.)
+
 
 ## B1 — Later scene failures get six attempts [FIXED]
 
