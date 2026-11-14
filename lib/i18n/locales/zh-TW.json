@@ -1354,7 +1354,9 @@
     "runLoadRetrying": "正在重試…",
     "mediaGenerationFailed": "媒體生成失敗",
     "mediaGenerationDisabled": "生成已停用",
-    "widgetAnimationExplainer": "開場動畫"
+    "widgetAnimationExplainer": "開場動畫",
+    "plannedImage": "計劃生成圖片 ({{count}})",
+    "reusedImage": "重複使用圖片 ({{count}})"
   },
   "settings": {
     "title": "設定",
@@ -2494,6 +2496,7 @@
     "styleClassic": "經典",
     "styleInteractive": "互動",
     "styleGame": "遊戲式",
-    "styleAnimation": "動畫為主"
+    "styleAnimation": "動畫為主",
+    "voice": "解說配音"
   }
 }

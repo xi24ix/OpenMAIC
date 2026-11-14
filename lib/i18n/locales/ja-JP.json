@@ -1369,7 +1369,9 @@
     "runLoadRetrying": "再試行しています…",
     "mediaGenerationFailed": "メディアの生成に失敗しました",
     "mediaGenerationDisabled": "生成は無効です",
-    "widgetAnimationExplainer": "モーション導入"
+    "widgetAnimationExplainer": "モーション導入",
+    "plannedImage": "生成予定の画像 ({{count}})",
+    "reusedImage": "再利用する画像 ({{count}})"
   },
   "settings": {
     "title": "設定",
@@ -2494,6 +2496,7 @@
     "styleClassic": "クラシック",
     "styleInteractive": "インタラクティブ",
     "styleGame": "ゲーム型",
-    "styleAnimation": "アニメーション"
+    "styleAnimation": "アニメーション",
+    "voice": "ナレーション音声"
   }
 }

@@ -1369,7 +1369,9 @@
     "runLoadRetrying": "다시 시도하는 중…",
     "mediaGenerationFailed": "미디어 생성에 실패했습니다",
     "mediaGenerationDisabled": "생성이 비활성화되었습니다",
-    "widgetAnimationExplainer": "모션 인트로"
+    "widgetAnimationExplainer": "모션 인트로",
+    "plannedImage": "생성 예정 이미지 ({{count}})",
+    "reusedImage": "재사용 이미지 ({{count}})"
   },
   "settings": {
     "title": "설정",
@@ -2494,6 +2496,7 @@
     "styleClassic": "기본",
     "styleInteractive": "인터랙티브",
     "styleGame": "게임 기반",
-    "styleAnimation": "애니메이션"
+    "styleAnimation": "애니메이션",
+    "voice": "내레이션 음성"
   }
 }

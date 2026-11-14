@@ -1369,7 +1369,9 @@
     "runLoadRetrying": "Tentando novamente…",
     "mediaGenerationFailed": "Falha ao gerar a mídia",
     "mediaGenerationDisabled": "Geração desativada",
-    "widgetAnimationExplainer": "Intro animada"
+    "widgetAnimationExplainer": "Intro animada",
+    "plannedImage": "Imagem planejada ({{count}})",
+    "reusedImage": "Imagem reutilizada ({{count}})"
   },
   "settings": {
     "title": "Configurações",
@@ -2494,6 +2496,7 @@
     "styleClassic": "Clássico",
     "styleInteractive": "Interativo",
     "styleGame": "Baseado em jogos",
-    "styleAnimation": "Com animação"
+    "styleAnimation": "Com animação",
+    "voice": "Voz de narração"
   }
 }

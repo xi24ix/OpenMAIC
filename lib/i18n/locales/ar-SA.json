@@ -1398,7 +1398,9 @@
     "runLoadRetrying": "جارٍ إعادة المحاولة…",
     "mediaGenerationFailed": "فشل توليد الوسائط",
     "mediaGenerationDisabled": "التوليد معطّل",
-    "widgetAnimationExplainer": "شاشة افتتاحية متحركة"
+    "widgetAnimationExplainer": "شاشة افتتاحية متحركة",
+    "plannedImage": "صورة مخططة ({{count}})",
+    "reusedImage": "صورة معاد استخدامها ({{count}})"
   },
   "settings": {
     "title": "الإعدادات",
@@ -2523,6 +2525,7 @@
     "styleClassic": "عادي",
     "styleInteractive": "تفاعلي",
     "styleGame": "لعبة",
-    "styleAnimation": "تحريك"
+    "styleAnimation": "تحريك",
+    "voice": "صوت التعليق"
   }
 }

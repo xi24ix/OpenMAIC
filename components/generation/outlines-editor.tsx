@@ -3,9 +3,11 @@
 import { Fragment, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
+  Atom,
   Check,
   ChevronDown,
   GripVertical,
+  Image as ImageIcon,
   Loader2,
   Minimize2,
   Minus,
@@ -690,6 +692,40 @@ function SceneRow({
               {!disabled && <DeleteSceneButton onConfirm={onRemove} />}
             </div>
           </div>
+
+          {/* Rhythm preview — what the learner DOES in this scene: the
+              widget driving an interactive scene, or the visual a slide
+              plans to carry. The explain → interact cadence is meant to be
+              readable at a glance while the outline is reviewed. */}
+          {(outline.type === 'interactive' && outline.widgetType) ||
+          (outline.type === 'slide' &&
+            ((outline.mediaGenerations?.length ?? 0) > 0 ||
+              (outline.suggestedImageIds?.length ?? 0) > 0)) ? (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {outline.type === 'interactive' && outline.widgetType && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-violet-500/10 px-2 py-0.5 text-[10px] font-medium text-violet-600 dark:text-violet-300">
+                  <Atom aria-hidden className="size-3" />
+                  {outline.widgetType}
+                </span>
+              )}
+              {outline.type === 'slide' && (outline.mediaGenerations?.length ?? 0) > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-sky-500/10 px-2 py-0.5 text-[10px] font-medium text-sky-600 dark:text-sky-300">
+                  <ImageIcon aria-hidden className="size-3" />
+                  {t('generation.plannedImage', {
+                    count: outline.mediaGenerations!.length,
+                  })}
+                </span>
+              )}
+              {outline.type === 'slide' && (outline.suggestedImageIds?.length ?? 0) > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-teal-500/10 px-2 py-0.5 text-[10px] font-medium text-teal-600 dark:text-teal-300">
+                  <ImageIcon aria-hidden className="size-3" />
+                  {t('generation.reusedImage', {
+                    count: outline.suggestedImageIds!.length,
+                  })}
+                </span>
+              )}
+            </div>
+          ) : null}
 
           {/* Description */}
           <textarea
@@ -1586,11 +1622,11 @@ function parseDesignDirectiveEcho(
   if (!directive) return null;
   const concept = /^- Visual concept:\s*(.+)$/m.exec(directive)?.[1]?.trim();
   const palette =
-    /^- Palette[^\n:]*:\s*(.+)$/m
-      .exec(directive)?.[1]?.match(/#[0-9a-fA-F]{6}/g) ?? [];
+    /^- Palette[^\n:]*:\s*(.+)$/m.exec(directive)?.[1]?.match(/#[0-9a-fA-F]{6}/g) ?? [];
   const background = /^- Background mode:\s*(\S+)$/m.exec(directive)?.[1]?.trim();
   const motionPersonality = /^- Motion personality:\s*(\S+)$/m
-    .exec(directive)?.[1]?.trim() as DesignDirectiveEcho['motionPersonality'];
+    .exec(directive)?.[1]
+    ?.trim() as DesignDirectiveEcho['motionPersonality'];
   if (!concept && palette.length === 0) return null;
   const echo: DesignDirectiveEcho = {
     ...(concept ? { concept } : {}),

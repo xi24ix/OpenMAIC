@@ -1398,7 +1398,9 @@
     "runLoadRetrying": "Trying again…",
     "mediaGenerationFailed": "Media generation failed",
     "mediaGenerationDisabled": "Generation disabled",
-    "widgetAnimationExplainer": "Motion Intro"
+    "widgetAnimationExplainer": "Motion Intro",
+    "plannedImage": "Planned image ({{count}})",
+    "reusedImage": "Reused image ({{count}})"
   },
   "settings": {
     "title": "Settings",
@@ -2523,6 +2525,7 @@
     "styleClassic": "Classic",
     "styleInteractive": "Interactive",
     "styleGame": "Game-based",
-    "styleAnimation": "Animation-led"
+    "styleAnimation": "Animation-led",
+    "voice": "Narration voice"
   }
 }

@@ -462,7 +462,16 @@ Omit `scenarioRoleplay` and `scenarioBrief` entirely for ordinary build-an-artef
 
 **Scene-level rules:**
 
-4. The `outlines` array holds only complete scene objects: every element must have every ✅ field above, including a non-empty `type`. Never write a design-directive object (palette, background, concept, motionPersonality), a widget sub-object, or an unfinished scene draft into `outlines` — those belong in their own keys or nowhere. If a scene cannot be fully described, leave it out of the array entirely rather than emit a fragment.
+4. The `outlines` array holds only complete scene objects: every element must have every ✅ field above, including a non-empty `type`. Never write a design-directive object (palette, background, concept, motionPersonality), a widget sub-object, or an unfinished scene draft into `outlines` — those belong in their own keys or nowhere. If a scene cannot be fully described, leave it out of the array entirely rather than emit a fragment. Concretely, these observed shapes are FORBIDDEN entries (the validator drops them and the whole outline is retried):
+
+   ```json
+   // FORBIDDEN — a fragment: no type, no teaching content, a stray summary object
+   { "order": 1, "summary": "Something about citizenship" }
+   // FORBIDDEN — a bare string, a design note, a nested scene wrapper
+   "Introduction to good citizenship"
+   // VALID — the smallest acceptable scene (all ✅ fields present)
+   { "id": "s1", "type": "slide", "title": "What Makes a Good Citizen?", "description": "One sentence on what the scene teaches.", "keyPoints": ["First key point"], "order": 0 }
+   ```
 5. `type` is one of `"slide"`, `"quiz"`, `"interactive"`, `"pbl"`.
 6. `quiz` scenes must include `quizConfig`.
 7. `interactive` scenes must include `widgetType` and `widgetOutline` (preferred). `interactiveConfig` is deprecated and only accepted for backwards compatibility.

@@ -1369,7 +1369,9 @@
     "runLoadRetrying": "Повторная попытка…",
     "mediaGenerationFailed": "Не удалось создать медиа",
     "mediaGenerationDisabled": "Генерация отключена",
-    "widgetAnimationExplainer": "Моушн-интро"
+    "widgetAnimationExplainer": "Моушн-интро",
+    "plannedImage": "Запланированное изображение ({{count}})",
+    "reusedImage": "Повторно используемое изображение ({{count}})"
   },
   "settings": {
     "title": "Настройки",
@@ -2494,6 +2496,7 @@
     "styleClassic": "Классический",
     "styleInteractive": "Интерактивный",
     "styleGame": "Игровой",
-    "styleAnimation": "Анимационный"
+    "styleAnimation": "Анимационный",
+    "voice": "Голос narration"
   }
 }

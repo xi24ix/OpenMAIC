@@ -1,10 +1,14 @@
 'use client';
 
 import { forwardRef, type ComponentPropsWithoutRef } from 'react';
-import { Check, ChevronDown, Users } from 'lucide-react';
+import { Check, ChevronDown, Users, Volume2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/hooks/use-i18n';
+import { useSlotTTSProvidersConfig, useTTSSelection } from '@/lib/audio/use-tts-selection';
+import { getSelectableProvidersWithVoices } from '@/lib/audio/voice-resolver';
+import { useAllVoiceProfiles } from '@/lib/audio/voxcpm-voices';
+import { useSettingsStore } from '@/lib/store/settings';
 
 /**
  * What the composer's learner popover holds. `teachingStyle` folds the old
@@ -84,6 +88,55 @@ function ChipGroup<T extends string>({ label, value, options, onChange }: ChipGr
           );
         })}
       </div>
+    </div>
+  );
+}
+
+/**
+ * The narration voice the generated lesson uses. Reads the tts slot's
+ * selectable voices — the same catalog the classroom's voice pill offers —
+ * and writes the global selection, which every run's narration picks up
+ * through its voice input. Hidden entirely when TTS is off or the slot has
+ * no voices: no dead control.
+ */
+function VoiceRow() {
+  const { t } = useI18n();
+  const selection = useTTSSelection();
+  const setTTSVoice = useSettingsStore((s) => s.setTTSVoice);
+  const ttsProvidersConfig = useSlotTTSProvidersConfig();
+  const { profiles: voiceProfiles } = useAllVoiceProfiles();
+  const providers = getSelectableProvidersWithVoices(ttsProvidersConfig, voiceProfiles, []);
+  const voices = providers.flatMap((provider) =>
+    provider.voices.map((voice) => ({
+      key: `${provider.providerId}::${voice.id}`,
+      providerId: provider.providerId,
+      voiceId: voice.id,
+      label: providers.length > 1 ? `${provider.providerName} · ${voice.name}` : voice.name,
+    })),
+  );
+  const currentKey = selection ? `${selection.providerId}::${selection.voice}` : undefined;
+  if (!selection || voices.length === 0) return null;
+  return (
+    <div className="space-y-1.5">
+      <p className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground/70">
+        <Volume2 aria-hidden="true" className="size-3" />
+        {t('composerLearner.voice')}
+      </p>
+      <select
+        value={voices.some((v) => v.key === currentKey) ? currentKey : voices[0]!.key}
+        onChange={(event) => {
+          const picked = voices.find((v) => v.key === event.target.value);
+          if (picked) setTTSVoice(picked.voiceId, picked.providerId);
+        }}
+        aria-label={t('composerLearner.voice')}
+        className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs outline-none transition-colors focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
+      >
+        {voices.map((voice) => (
+          <option key={voice.key} value={voice.key}>
+            {voice.label}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }
@@ -203,6 +256,7 @@ export const LearnerOptionsButton = forwardRef<HTMLButtonElement, LearnerOptions
               { value: 'animation', label: t('composerLearner.styleAnimation') },
             ]}
           />
+          <VoiceRow />
         </PopoverContent>
       </Popover>
     );

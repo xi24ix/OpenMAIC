@@ -1369,7 +1369,9 @@
     "runLoadRetrying": "Đang thử lại…",
     "mediaGenerationFailed": "Tạo nội dung đa phương tiện thất bại",
     "mediaGenerationDisabled": "Đã tắt chức năng tạo",
-    "widgetAnimationExplainer": "Giới thiệu động"
+    "widgetAnimationExplainer": "Giới thiệu động",
+    "plannedImage": "Hình ảnh dự kiến ({{count}})",
+    "reusedImage": "Hình ảnh tái sử dụng ({{count}})"
   },
   "settings": {
     "title": "Cài đặt",
@@ -2494,6 +2496,7 @@
     "styleClassic": "Cổ điển",
     "styleInteractive": "Tương tác",
     "styleGame": "Dựa trên trò chơi",
-    "styleAnimation": "Dẫn bằng hoạt hình"
+    "styleAnimation": "Dẫn bằng hoạt hình",
+    "voice": "Giọng đọc"
   }
 }
