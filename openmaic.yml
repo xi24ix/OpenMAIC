@@ -53,18 +53,25 @@ providers:
       - gpt-4o-mini-transcribe
 
   # Scene images: OpenRouter's image endpoint.
+  # Primary: recraft flash v2's :free variant (free until 2026-11-30 — the
+  # operator's window; revisit before it ends). seedream-5-0-flash stays
+  # declared as IMAGE_FALLBACK_MODEL (paid, ~$0.018/image) so a rate-limited
+  # or retired free variant still yields an image; pro stays declared for a
+  # manual premium switch.
   images:
     preset: openrouter-image
     apiKey: ${OPENROUTER_API_KEY}
     models:
+      - recraft/recraft-v4.1-flash-v2:free
+      - bytedance-seed/seedream-5-0-flash
       - bytedance-seed/seedream-5-0-pro
 
-  # Scene video: OpenRouter's video endpoint.
-  videos:
-    preset: openrouter-video
-    apiKey: ${OPENROUTER_API_KEY}
-    models:
-      - bytedance/seedance-2.5
+  # Scene video: DISABLED by the operator — video generation is too expensive
+  # for the value it adds. Motion comes from the animation-explainer /
+  # interactive widgets (GSAP, 3D, infographics, whiteboard) and images
+  # instead. `null` is the validator's documented "off": with `lock: all`
+  # every slot must still be WRITTEN, and null refuses it for everyone. The
+  # videos provider block is gone with it.
 
   # Web search: Tavily.
   search:
@@ -122,9 +129,10 @@ slots:
   tts: speech-fish:s2.1-pro-free
   asr: transcription:gpt-4o-mini-transcribe
 
-  # Media: OpenRouter.
-  image: images:bytedance-seed/seedream-5-0-pro
-  video: videos:bytedance/seedance-2.5
+  # Media: images through OpenRouter's free recraft flash; video OFF (see the
+  # videos note above — motion belongs to the widgets).
+  image: images:recraft/recraft-v4.1-flash-v2:free
+  video: null
 
   # Research and document extraction.
   webSearch: search
