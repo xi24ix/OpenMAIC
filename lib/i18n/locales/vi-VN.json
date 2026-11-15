@@ -10,8 +10,7 @@
     "close": "Đóng"
   },
   "home": {
-    "slogan": "Học tập sinh tạo trong lớp học tương tác đa tác nhân",
-    "greetingWithName": "Chào {{name}}"
+    "slogan": "Tạo bài học thu hút học sinh ngay từ phút đầu tiên"
   },
   "curriculum": {
     "openPicker": "Build from curriculum",
@@ -1240,7 +1239,7 @@
     "courseMaterialFormats": "Hỗ trợ {{formats}} — tối đa {{size}}MB mỗi tệp",
     "formatListSeparator": ", ",
     "generateFailed": "Không tạo được lớp học, vui lòng thử lại",
-    "requirementPlaceholder": "Hãy nói bạn muốn học gì, ví dụ\n\"Dạy tôi Python từ đầu trong 30 phút\"\n\"Giảng phép biến đổi Fourier trên bảng\"\n\"Cách chơi board game Avalon\"",
+    "requirementPlaceholder": "Cho tôi biết bài học bạn muốn dạy, ví dụ:\n\"Chuẩn bị bài về vòng tuần hoàn của nước cho lớp 4\"\n\"Giải thích phân số thập phân trên bảng\"\n\"Thiết kế trò chơi học bảng cửu chương\"",
     "requirementRequired": "Vui lòng nhập yêu cầu về bài học",
     "fileTooLarge": "Tệp quá lớn. Vui lòng chọn tệp nhỏ hơn 50MB",
     "courseMaterialCountLimit": "Bạn chỉ tải lên được tối đa 5 tệp tài liệu",
@@ -2480,8 +2479,8 @@
     }
   },
   "composerLearner": {
-    "trigger": "Người học & phong cách",
-    "title": "Người học & phong cách dạy học",
+    "trigger": "Hình thức bài học",
+    "title": "Chọn hình thức bài học",
     "audience": "Bài học này dành cho ai?",
     "audienceStudent": "Học sinh",
     "audienceParent": "Phụ huynh",

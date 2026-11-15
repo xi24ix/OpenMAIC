@@ -10,8 +10,7 @@
     "close": "关闭"
   },
   "home": {
-    "slogan": "Generative Learning in Multi-Agent Interactive Classroom",
-    "greetingWithName": "嗨，{{name}}"
+    "slogan": "打造从第一分钟就抓住学生的课堂"
   },
   "curriculum": {
     "openPicker": "Build from curriculum",
@@ -1240,7 +1239,7 @@
     "courseMaterialFormats": "支持 {{formats}}，单个最大 {{size}}MB",
     "formatListSeparator": "、",
     "generateFailed": "生成课堂失败，请重试",
-    "requirementPlaceholder": "输入你想学的任何内容，例如：\n「从零学 Python，30 分钟写出第一个程序」\n「用白板给我讲解傅里叶变换」\n「阿瓦隆桌游怎么玩」",
+    "requirementPlaceholder": "告诉我你想教的课，例如：\n\"准备一节四年级水循环的课\"\n\"在黑板上讲解小数\"\n\"设计一个九九乘法学习游戏\"",
     "requirementRequired": "请输入课程需求",
     "fileTooLarge": "文件过大，请选择小于 50MB 的文件",
     "courseMaterialCountLimit": "最多可上传 5 个课程材料文件",
@@ -2480,8 +2479,8 @@
     }
   },
   "composerLearner": {
-    "trigger": "学习者和风格",
-    "title": "学习者与教学风格",
+    "trigger": "课程形式",
+    "title": "选择课程形式",
     "audience": "这节课为谁而设？",
     "audienceStudent": "学生",
     "audienceParent": "家长",

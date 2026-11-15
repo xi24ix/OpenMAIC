@@ -39,8 +39,7 @@
     "signOut": "Sign out"
   },
   "home": {
-    "slogan": "Generative Learning in Multi-Agent Interactive Classroom",
-    "greetingWithName": "Hi, {{name}}"
+    "slogan": "Build a lesson that hooks your students from minute one"
   },
   "curriculum": {
     "openPicker": "Build from curriculum",
@@ -1269,7 +1268,7 @@
     "courseMaterialFormats": "Supports {{formats}} — up to {{size}}MB per file",
     "formatListSeparator": ", ",
     "generateFailed": "Failed to generate classroom, please try again",
-    "requirementPlaceholder": "Tell me anything you want to learn, e.g.\n\"Teach me Python from scratch in 30 minutes\"\n\"Explain Fourier Transform on the whiteboard\"\n\"How to play the board game Avalon\"",
+    "requirementPlaceholder": "Tell me the lesson you want to teach, e.g.:\n\"Prepare a water-cycle lesson for grade 4\"\n\"Explain decimal fractions on the whiteboard\"\n\"Design a times-table learning game\"",
     "requirementRequired": "Please enter course requirements",
     "fileTooLarge": "File too large. Please select a file smaller than 50MB",
     "courseMaterialCountLimit": "You can upload up to 5 course material files",
@@ -2509,8 +2508,8 @@
     }
   },
   "composerLearner": {
-    "trigger": "Learner & style",
-    "title": "Learner & teaching style",
+    "trigger": "Lesson format",
+    "title": "Choose the lesson format",
     "audience": "Who is this lesson for?",
     "audienceStudent": "Student",
     "audienceParent": "Parent",

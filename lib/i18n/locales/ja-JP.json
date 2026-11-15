@@ -10,8 +10,7 @@
     "close": "閉じる"
   },
   "home": {
-    "slogan": "マルチエージェント対話型教室で生成的に学ぶ",
-    "greetingWithName": "こんにちは、{{name}}さん"
+    "slogan": "最初の1分から生徒を引き込むレッスンを作ろう"
   },
   "curriculum": {
     "openPicker": "Build from curriculum",
@@ -1240,7 +1239,7 @@
     "courseMaterialFormats": "対応形式：{{formats}}（1ファイル最大{{size}}MB）",
     "formatListSeparator": "、",
     "generateFailed": "教室の生成に失敗しました。もう一度お試しください",
-    "requirementPlaceholder": "学びたいことを自由に入力してください。例えば：\n「Pythonをゼロから30分で教えて」\n「フーリエ変換をホワイトボードで解説して」\n「ボードゲーム『アバロン』の遊び方」",
+    "requirementPlaceholder": "教えたいレッスンを教えてください。例:\n「4年生向けの水の循環のレッスンを作って」\n「黒板で小数を説明して」\n「九九を学べるゲームを作って」",
     "requirementRequired": "コースの要件を入力してください",
     "fileTooLarge": "ファイルが大きすぎます。50MB以下のファイルを選択してください",
     "courseMaterialCountLimit": "教材ファイルは最大5件までアップロードできます",
@@ -2480,8 +2479,8 @@
     }
   },
   "composerLearner": {
-    "trigger": "学習者とスタイル",
-    "title": "学習者と指導スタイル",
+    "trigger": "レッスン形式",
+    "title": "レッスンの形式を選ぶ",
     "audience": "このレッスンは誰のために？",
     "audienceStudent": "学生",
     "audienceParent": "保護者",

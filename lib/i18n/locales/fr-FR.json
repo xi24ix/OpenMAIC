@@ -10,8 +10,7 @@
     "close": "Fermer"
   },
   "home": {
-    "slogan": "L’apprentissage génératif en classe interactive multi-agents",
-    "greetingWithName": "Bonjour, {{name}}"
+    "slogan": "Créez une leçon qui captive vos élèves dès la première minute"
   },
   "curriculum": {
     "openPicker": "Build from curriculum",
@@ -1240,7 +1239,7 @@
     "courseMaterialFormats": "Formats pris en charge : {{formats}} — jusqu’à {{size}} Mo par fichier",
     "formatListSeparator": ", ",
     "generateFailed": "Échec de la génération de la classe, veuillez réessayer",
-    "requirementPlaceholder": "Dites-moi ce que vous voulez apprendre, par exemple :\n« Apprends-moi Python en partant de zéro en 30 minutes »\n« Explique la transformation de Fourier au tableau »\n« Comment jouer au jeu de société Avalon »",
+    "requirementPlaceholder": "Dis-moi la leçon à donner, par exemple :\n« Prépare une leçon sur le cycle de l'eau pour le CM1 »\n« Explique les fractions décimales au tableau »\n« Conçois un jeu pour apprendre les tables »",
     "requirementRequired": "Veuillez saisir vos attentes pour le cours",
     "fileTooLarge": "Fichier trop volumineux. Veuillez choisir un fichier de moins de 50 Mo",
     "courseMaterialCountLimit": "Vous pouvez envoyer jusqu’à 5 supports de cours",
@@ -2480,8 +2479,8 @@
     }
   },
   "composerLearner": {
-    "trigger": "Apprenant & style",
-    "title": "Apprenant & style d'enseignement",
+    "trigger": "Format de leçon",
+    "title": "Choisissez le format de la leçon",
     "audience": "Pour qui est cette leçon ?",
     "audienceStudent": "Élève",
     "audienceParent": "Parent",

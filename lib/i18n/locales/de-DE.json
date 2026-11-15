@@ -10,8 +10,7 @@
     "close": "Schließen"
   },
   "home": {
-    "slogan": "Generatives Lernen im interaktiven Lernraum mit mehreren KI-Agenten",
-    "greetingWithName": "Hallo, {{name}}"
+    "slogan": "Baue eine Stunde, die deine Schüler ab der ersten Minute mitreißt"
   },
   "curriculum": {
     "openPicker": "Build from curriculum",
@@ -1240,7 +1239,7 @@
     "courseMaterialFormats": "Unterstützt {{formats}} – bis zu {{size}} MB pro Datei",
     "formatListSeparator": ", ",
     "generateFailed": "Kurs konnte nicht erstellt werden. Bitte versuche es erneut.",
-    "requirementPlaceholder": "Beschreibe, was du lernen möchtest, z. B.\n\"Bring mir Python in 30 Minuten von Grund auf bei\"\n\"Erkläre die Fourier-Transformation am Whiteboard\"\n\"Wie spielt man das Brettspiel Avalon?\"",
+    "requirementPlaceholder": "Sag mir die Stunde, die du unterrichten willst, z. B.:\n\"Bereite eine Wasserkreislauf-Stunde für die 4. Klasse vor\"\n\"Erkläre Dezimalbrüche an der Tafel\"\n\"Entwirf ein Lernspiel zum Einmaleins\"",
     "requirementRequired": "Bitte gib die Kursanforderungen ein",
     "fileTooLarge": "Die Datei ist zu groß. Wähle bitte eine Datei unter 50 MB aus.",
     "courseMaterialCountLimit": "Du kannst bis zu 5 Dateien als Kursmaterial hochladen",
@@ -2480,8 +2479,8 @@
     }
   },
   "composerLearner": {
-    "trigger": "Lernende & Stil",
-    "title": "Lernende & Lehrstil",
+    "trigger": "Unterrichtsform",
+    "title": "Wähle die Unterrichtsform",
     "audience": "Für wen ist die Lektion?",
     "audienceStudent": "Schüler/in",
     "audienceParent": "Eltern",

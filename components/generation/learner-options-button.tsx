@@ -64,9 +64,9 @@ type ChipGroupProps<T extends string> = {
 
 function ChipGroup<T extends string>({ label, value, options, onChange }: ChipGroupProps<T>) {
   return (
-    <div className="space-y-1.5">
-      <p className="text-[11px] font-medium text-muted-foreground/70">{label}</p>
-      <div className="flex flex-wrap gap-1.5">
+    <div className="space-y-2">
+      <p className="text-xs font-semibold text-foreground">{label}</p>
+      <div className="flex flex-wrap gap-2">
         {options.map((option) => {
           const active = option.value === value;
           return (
@@ -76,10 +76,10 @@ function ChipGroup<T extends string>({ label, value, options, onChange }: ChipGr
               onClick={() => onChange(option.value)}
               aria-pressed={active}
               className={cn(
-                'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors cursor-pointer',
+                'inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer min-h-[32px]',
                 active
                   ? 'border-primary/60 bg-primary/10 text-primary'
-                  : 'border-border/70 bg-background/60 text-muted-foreground hover:border-primary/40 hover:text-foreground',
+                  : 'border-border/70 bg-background/60 text-foreground hover:border-primary/40',
               )}
             >
               {active && <Check aria-hidden="true" className="size-3" />}
@@ -117,9 +117,9 @@ function VoiceRow() {
   const currentKey = selection ? `${selection.providerId}::${selection.voice}` : undefined;
   if (!selection || voices.length === 0) return null;
   return (
-    <div className="space-y-1.5">
-      <p className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground/70">
-        <Volume2 aria-hidden="true" className="size-3" />
+    <div className="space-y-2">
+      <p className="flex items-center gap-1 text-xs font-semibold text-foreground">
+        <Volume2 aria-hidden="true" className="size-3.5" />
         {t('composerLearner.voice')}
       </p>
       <select
@@ -129,7 +129,7 @@ function VoiceRow() {
           if (picked) setTTSVoice(picked.voiceId, picked.providerId);
         }}
         aria-label={t('composerLearner.voice')}
-        className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs outline-none transition-colors focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
+        className="h-9 w-full rounded-md border border-input bg-background px-2 text-xs font-medium text-foreground outline-none transition-colors focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
       >
         {voices.map((voice) => (
           <option key={voice.key} value={voice.key}>
@@ -145,7 +145,10 @@ type DataAttributes = {
   [key: `data-${string}`]: string | number | boolean | undefined;
 };
 
-type LearnerOptionsButtonProps = Omit<ComponentPropsWithoutRef<'button'>, 'children'> &
+type LearnerOptionsButtonProps = Omit<
+  ComponentPropsWithoutRef<'button'>,
+  'children' | 'onChange' | 'value'
+> &
   DataAttributes & {
     value: LearnerOptions;
     onChange: (value: LearnerOptions) => void;
@@ -214,10 +217,15 @@ export const LearnerOptionsButton = forwardRef<HTMLButtonElement, LearnerOptions
             <ChevronDown aria-hidden="true" className="size-3 opacity-50" />
           </button>
         </PopoverTrigger>
-        <PopoverContent side="top" align="end" sideOffset={6} className="w-80 space-y-3.5 p-3">
-          <div className="space-y-0.5">
-            <p className="text-xs font-semibold">{t('composerLearner.title')}</p>
-            <p className="text-[10px] leading-tight text-muted-foreground/60">
+        <PopoverContent
+          side="top"
+          align="end"
+          sideOffset={6}
+          className="w-80 max-w-[calc(100vw-1.5rem)] space-y-4 p-4"
+        >
+          <div className="space-y-1">
+            <p className="text-sm font-semibold text-foreground">{t('composerLearner.title')}</p>
+            <p className="text-xs leading-snug text-foreground/90">
               {t('composerLearner.supportHint')}
             </p>
           </div>

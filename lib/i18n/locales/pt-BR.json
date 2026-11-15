@@ -10,8 +10,7 @@
     "close": "Fechar"
   },
   "home": {
-    "slogan": "Aprendizagem Generativa em Sala de Aula Interativa Multi-Agente",
-    "greetingWithName": "Olá, {{name}}"
+    "slogan": "Crie uma aula que prenda os alunos desde o primeiro minuto"
   },
   "curriculum": {
     "openPicker": "Build from curriculum",
@@ -1240,7 +1239,7 @@
     "courseMaterialFormats": "Suporta {{formats}} — até {{size}} MB por arquivo",
     "formatListSeparator": ", ",
     "generateFailed": "Falha ao gerar a sala, tente novamente",
-    "requirementPlaceholder": "Conte-me o que você quer aprender, por exemplo:\n\"Me ensine Python do zero em 30 minutos\"\n\"Explique a Transformada de Fourier no quadro\"\n\"Como jogar o jogo de tabuleiro Avalon\"",
+    "requirementPlaceholder": "Diga a aula que você quer dar, por exemplo:\n\"Prepare uma aula sobre o ciclo da água para o 4º ano\"\n\"Explique frações decimais na lousa\"\n\"Crie um jogo para aprender tabuada\"",
     "requirementRequired": "Por favor, descreva os objetivos do curso",
     "fileTooLarge": "Arquivo muito grande. Selecione um arquivo com menos de 50 MB",
     "courseMaterialCountLimit": "Você pode enviar até 5 arquivos de material do curso",
@@ -2480,8 +2479,8 @@
     }
   },
   "composerLearner": {
-    "trigger": "Estudante e estilo",
-    "title": "Estudante e estilo de ensino",
+    "trigger": "Formato da aula",
+    "title": "Escolha o formato da aula",
     "audience": "Para quem é esta lição?",
     "audienceStudent": "Estudante",
     "audienceParent": "Família",
