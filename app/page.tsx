@@ -27,11 +27,20 @@ import {
   X,
   Presentation,
   Loader2,
+  Pickaxe,
 } from 'lucide-react';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { AlostadLogo } from '@/components/brand/alostad-logo';
 import { AccountMenu } from '@/components/auth/account-menu';
+import { useStyleTheme } from '@/lib/hooks/use-style-theme';
+import dynamic from 'next/dynamic';
+
+/** The Minecraft voxel world background — client-only (WebGL + video). */
+const VoxelWorld = dynamic(
+  () => import('@/components/voxel/voxel-world').then((m) => m.VoxelWorld),
+  { ssr: false },
+);
 import { createLogger } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
 import { InputGroup, InputGroupInput, InputGroupButton } from '@/components/ui/input-group';
@@ -148,6 +157,7 @@ const initialFormState: FormState = {
 function HomePage() {
   const { t } = useI18n();
   const { theme, setTheme } = useTheme();
+  const { styleTheme, setStyleTheme } = useStyleTheme();
   const router = useRouter();
   // Do not replay the classic hero's entrance after the route handoff already
   // carried the lockup and composer into place. The entrance is CSS, not a
@@ -247,6 +257,19 @@ function HomePage() {
   }, []);
 
   const [themeOpen, setThemeOpen] = useState(false);
+  const [styleOpen, setStyleOpen] = useState(false);
+
+  // Close the style dropdown when clicking outside (same pattern as theme).
+  useEffect(() => {
+    if (!styleOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (toolbarRef.current && !toolbarRef.current.contains(e.target as Node)) {
+        setStyleOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [styleOpen]);
   const [error, setError] = useState<string | null>(null);
   // True while the Generate click starts the run. Doubles as the guard flag
   // that freezes the course material set for the duration of the start and as
@@ -674,7 +697,16 @@ function HomePage() {
   };
 
   return (
-    <div className="aurora-home min-h-[100dvh] w-full flex flex-col items-center p-4 pt-16 md:p-8 md:pt-16 overflow-x-hidden">
+    <div
+      className={cn(
+        'aurora-home min-h-[100dvh] w-full flex flex-col items-center p-4 pt-16 md:p-8 md:pt-16 overflow-x-hidden',
+        // The voxel style forces the app's own dark palette inside the page
+        // (its literal dark: utilities) and layers the world's tokens on top.
+        styleTheme === 'voxel' && 'voxel-page dark',
+      )}
+    >
+      {/* The Minecraft world renders behind everything in the voxel style. */}
+      {styleTheme === 'voxel' && <VoxelWorld />}
       <input
         ref={fileInputRef}
         type="file"
@@ -722,6 +754,60 @@ function HomePage() {
               setSettingsOpen(true);
             }}
           />
+
+          <div className="aurora-div w-[1px] h-4" />
+
+          {/* Style Selector — Aurora (the app's own design) or Minecraft voxel
+              world. Independent from light/dark: the voxel style is a world of
+              its own and keeps the theme setting for what it does not reskin. */}
+          <div className="relative">
+            <button
+              onClick={() => setStyleOpen(!styleOpen)}
+              aria-label={t('settings.styleDesc')}
+              title={t('settings.styleDesc')}
+              className="p-2 rounded-full text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200 hover:shadow-sm transition-all"
+            >
+              {styleTheme === 'voxel' ? (
+                <Pickaxe className="w-4 h-4" />
+              ) : (
+                <Sparkles className="w-4 h-4" />
+              )}
+            </button>
+            {styleOpen && (
+              <div className="absolute top-full mt-2 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden z-50 min-w-[160px]">
+                <button
+                  onClick={() => {
+                    setStyleTheme('aurora');
+                    setStyleOpen(false);
+                  }}
+                  className={cn(
+                    'w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2',
+                    styleTheme === 'aurora' &&
+                      'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
+                  )}
+                >
+                  <Sparkles className="w-4 h-4" />
+                  {t('settings.styleOptions.aurora')}
+                  {styleTheme === 'aurora' && <Check className="w-3.5 h-3.5 ms-auto" />}
+                </button>
+                <button
+                  onClick={() => {
+                    setStyleTheme('voxel');
+                    setStyleOpen(false);
+                  }}
+                  className={cn(
+                    'w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2',
+                    styleTheme === 'voxel' &&
+                      'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
+                  )}
+                >
+                  <Pickaxe className="w-4 h-4" />
+                  {t('settings.styleOptions.minecraft')}
+                  {styleTheme === 'voxel' && <Check className="w-3.5 h-3.5 ms-auto" />}
+                </button>
+              </div>
+            )}
+          </div>
 
           <div className="aurora-div w-[1px] h-4" />
 

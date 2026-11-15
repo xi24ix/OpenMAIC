@@ -2343,7 +2343,12 @@
         "unconfirmed": "لم يؤكد الخادم أنه تم استيراده."
       }
     },
-    "serverConfiguredAddOwn": "لاستخدام بيانات الاعتماد الخاصة بك، أضِف مزوّدًا منفصلاً."
+    "serverConfiguredAddOwn": "لاستخدام بيانات الاعتماد الخاصة بك، أضِف مزوّدًا منفصلاً.",
+    "styleDesc": "اختر نمط الواجهة",
+    "styleOptions": {
+      "aurora": "أورورا",
+      "minecraft": "ماينكرافت"
+    }
   },
   "workspace": {
     "untitledCourse": "未命名课堂",

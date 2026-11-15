@@ -100,3 +100,9 @@ render-service/.owner-bound-parent-*/
 
 # macOS AppleDouble sidecar files on non-native volumes (exFAT/NTFS)
 ._*
+design-experiments/minecraft-alive-landing/shots/
+design-experiments/minecraft-alive-landing/archive-v1-image/
+design-experiments/minecraft-alive-landing/assets/*.mp4
+design-experiments/minecraft-alive-landing/assets/bg-plate.png
+design-experiments/minecraft-alive-landing/assets/reference-mock.png
+design-experiments/minecraft-alive-landing/vendor/

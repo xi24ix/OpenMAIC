@@ -18,7 +18,15 @@ import { OutlinesEditor } from '@/components/generation/outlines-editor';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/lib/store/settings';
 import { useI18n } from '@/lib/hooks/use-i18n';
+import { useStyleTheme } from '@/lib/hooks/use-style-theme';
+import dynamic from 'next/dynamic';
 import { useModelCapabilities } from '@/lib/model-settings/use-model-settings';
+
+/** The voxel world keeps running behind the generation flow in the Minecraft style. */
+const VoxelWorld = dynamic(
+  () => import('@/components/voxel/voxel-world').then((m) => m.VoxelWorld),
+  { ssr: false },
+);
 import type { SceneOutline } from '@/lib/types/generation';
 import { createLogger } from '@/lib/logger';
 import { RunApiError, runApiErrorText } from '@/lib/generation-run-client/api';
@@ -554,18 +562,25 @@ function GenerationPreviewContent() {
 }
 
 export default function GenerationPreviewPage() {
+  // The voxel style wraps the whole generation flow: the world keeps running
+  // behind the run card until the classroom takes over.
+  const { styleTheme } = useStyleTheme();
+  const voxel = styleTheme === 'voxel';
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-[100dvh] w-full bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 flex items-center justify-center">
-          <div className="animate-pulse space-y-4 text-center">
-            <div className="h-8 w-48 bg-muted rounded mx-auto" />
-            <div className="h-4 w-64 bg-muted rounded mx-auto" />
+    <div className={cn('relative z-10', voxel && 'voxel-page dark')}>
+      {voxel && <VoxelWorld />}
+      <Suspense
+        fallback={
+          <div className="min-h-[100dvh] w-full bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 flex items-center justify-center">
+            <div className="animate-pulse space-y-4 text-center">
+              <div className="h-8 w-48 bg-muted rounded mx-auto" />
+              <div className="h-4 w-64 bg-muted rounded mx-auto" />
+            </div>
           </div>
-        </div>
-      }
-    >
-      <GenerationPreviewContent />
-    </Suspense>
+        }
+      >
+        <GenerationPreviewContent />
+      </Suspense>
+    </div>
   );
 }

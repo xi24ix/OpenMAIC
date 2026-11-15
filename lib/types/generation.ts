@@ -97,6 +97,7 @@ export interface UserRequirements {
   webSearch?: boolean; // Enable web search for richer context
   interactiveMode?: boolean; // Enable Interactive Mode for interactive-first generation
   taskEngineMode?: boolean; // Enable vocational task-engine generation path
+  requirementPrepared?: boolean; // Skip enrichment for requirements already grounded by the curriculum picker
 }
 
 // ==================== Stage 1 Output: Scene Outlines (Simplified) ====================

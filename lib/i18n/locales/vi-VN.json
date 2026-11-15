@@ -2314,7 +2314,12 @@
       }
     },
     "serverConfiguredAddOwn": "Muốn dùng thông tin đăng nhập riêng, hãy thêm một nhà cung cấp khác.",
-    "providerHeygenVoiceTTS": "HeyGen Voice (OpenRouter)"
+    "providerHeygenVoiceTTS": "HeyGen Voice (OpenRouter)",
+    "styleDesc": "Chọn phong cách giao diện",
+    "styleOptions": {
+      "aurora": "Aurora",
+      "minecraft": "Minecraft"
+    }
   },
   "workspace": {
     "untitledCourse": "未命名课堂",

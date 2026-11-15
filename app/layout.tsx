@@ -6,6 +6,7 @@ import '@openmaic/renderer/fonts.css';
 import 'animate.css';
 import 'katex/dist/katex.min.css';
 import { ThemeProvider } from '@/lib/hooks/use-theme';
+import { StyleThemeProvider } from '@/lib/hooks/use-style-theme';
 import { I18nProvider } from '@/lib/hooks/use-i18n';
 import { Toaster } from '@/components/ui/sonner';
 import { AgentRegistryInit } from '@/components/agent-registry-init';
@@ -37,8 +38,12 @@ import '@fontsource-variable/inter';
  * once the page's scripts run, so a server-rendered page would otherwise be
  * painted light and flip to dark afterwards. Keep in step with
  * `lib/hooks/use-theme.tsx`.
+ *
+ * The same script applies the interface style before paint — the Minecraft
+ * voxel world is the default, and an explicit stored 'aurora' opts out. Keep
+ * in step with `lib/hooks/use-style-theme.tsx` (DEFAULT_STYLE_THEME).
  */
-const THEME_INIT_SCRIPT = `try{var t=localStorage.getItem('theme');if(t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark')}catch(e){}`;
+const THEME_INIT_SCRIPT = `try{var t=localStorage.getItem('theme');if(t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark');if(localStorage.getItem('styleTheme')!=='aurora')document.documentElement.classList.add('voxel-style')}catch(e){}`;
 
 export const metadata: Metadata = {
   title: 'Alostad الأستاذ',
@@ -76,21 +81,23 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <ThemeProvider>
-          <I18nProvider>
-            <AuthProvider>
-              <ModelSettingsInit />
-              <AgentRegistryInit />
-              <ProSwapWatcher />
-              <AccessCodeGuard>
-                <AuthBoundary>{children}</AuthBoundary>
-              </AccessCodeGuard>
-            </AuthProvider>
-            <Toaster position="top-center" />
-            {/* After the Toaster: this one raises a toast on mount when
+          <StyleThemeProvider>
+            <I18nProvider>
+              <AuthProvider>
+                <ModelSettingsInit />
+                <AgentRegistryInit />
+                <ProSwapWatcher />
+                <AccessCodeGuard>
+                  <AuthBoundary>{children}</AuthBoundary>
+                </AccessCodeGuard>
+              </AuthProvider>
+              <Toaster position="top-center" />
+              {/* After the Toaster: this one raises a toast on mount when
                 persistence is already broken, and a toast raised before its
                 host exists has nowhere to go. */}
-            <StorageHealthNotice />
-          </I18nProvider>
+              <StorageHealthNotice />
+            </I18nProvider>
+          </StyleThemeProvider>
         </ThemeProvider>
       </body>
     </html>

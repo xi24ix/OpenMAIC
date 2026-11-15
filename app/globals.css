@@ -6,6 +6,7 @@
 /* Aurora skin — home + classroom. Imported after Tailwind so its unlayered
    rules win over utility classes (no !important needed). */
 @import './aurora.css';
+@import './voxel.css';
 
 /* ── Alostad brand type: Cairo ───────────────────────────────────────────
    Self-hosted from public/fonts/cairo (fontsource woff2, OFL) — no CDN and

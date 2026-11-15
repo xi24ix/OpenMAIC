@@ -2314,7 +2314,12 @@
       }
     },
     "serverConfiguredAddOwn": "如需使用自己的凭据，请新增一个提供方。",
-    "providerHeygenVoiceTTS": "HeyGen Voice (OpenRouter)"
+    "providerHeygenVoiceTTS": "HeyGen Voice (OpenRouter)",
+    "styleDesc": "选择界面风格",
+    "styleOptions": {
+      "aurora": "极光",
+      "minecraft": "我的世界"
+    }
   },
   "workspace": {
     "untitledCourse": "未命名课堂",

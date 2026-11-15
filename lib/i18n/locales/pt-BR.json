@@ -2314,7 +2314,12 @@
       }
     },
     "serverConfiguredAddOwn": "Para usar suas próprias credenciais, adicione um provedor separado.",
-    "providerHeygenVoiceTTS": "HeyGen Voice (OpenRouter)"
+    "providerHeygenVoiceTTS": "HeyGen Voice (OpenRouter)",
+    "styleDesc": "Selecione o estilo da interface",
+    "styleOptions": {
+      "aurora": "Aurora",
+      "minecraft": "Minecraft"
+    }
   },
   "workspace": {
     "untitledCourse": "未命名课堂",

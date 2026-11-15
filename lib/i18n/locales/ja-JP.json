@@ -2314,7 +2314,12 @@
       }
     },
     "serverConfiguredAddOwn": "独自の認証情報を使うには、別のプロバイダーを追加してください。",
-    "providerHeygenVoiceTTS": "HeyGen Voice (OpenRouter)"
+    "providerHeygenVoiceTTS": "HeyGen Voice (OpenRouter)",
+    "styleDesc": "インターフェースのスタイルを選択",
+    "styleOptions": {
+      "aurora": "オーロラ",
+      "minecraft": "マインクラフト"
+    }
   },
   "workspace": {
     "untitledCourse": "未命名课堂",

@@ -2314,7 +2314,12 @@
       }
     },
     "serverConfiguredAddOwn": "Um eigene Zugangsdaten zu verwenden, füge einen separaten Anbieter hinzu.",
-    "providerHeygenVoiceTTS": "HeyGen Voice (OpenRouter)"
+    "providerHeygenVoiceTTS": "HeyGen Voice (OpenRouter)",
+    "styleDesc": "Interface-Stil wählen",
+    "styleOptions": {
+      "aurora": "Aurora",
+      "minecraft": "Minecraft"
+    }
   },
   "workspace": {
     "untitledCourse": "未命名课堂",

@@ -2343,7 +2343,12 @@
         "unconfirmed": "The server did not confirm that it was imported."
       }
     },
-    "serverConfiguredAddOwn": "To use your own credentials, add a separate provider."
+    "serverConfiguredAddOwn": "To use your own credentials, add a separate provider.",
+    "styleDesc": "Select interface style",
+    "styleOptions": {
+      "aurora": "Aurora",
+      "minecraft": "Minecraft"
+    }
   },
   "workspace": {
     "untitledCourse": "Untitled course",

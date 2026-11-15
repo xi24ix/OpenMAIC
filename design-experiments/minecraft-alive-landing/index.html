@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ألوستاد — غرفة صفية ألغاز | Alostad Classroom</title>
+<meta name="description" content="اصنع درسًا تفاعليًا يشدّ الطالب من أول دقيقة — منصة ألوستاد التعليمية بعالم فوكسل حيّ.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='4' y='4' width='24' height='24' rx='4' fill='%23ff7a3d'/><rect x='10' y='10' width='12' height='12' fill='%23fff'/></svg>">
+<link rel="preload" href="assets/baloo-arabic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<!-- ═══════════════ ALIVE VOXEL WORLD (three.js canvas) ═══════════════ -->
+<canvas id="world" aria-hidden="true"></canvas>
+<div class="grade grade-vignette" aria-hidden="true"></div>
+<div class="grade grade-night" aria-hidden="true"></div>
+<div class="grade grade-ui" aria-hidden="true"></div>
+<div id="torch" aria-hidden="true"></div>
+
+<!-- Loading screen -->
+<div id="loader" aria-hidden="true">
+  <div class="loader-cube">
+    <span></span><span></span><span></span><span></span><span></span><span></span>
+  </div>
+  <p class="loader-text" lang="ar">جارٍ بناء العالم…</p>
+</div>
+
+<!-- ═══════════════ HERO ═══════════════ -->
+<main>
+<section class="hero" id="top">
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="brand" data-anim="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 1.8c.9 5.4 2.1 6.9 7.9 7.9-5.8 1-7 2.5-7.9 7.9-.9-5.4-2.1-6.9-7.9-7.9 5.8-1 7-2.5 7.9-7.9Z" fill="url(#sparkGrad)"/></svg>
+      </span>
+      <span class="brand-stack">
+        <span class="brand-word">أستاذ</span>
+        <span class="brand-sub" lang="en">ALOSTAD</span>
+      </span>
+      <span class="brand-book" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M2.8 5.6C5.6 4.2 8.6 4.3 11.3 6v12.6C8.6 17 5.6 16.9 2.8 18.2V5.6Z" fill="url(#bookGrad)"/><path d="M21.2 5.6C18.4 4.2 15.4 4.3 12.7 6v12.6c2.7-1.6 5.7-1.7 8.5-.4V5.6Z" fill="url(#bookGrad)" opacity=".9"/><path d="M11.3 6v12.6M12.7 6v12.6" stroke="rgba(255,255,255,.55)" stroke-width="1.2" stroke-linecap="round"/><path d="M4.6 7.6c1.6-.5 3-.4 4.6.2M4.6 10.2c1.6-.5 3-.4 4.6.2M4.6 12.8c1.6-.5 3-.4 4.6.2M14.8 7.8c1.6-.6 3-.7 4.6-.2M14.8 10.4c1.6-.6 3-.7 4.6-.2M14.8 13c1.6-.6 3-.7 4.6-.2" stroke="rgba(255,255,255,.35)" stroke-width="1" stroke-linecap="round"/></svg>
+      </span>
+    </div>
+    <nav class="quick-pill" data-anim="pill" aria-label="أدوات سريعة">
+      <button class="qbtn" title="الإعدادات" aria-label="الإعدادات">
+        <svg viewBox="0 0 24 24"><path d="M10.3 3.9c.2-.9 1-1.5 1.7-1.5s1.5.6 1.7 1.5l.2 1.1c.5.2 1 .5 1.4.8l1.1-.3c.9-.3 1.8.1 2.2.8.4.7.2 1.6-.4 2.2l-.8.7c.1.5.1 1.1 0 1.6l.8.7c.6.6.8 1.5.4 2.2-.4.7-1.3 1.1-2.2.8l-1.1-.3c-.4.3-.9.6-1.4.8l-.2 1.1c-.2.9-1 1.5-1.7 1.5s-1.5-.6-1.7-1.5l-.2-1.1c-.5-.2-1-.5-1.4-.8l-1.1.3c-.9.3-1.8-.1-2.2-.8-.4-.7-.2-1.6.4-2.2l.8-.7c-.1-.5-.1-1.1 0-1.6l-.8-.7c-.6-.6-.8-1.5-.4-2.2.4-.7 1.3-1.1 2.2-.8l1.1.3c.4-.3.9-.6 1.4-.8l.2-1.1Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="11.9" r="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
+      </button>
+      <span class="qdiv"></span>
+      <button class="qbtn" title="مشاركة الشاشة" aria-label="مشاركة الشاشة">
+        <svg viewBox="0 0 24 24"><rect x="2.8" y="4.2" width="18.4" height="13" rx="2.4" stroke="currentColor" stroke-width="1.8"/><path d="M8.5 20.5h7M12 17.5v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 7.6v5.2M9.6 10l2.4-2.4L14.4 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <span class="qdiv"></span>
+      <button class="qbtn qbtn-ar" title="ترجمة فورية" aria-label="ترجمة فورية">
+        <bdi>AR</bdi>
+        <svg viewBox="0 0 24 24"><path d="M13.2 16.8 16 9.4l2.8 7.4M14.1 14.7h3.8M8.6 4.4c-1.5 2.6-3.3 4.7-5.8 6.3M5.4 6.6c1.4 2.8 3.4 5 5.9 6.5M4.2 19.2l4.5-9.5 4.4 9.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 .6) scale(.96)"/></svg>
+      </button>
+    </nav>
+  </header>
+
+  <!-- Headline block -->
+  <div class="hero-center">
+    <div class="badge" data-anim="badge">
+      <span class="badge-dot" aria-hidden="true"></span>
+      <span class="badge-text" lang="en">ALOSTAD&nbsp;CLASSROOM</span>
+    </div>
+
+    <h1 class="headline">
+      <span class="line l1" data-anim="l1">اصنع درسًا تفاعليًا يشدّ</span>
+      <span class="line l2" data-anim="l2">
+        <span class="white-part">الطالب</span> <span class="grad-text">من أول دقيقة</span>
+        <svg class="swoosh" viewBox="0 0 420 22" fill="none" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M6 14.5C96 6.5 232 4.5 414 9.5" stroke="url(#swooshGrad)" stroke-width="7" stroke-linecap="round"/>
+          <path d="M60 19.5C170 13.5 290 13.5 380 16.5" stroke="url(#swooshGrad)" stroke-width="4" stroke-linecap="round" opacity=".55"/>
+        </svg>
+      </span>
+    </h1>
+
+    <!-- Prompt card -->
+    <form class="prompt-card" data-anim="card" onsubmit="return false">
+      <span class="card-spark" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 2.5c.7 4.6 1.8 5.9 6.8 6.8-5 .9-6.1 2.2-6.8 6.8-.7-4.6-1.8-5.9-6.8-6.8 5-.9 6.1-2.2 6.8-6.8Z" fill="url(#sparkGrad)"/><path d="M19 15.2c.35 2.3.9 2.95 3.2 3.3-2.3.35-2.85 1-3.2 3.3-.35-2.3-.9-2.95-3.2-3.3 2.3-.35 2.85-1 3.2-3.3Z" fill="url(#sparkGrad)" opacity=".8"/></svg>
+      </span>
+
+      <label class="card-label" for="lessonTopic">اكتب الموضوع الذي تريد شرحه، مثل:</label>
+      <div class="chip-stage">
+        <span class="chip chip-rotator"><span class="chip-q">«</span><span id="typeTarget"></span><span class="caret" aria-hidden="true"></span><span class="chip-q">»</span></span>
+      </div>
+
+      <div class="card-tools">
+        <button type="button" class="tpill tpill-ghost" title="دخول الفصل">
+          <svg viewBox="0 0 24 24"><path d="M12 18.5v-13M7.2 10.3 12 5.5l4.8 4.8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>دخول الفصل</span>
+        </button>
+        <span class="tdiv" aria-hidden="true"></span>
+        <button type="button" class="tpill tpill-icon" title="إدخال صوتي" aria-label="إدخال صوتي">
+          <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+        <button type="button" class="tpill tpill-help" title="مساعد الدرس الذكي">
+          <svg viewBox="0 0 24 24"><path d="M12 3.2c.55 3.7 1.5 4.8 5.5 5.5-4 .7-4.95 1.8-5.5 5.5-.55-3.7-1.5-4.8-5.5-5.5 4-.7 4.95-1.8 5.5-5.5Z" fill="currentColor"/><path d="M18.4 14.6c.3 2 .8 2.6 2.9 2.9-2.1.3-2.6.9-2.9 2.9-.3-2-.8-2.6-2.9-2.9 2.1-.3 2.6-.9 2.9-2.9Z" fill="currentColor" opacity=".75"/></svg>
+          <span>مساعد الدرس</span>
+        </button>
+        <button type="button" class="tpill tpill-ghost" title="الصوتيات">
+          <svg viewBox="0 0 24 24"><path d="M4 9.5v5h3.5L12 18V6L7.5 9.5H4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M15.5 9.2a4 4 0 0 1 0 5.6M18 6.8a7.4 7.4 0 0 1 0 10.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span>الصوتيات</span>
+        </button>
+        <button type="button" class="tpill tpill-round" title="إرفاق ملف" aria-label="إرفاق ملف">
+          <svg viewBox="0 0 24 24"><path d="M20 11.5 12.2 19.3a4.6 4.6 0 0 1-6.5-6.5l7.6-7.6a3 3 0 0 1 4.3 4.3l-7.5 7.5a1.5 1.5 0 0 1-2.1-2.1l6.7-6.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <div class="card-spot" aria-hidden="true"></div>
+    </form>
+
+    <!-- CTA -->
+    <button class="cta" data-anim="cta" type="button">
+      <span class="cta-label">إنشاء درس من المنصة</span>
+      <span class="cta-arrow" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M19 12H5m5.5-5.5L5 12l5.5 5.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <span class="cta-shine" aria-hidden="true"></span>
+    </button>
+  </div>
+
+  <!-- Feature strip -->
+  <footer class="features" data-anim="features">
+    <div class="feature">
+      <span class="f-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M6.5 8.5h11a3.5 3.5 0 0 1 3.5 3.5v3a2.5 2.5 0 0 1-2.5 2.5h-2.2l-1.8-2h-5l-1.8 2H5.5A2.5 2.5 0 0 1 3 15v-3a3.5 3.5 0 0 1 3.5-3.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8 12.2h2M9 11.2v2M15.6 11.5v.01M17.4 13v.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </span>
+      <span class="f-txt">محتوى تفاعلي<small>تعلّم باللعب والبناء</small></span>
+    </div>
+    <div class="f-sep" aria-hidden="true"></div>
+    <div class="feature">
+      <span class="f-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/></svg>
+      </span>
+      <span class="f-txt">درس مخصص<small>يناسب مستوى كل طالب</small></span>
+    </div>
+    <div class="f-sep" aria-hidden="true"></div>
+    <div class="feature">
+      <span class="f-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><rect x="6.5" y="6.5" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M9.5 2.8v3M14.5 2.8v3M9.5 18.2v3M14.5 18.2v3M2.8 9.5h3M2.8 14.5h3M18.2 9.5h3M18.2 14.5h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><rect x="10.2" y="10.2" width="3.6" height="3.6" rx=".8" fill="currentColor"/></svg>
+      </span>
+      <span class="f-txt">ذكاء اصطناعي متقدم<small>يشرح ويُجيب ويُصحّح</small></span>
+    </div>
+    <div class="f-sep" aria-hidden="true"></div>
+    <div class="feature feature-star">
+      <span class="f-ico f-ico-orange" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.8-4.5 4.3 1.1 6.1L12 16.9l-5.4 2.9 1.1-6.1L3.2 9.4l6.1-.8L12 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+      </span>
+      <span class="f-txt">تجربة تعليمية ممتعة<small>يبقي الطلاب مركزين</small></span>
+    </div>
+  </footer>
+
+  <!-- Scroll hint -->
+  <button class="scroll-hint" data-anim="scroll" type="button" aria-label="انتقل إلى لوحة المتصدرين">
+    <span class="mouse"><span class="wheel"></span></span>
+    <span class="chev" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="m6 9.5 6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </span>
+  </button>
+</section>
+
+<!-- ═══════════════ LEADERBOARD — THE RANKING LIST ═══════════════ -->
+<section class="board-section" id="board">
+  <div class="board-head">
+    <div class="board-title-wrap" data-board="title">
+      <h2 class="board-title">
+        <span class="crown" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M3.5 8.5 8 12l4-6.5L16 12l4.5-3.5-1.6 9H5.1l-1.6-9Z" fill="url(#crownGrad)" stroke="#2b1a08" stroke-width="1.1" stroke-linejoin="round"/><rect x="5.1" y="17.5" width="13.8" height="2.6" rx=".6" fill="#ffb347" stroke="#2b1a08" stroke-width="1.1"/></svg>
+        </span>
+        لوحة المتصدرين
+      </h2>
+      <p class="board-sub">أبطال التعلم هذا الأسبوع — تتنافس، تتعلم، وتتقدم</p>
+    </div>
+    <div class="board-live" data-board="live">
+      <span class="live-dot" aria-hidden="true"></span>
+      <bdi class="live-count" id="liveCount">1,248</bdi>
+      <span class="live-label">متعلم نشط الآن</span>
+    </div>
+  </div>
+
+  <!-- Podium -->
+  <div class="podium" data-board="podium">
+    <article class="podium-card p2" data-rank="2">
+      <div class="p-rank" lang="en">2</div>
+      <span class="avatar" data-seed="ليان"></span>
+      <h3 class="p-name">ليان ح.</h3>
+      <div class="p-lvl">مستوى <b lang="en">17</b></div>
+      <div class="xp"><span class="xp-fill" style="--w:82%"></span></div>
+      <div class="p-xp-num"><bdi lang="en">4,120</bdi> خبرة</div>
+    </article>
+    <article class="podium-card p1" data-rank="1">
+      <span class="p-crown" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M3.5 8.5 8 12l4-6.5L16 12l4.5-3.5-1.6 9H5.1l-1.6-9Z" fill="url(#crownGrad)" stroke="#2b1a08" stroke-width="1.1" stroke-linejoin="round"/></svg>
+      </span>
+      <div class="p-rank" lang="en">1</div>
+      <span class="avatar" data-seed="سارة"></span>
+      <h3 class="p-name">سارة ع.</h3>
+      <div class="p-lvl">مستوى <b lang="en">21</b></div>
+      <div class="xp"><span class="xp-fill" style="--w:96%"></span></div>
+      <div class="p-xp-num"><bdi lang="en">6,340</bdi> خبرة</div>
+    </article>
+    <article class="podium-card p3" data-rank="3">
+      <div class="p-rank" lang="en">3</div>
+      <span class="avatar" data-seed="عمر"></span>
+      <h3 class="p-name">عمر م.</h3>
+      <div class="p-lvl">مستوى <b lang="en">16</b></div>
+      <div class="xp"><span class="xp-fill" style="--w:74%"></span></div>
+      <div class="p-xp-num"><bdi lang="en">3,875</bdi> خبرة</div>
+    </article>
+  </div>
+
+  <!-- Rows 4–8 -->
+  <div class="rank-rows" data-board="rows" id="rankRows">
+    <article class="rrow" data-i="0">
+      <span class="r-num" lang="en">4</span>
+      <span class="avatar sm" data-seed="خالد"></span>
+      <div class="r-main"><span class="r-name">خالد ن.</span><span class="r-lvl">مستوى <b lang="en">14</b></span></div>
+      <div class="xp slim"><span class="xp-fill" style="--w:63%"></span></div>
+      <div class="r-xp"><bdi lang="en">2,960</bdi> خبرة</div>
+      <span class="r-trend up" title="صعود مركزين">▲ <bdi lang="en">2</bdi></span>
+    </article>
+    <article class="rrow" data-i="1">
+      <span class="r-num" lang="en">5</span>
+      <span class="avatar sm" data-seed="نور"></span>
+      <div class="r-main"><span class="r-name">نور س.</span><span class="r-lvl">مستوى <b lang="en">13</b></span></div>
+      <div class="xp slim"><span class="xp-fill" style="--w:57%"></span></div>
+      <div class="r-xp"><bdi lang="en">2,645</bdi> خبرة</div>
+      <span class="r-trend same">—</span>
+    </article>
+    <article class="rrow" data-i="2">
+      <span class="r-num" lang="en">6</span>
+      <span class="avatar sm" data-seed="يوسف"></span>
+      <div class="r-main"><span class="r-name">يوسف ك.</span><span class="r-lvl">مستوى <b lang="en">12</b></span></div>
+      <div class="xp slim"><span class="xp-fill" style="--w:49%"></span></div>
+      <div class="r-xp"><bdi lang="en">2,310</bdi> خبرة</div>
+      <span class="r-trend up">▲ <bdi lang="en">1</bdi></span>
+    </article>
+    <article class="rrow" data-i="3">
+      <span class="r-num" lang="en">7</span>
+      <span class="avatar sm" data-seed="مريم"></span>
+      <div class="r-main"><span class="r-name">مريم ت.</span><span class="r-lvl">مستوى <b lang="en">11</b></span></div>
+      <div class="xp slim"><span class="xp-fill" style="--w:42%"></span></div>
+      <div class="r-xp"><bdi lang="en">1,998</bdi> خبرة</div>
+      <span class="r-trend down">▼ <bdi lang="en">1</bdi></span>
+    </article>
+    <article class="rrow" data-i="4">
+      <span class="r-num" lang="en">8</span>
+      <span class="avatar sm" data-seed="زياد"></span>
+      <div class="r-main"><span class="r-name">زياد ف.</span><span class="r-lvl">مستوى <b lang="en">10</b></span></div>
+      <div class="xp slim"><span class="xp-fill" style="--w:36%"></span></div>
+      <div class="r-xp"><bdi lang="en">1,720</bdi> خبرة</div>
+      <span class="r-trend up">▲ <bdi lang="en">3</bdi></span>
+    </article>
+  </div>
+
+  <!-- Live activity ticker -->
+  <div class="ticker" data-board="ticker">
+    <span class="ticker-tag" lang="en">LIVE</span>
+    <div class="ticker-window"><p class="ticker-line" id="tickerLine">سارة أكملت درس «الكسور» وحصلت على ‎+50 خبرة ✦</p></div>
+  </div>
+</section>
+
+<footer class="colophon">
+  <span lang="en">ALOSTAD CLASSROOM — VOXEL WORLD BUILD</span>
+  <span class="col-sep">•</span>
+  <span>منصة ألوستاد التعليمية</span>
+</footer>
+</main>
+
+<!-- Shared SVG gradients -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="sparkGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffc65c"/><stop offset="1" stop-color="#ff7a3d"/>
+    </linearGradient>
+    <linearGradient id="bookGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8f7bff"/><stop offset="1" stop-color="#5f48d8"/>
+    </linearGradient>
+    <linearGradient id="swooshGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff9d2e"/><stop offset="1" stop-color="#ff6a3d"/>
+    </linearGradient>
+    <linearGradient id="crownGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd76a"/><stop offset="1" stop-color="#f5a623"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<script src="vendor/three.min.js"></script>
+<script src="vendor/gsap.min.js"></script>
+<script src="vendor/ScrollTrigger.min.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

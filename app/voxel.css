@@ -1,0 +1,419 @@
+/* ═══════════════════════════════════════════════════════════════
+   Voxel style — the Minecraft world theme (scoped, opt-in).
+   Activated by `html.voxel-style` (lib/hooks/use-style-theme.tsx).
+   Pages that mount the VoxelWorld also carry `.voxel-page`, which
+   remaps the shadcn + aurora tokens so every surface inside them
+   (popovers, dialogs, cards, buttons) follows the world's palette.
+   ═══════════════════════════════════════════════════════════════ */
+
+@font-face {
+  font-family: 'Baloo Bhaijaan 2';
+  src: url('/voxel/fonts/baloo-arabic.woff2') format('woff2');
+  font-weight: 400 800;
+  font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF;
+}
+@font-face {
+  font-family: 'Baloo Bhaijaan 2';
+  src: url('/voxel/fonts/baloo-latin.woff2') format('woff2');
+  font-weight: 400 800;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+2000-206F, U+2212;
+}
+@font-face {
+  font-family: 'Voxel Pixel';
+  src: url('/voxel/fonts/silkscreen-400.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Voxel Pixel';
+  src: url('/voxel/fonts/silkscreen-700.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+/* ── world layers: only visible while the style is active ── */
+.voxel-world-canvas,
+.voxel-world-grades,
+.voxel-torch {
+  display: none;
+}
+html.voxel-style .voxel-world-canvas,
+html.voxel-style .voxel-world-grades,
+html.voxel-style .voxel-torch {
+  display: block;
+}
+
+.voxel-grade-vignette {
+  background:
+    radial-gradient(120% 90% at 50% 42%, transparent 48%, rgba(6, 3, 20, 0.5) 100%),
+    linear-gradient(180deg, rgba(8, 4, 26, 0.42) 0%, rgba(8, 4, 26, 0.14) 30%, transparent 55%),
+    linear-gradient(0deg, rgba(6, 3, 20, 0.55) 0%, transparent 18%);
+}
+/* deepens contrast during the video's night half (body.voxel-night, synced
+   from the world's RAF loop) */
+.voxel-grade-night {
+  background:
+    radial-gradient(120% 90% at 50% 42%, transparent 44%, rgba(4, 2, 14, 0.45) 100%),
+    linear-gradient(180deg, rgba(5, 2, 18, 0.35) 0%, transparent 45%);
+  opacity: 0;
+  transition: opacity 2.5s ease;
+}
+body.voxel-night .voxel-grade-night {
+  opacity: 1;
+}
+.voxel-grade-ui {
+  background: linear-gradient(180deg, rgba(16, 9, 38, 0.3) 0%, transparent 12%);
+}
+.voxel-torch {
+  position: fixed;
+  z-index: -1; /* above the grades, below every page element */
+  left: var(--tx, 50vw);
+  top: var(--ty, 50vh);
+  width: 340px;
+  height: 340px;
+  margin: -170px 0 0 -170px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 190, 110, 0.14) 0%,
+    rgba(255, 160, 90, 0.05) 42%,
+    transparent 70%
+  );
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .voxel-torch {
+    display: none;
+  }
+}
+
+/* ── page background: the twilight world replaces the aurora wash ── */
+html.voxel-style body:has(.voxel-page) {
+  background: #0d081f;
+}
+html.voxel-style .voxel-page.aurora-home {
+  background: transparent;
+}
+/* the aurora gradient blobs have no place in the voxel world */
+html.voxel-style .voxel-page > .absolute.inset-0.overflow-hidden {
+  display: none;
+}
+
+/* ── token remap: every shadcn surface follows the world ──
+   Tokens live on <body> while a voxel page is mounted — Radix renders
+   popovers/dialogs in portals on <body>, so page-scoped tokens would never
+   reach them. The .voxel-page mirror keeps the same tokens on the page root. */
+html.voxel-style body:has(.voxel-page),
+html.voxel-style .voxel-page {
+  /* the voxel world is a twilight scene regardless of light/dark mode */
+  --background: #0d081f;
+  --foreground: #f2f3ff;
+  --card: rgba(26, 17, 54, 0.85);
+  --card-foreground: #f2f3ff;
+  --popover: rgba(19, 12, 40, 0.97);
+  --popover-foreground: #f2f3ff;
+  --primary: #ff7a3d;
+  --primary-foreground: #ffffff;
+  --secondary: rgba(255, 255, 255, 0.08);
+  --secondary-foreground: #f2f3ff;
+  --muted: rgba(255, 255, 255, 0.07);
+  --muted-foreground: #a9a3c9;
+  --accent: rgba(124, 108, 255, 0.16);
+  --accent-foreground: #dcd6ff;
+  --destructive: #ff5d5d;
+  --border: rgba(255, 255, 255, 0.13);
+  --input: rgba(255, 255, 255, 0.16);
+  --ring: rgba(255, 122, 61, 0.55);
+  --radius: 0.875rem;
+
+  /* brand mark colors (AlostadLogo reads these custom properties) */
+  --logo-ink: #f2f3ff;
+  --logo-accent: #ff8a3d;
+
+  /* aurora variables the homepage components read directly */
+  --aurora-bg: #0d081f;
+  --aurora-panel: rgba(30, 20, 60, 0.6);
+  --aurora-panel-2: rgba(255, 255, 255, 0.06);
+  --aurora-drawer-solid: #191236;
+  --aurora-hover: rgba(255, 255, 255, 0.08);
+  --aurora-ink: #f2f3ff;
+  --aurora-ink-soft: #c3bde6;
+  --aurora-ink-faint: #948ec2;
+  --aurora-line: rgba(255, 255, 255, 0.12);
+  --aurora-line-strong: rgba(255, 255, 255, 0.2);
+  --aurora-violet: #8f7bff;
+  --aurora-indigo: #6f61ff;
+  --aurora-coral: #ff8172;
+  --aurora-mint: #6fe3c1;
+  --aurora-gold: #ffbf6e;
+  --aurora-sky: #7cc8ff;
+  --aurora-glow-violet: rgba(124, 108, 255, 0.12);
+  --aurora-glow-coral: rgba(255, 129, 114, 0.08);
+  --aurora-shadow: 0 24px 60px -26px rgba(4, 2, 16, 0.75);
+  --aurora-shadow-soft: 0 16px 40px -24px rgba(4, 2, 16, 0.6);
+
+  font-family: 'Baloo Bhaijaan 2', var(--font-sans);
+}
+
+/* ── topbar: a floating glass pill over the sky ── */
+html.voxel-style .voxel-page .aurora-home-topbar {
+  background: linear-gradient(180deg, rgba(14, 8, 34, 0.72), rgba(14, 8, 34, 0.45));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(18px) saturate(1.2);
+}
+html.voxel-style .voxel-page .aurora-utilities {
+  background: rgba(24, 15, 52, 0.72);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 6px 22px rgba(4, 2, 16, 0.4),
+    inset 0 2px 0 rgba(255, 255, 255, 0.1);
+}
+html.voxel-style .voxel-page .aurora-utilities button {
+  color: rgba(255, 255, 255, 0.75);
+}
+html.voxel-style .voxel-page .aurora-utilities button:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  box-shadow: none;
+}
+html.voxel-style .voxel-page .aurora-div {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* style-switcher dropdown content is token-driven (bg-popover) already */
+
+/* ── hero ── */
+html.voxel-style .voxel-page .aurora-kicker {
+  font-family: 'Voxel Pixel', monospace;
+  letter-spacing: 0.3em;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.88);
+  background: rgba(14, 8, 34, 0.6);
+  border-color: rgba(255, 255, 255, 0.17);
+  box-shadow:
+    0 6px 24px rgba(8, 4, 24, 0.4),
+    inset 0 2px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+}
+html.voxel-style .voxel-page .aurora-kicker-dot {
+  background: var(--primary);
+  box-shadow: 0 0 0 4px rgba(255, 122, 61, 0.18);
+}
+html.voxel-style .voxel-page .aurora-hero-title {
+  font-family: 'Baloo Bhaijaan 2', var(--font-sans);
+  letter-spacing: 0;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  background: none;
+  text-shadow:
+    0 4px 34px rgba(6, 2, 20, 0.8),
+    0 2px 10px rgba(6, 2, 20, 0.55);
+  line-height: 1.34;
+}
+
+/* ── composer: the glass prompt card with a voxel bevel ── */
+html.voxel-style .voxel-page .aurora-composer {
+  border-radius: 22px;
+  /* alphas stay high: the video's sunrise center is bright behind this card */
+  background: linear-gradient(165deg, rgba(36, 24, 72, 0.84), rgba(18, 11, 40, 0.88));
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 24px 70px rgba(6, 2, 20, 0.55),
+    inset 0 2px 0 rgba(255, 255, 255, 0.09),
+    inset 0 -14px 40px rgba(110, 70, 255, 0.07);
+}
+html.voxel-style .voxel-page .aurora-composer textarea {
+  color: rgba(255, 255, 255, 0.94);
+}
+html.voxel-style .voxel-page .aurora-composer textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+html.voxel-style .voxel-page .aurora-composer-actions {
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+/* pill buttons inside the composer keep presence over the bright horizon */
+html.voxel-style .voxel-page .aurora-composer button {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+html.voxel-style .voxel-page .aurora-composer button:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.16);
+}
+/* the rotating example chips: orange tint strong enough to read */
+html.voxel-style .voxel-page .aurora-composer span[class*='bg-primary/8'] {
+  background-color: rgba(255, 122, 61, 0.16);
+  border-color: rgba(255, 140, 70, 0.4);
+  color: #ffc9a8;
+}
+/* the send button: the world's signature orange, beveled like a block */
+html.voxel-style .voxel-page .aurora-composer button.bg-primary {
+  background: linear-gradient(180deg, #ffb054 0%, #ff8a3d 45%, #ff6a3d 100%);
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(150, 50, 10, 0.35);
+  box-shadow:
+    0 6px 20px rgba(255, 110, 50, 0.4),
+    inset 0 2px 0 rgba(255, 255, 255, 0.25),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+}
+html.voxel-style .voxel-page .aurora-composer button.bg-primary:hover:not(:disabled) {
+  box-shadow:
+    0 10px 30px rgba(255, 110, 50, 0.55),
+    inset 0 2px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+}
+html.voxel-style .voxel-page .aurora-composer button.bg-primary:disabled {
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.3);
+  text-shadow: none;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* ── library shelf ── */
+html.voxel-style .voxel-page .aurora-library .h-px {
+  background: rgba(255, 255, 255, 0.14);
+}
+html.voxel-style .voxel-page .aurora-lesson {
+  border-radius: 16px;
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease;
+}
+html.voxel-style .voxel-page .aurora-lesson:hover {
+  transform: translateY(-2px);
+  filter: drop-shadow(0 10px 26px rgba(124, 108, 255, 0.22));
+}
+html.voxel-style .voxel-page .aurora-cover {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 10px 30px rgba(4, 2, 16, 0.5),
+    inset 0 2px 0 rgba(255, 255, 255, 0.1);
+  background: rgba(24, 15, 52, 0.72);
+}
+html.voxel-style .voxel-page .aurora-lesson-badge {
+  font-family: 'Voxel Pixel', monospace;
+  font-size: 9.5px;
+  background: rgba(124, 108, 255, 0.16);
+  color: #cfc4ff;
+  border: 1px solid rgba(143, 123, 255, 0.35);
+}
+html.voxel-style .voxel-page .aurora-lesson-title {
+  text-shadow: 0 2px 12px rgba(4, 2, 16, 0.6);
+}
+
+/* ── footer ── */
+html.voxel-style .voxel-page .aurora-footer {
+  color: rgba(255, 255, 255, 0.32);
+  text-shadow: 0 2px 10px rgba(4, 2, 16, 0.6);
+}
+
+/* ── generation preview: the world keeps running while the lesson builds ── */
+html.voxel-style .voxel-page .min-h-\[100dvh\] {
+  background: transparent;
+}
+html.voxel-style .voxel-page [class*='bg-gradient-to-b'] {
+  background: transparent;
+}
+html.voxel-style .voxel-page .backdrop-blur-xl {
+  background: linear-gradient(165deg, rgba(44, 30, 84, 0.66), rgba(22, 14, 48, 0.72));
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 30px 80px rgba(4, 2, 16, 0.6),
+    inset 0 2px 0 rgba(255, 255, 255, 0.08);
+}
+/* literal slate utilities inside the generation flow follow the world's ink */
+html.voxel-style .voxel-page .text-slate-600,
+html.voxel-style .voxel-page .text-slate-700 {
+  color: #c3bde6;
+}
+html.voxel-style .voxel-page .text-slate-500,
+html.voxel-style .voxel-page .text-slate-400 {
+  color: #948ec2;
+}
+html.voxel-style .voxel-page .text-slate-300,
+html.voxel-style .voxel-page .text-slate-200 {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+/* ── motion sensitivities ── */
+@media (prefers-reduced-motion: reduce) {
+  .voxel-grade-night,
+  .voxel-grade-vignette {
+    transition: none;
+  }
+}
+
+/* ── contrast hardening (judge round: bottom strip, CTAs, hero scrim) ── */
+
+/* A rising bottom scrim + a soft radial behind the hero keep real app UI
+   readable through both halves of the video's day→night loop. */
+html.voxel-style .voxel-page.aurora-home::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(58% 34% at 50% 34%, rgba(10, 5, 26, 0.34), transparent 72%),
+    linear-gradient(0deg, rgba(8, 4, 24, 0.78) 0%, rgba(8, 4, 24, 0.38) 12%, transparent 30%);
+}
+@media (prefers-reduced-motion: reduce) {
+  html.voxel-style .voxel-page.aurora-home::after {
+    display: none;
+  }
+}
+
+/* the library strip + empty state + footer: white instead of grey-on-horizon */
+html.voxel-style .voxel-page .text-muted-foreground\/60,
+html.voxel-style .voxel-page .text-muted-foreground\/50,
+html.voxel-style .voxel-page .text-muted-foreground\/40 {
+  color: rgba(255, 255, 255, 0.8);
+}
+html.voxel-style .voxel-page .text-muted-foreground\/35 {
+  color: rgba(255, 255, 255, 0.7);
+}
+html.voxel-style .voxel-page .hover\:text-foreground\/70:hover {
+  color: #fff;
+}
+
+/* disabled send/enter pill: a readable dark plate instead of a ghost */
+html.voxel-style .voxel-page .aurora-composer button.bg-muted {
+  background: rgba(30, 22, 56, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.72);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* the curriculum launcher: solid voxel-orange CTA, white text */
+html.voxel-style
+  .voxel-page
+  button[data-testid='curriculum-lesson-launcher']:not(.cursor-not-allowed) {
+  background: linear-gradient(180deg, #ffb054 0%, #ff8a3d 45%, #ff6a3d 100%) !important;
+  background-color: #ff8a3d !important;
+  border-color: rgba(255, 190, 120, 0.55) !important;
+  color: #fff !important;
+  text-shadow: 0 2px 4px rgba(150, 50, 10, 0.35) !important;
+  box-shadow:
+    0 10px 30px rgba(255, 110, 50, 0.4),
+    inset 0 2px 0 rgba(255, 255, 255, 0.25),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+}
+html.voxel-style
+  .voxel-page
+  button[data-testid='curriculum-lesson-launcher']:hover:not(.cursor-not-allowed) {
+  box-shadow:
+    0 16px 40px rgba(255, 110, 50, 0.55),
+    inset 0 2px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+}
+
+/* skills popover: denser body copy stays readable */
+html.voxel-style .voxel-page .text-muted-foreground {
+  color: #bab4db;
+}
+html.voxel-style body:has(.voxel-page) .text-muted-foreground {
+  color: #bab4db;
+}

@@ -2299,7 +2299,12 @@
       }
     },
     "serverConfiguredAddOwn": "如需使用自己的憑證，請新增一個供應商。",
-    "providerHeygenVoiceTTS": "HeyGen Voice (OpenRouter)"
+    "providerHeygenVoiceTTS": "HeyGen Voice (OpenRouter)",
+    "styleDesc": "選擇介面風格",
+    "styleOptions": {
+      "aurora": "極光",
+      "minecraft": "Minecraft"
+    }
   },
   "workspace": {
     "untitledCourse": "未命名课堂",
