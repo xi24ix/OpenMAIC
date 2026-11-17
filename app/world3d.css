@@ -1077,8 +1077,8 @@ html.voxel-style .voxel-page .aurora-brand {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 14px;
-    padding: 74px 14px 20px;
+    gap: 26px;
+    padding: 86px 16px 30px;
     overflow: visible;
   }
   .w3-ui > * {
@@ -1088,47 +1088,77 @@ html.voxel-style .voxel-page .aurora-brand {
     right: auto !important;
   }
   .w3-badge {
-    margin-top: 6px;
+    margin-top: 0;
     width: auto;
     padding: 0 22px;
     height: 40px;
     font-size: 12px;
   }
-  .w3-headline {
+  .w3-ui .w3-headline {
     width: 100%;
-    font-size: clamp(30px, 9vw, 46px);
-    line-height: 1.3;
+    font-size: clamp(23px, 7.2vw, 38px);
+    line-height: 1.45;
   }
-  .w3-swoosh {
-    display: none;
+  .w3-headline .w3-t {
+    text-wrap: balance;
+  }
+  .w3-ui .w3-swoosh {
+    display: none !important;
   }
   .w3-headline .w3-t {
     filter: drop-shadow(0 2px 6px rgba(10, 8, 50, 0.45));
   }
   .w3-composer {
     width: 100%;
-    height: 230px;
+    height: auto;
+    padding: 22px 20px 16px;
     background: rgba(20, 19, 72, 0.84);
   }
-  .w3-field {
-    left: 60px;
-  }
   .w3-spark {
-    left: 16px;
+    left: 14px;
+    top: 20px;
+    width: 24px;
+    height: 24px;
+  }
+  .w3-field {
+    position: relative;
+    left: auto;
+    right: auto;
+    top: auto;
+    height: auto;
+    margin: 0 4px 12px 40px;
+  }
+  .w3-field textarea {
+    position: static;
+    width: 100%;
+    height: auto;
+    min-height: 88px;
+  }
+  /* intro + first example; deeper examples would push the chips out */
+  .w3-hints {
+    max-height: 92px;
+    overflow: hidden;
   }
   .w3-hints p {
-    font-size: 15px;
-    line-height: 26px;
+    font-size: 13.5px;
+    line-height: 23px;
   }
   .w3-hints p:first-child {
-    font-size: 14px;
+    font-size: 12.5px;
   }
   .w3-row {
-    left: 12px;
-    right: 12px;
+    position: static;
+    left: auto;
+    right: auto;
+    top: auto;
+    height: auto;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 10px;
   }
   .w3-chips {
     gap: 8px;
+    flex-wrap: wrap;
   }
   .w3-chips .w3-chip-slot > button {
     padding: 0 11px 3px;
@@ -1142,14 +1172,13 @@ html.voxel-style .voxel-page .aurora-brand {
   .w3-chips .w3-chip-slot.w3-chip-curriculum {
     display: none;
   }
-  .w3-row > .w3-attach-slot > button {
-    width: 44px;
-    height: 44px;
+  .w3-row > .w3-attach-slot button {
+    width: 46px;
+    height: 46px;
   }
   .w3-cta {
     width: 100%;
     max-width: 340px;
-    margin-top: -6px;
   }
   .w3-error {
     width: auto;

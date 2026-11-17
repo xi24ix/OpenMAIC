@@ -68,6 +68,19 @@ export function VoxelHero({
     return () => removeEventListener('resize', fit);
   }, []);
 
+  // Failsafe for throttled webviews: a backgrounded pane can freeze the
+  // .w3-rise entrance animations mid-delay, leaving the CTA invisible. By the
+  // time this runs (2.6s) the animation is long done on real devices, so this
+  // only ever force-completes a frozen one.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      document.querySelectorAll<HTMLElement>('.w3-rise').forEach((el) => {
+        el.getAnimations?.().forEach((a) => a.finish());
+      });
+    }, 2600);
+    return () => clearTimeout(timer);
+  }, []);
+
   const scrollToLibrary = () => {
     document.getElementById('w3-library')?.scrollIntoView({
       behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
