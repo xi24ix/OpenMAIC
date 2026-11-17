@@ -1182,18 +1182,8 @@ html.voxel-style .voxel-page .aurora-brand {
     display: none;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .w3-world *,
-  .w3-ui *,
-  .w3-ui *::before,
-  .w3-ui *::after {
-    animation: none !important;
-    transition: none !important;
-  }
-  .w3-stage {
-    opacity: 1;
-  }
-  .w3-rise {
-    opacity: 1;
-  }
-}
+/* NOTE: the world deliberately does not honor prefers-reduced-motion —
+   embedded preview browsers and OS-level "animations off" all report it,
+   which froze the world into a dead painting (components/voxel/
+   world-scene.tsx keeps the same decision for its JS motion). */
+

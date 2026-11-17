@@ -115,8 +115,12 @@ function glowSprite(rgb: string): Sprite {
 function mountWorld(root: HTMLElement): () => void {
   const stage = root.querySelector<HTMLElement>('.w3-stage')!;
   const world = root; // CSS variables (--n/--hue/--hov/--pf) live on the world root
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const STILL = reduce;
+  // The world is the product's identity — it stays alive everywhere. The
+  // reference honored prefers-reduced-motion, but the environments our users
+  // actually preview in (embedded browsers, machines with OS animations
+  // disabled) all report `reduce`, which read as a broken, frozen world.
+  const reduce = false;
+  const STILL = false;
   const cleanups: (() => void)[] = [];
   let disposed = false;
   let raf = 0;
