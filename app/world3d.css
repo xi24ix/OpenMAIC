@@ -810,8 +810,9 @@ html.voxel-style
   transform: translateX(5px);
 }
 .w3-ui .w3-cta[aria-disabled='true'] {
-  opacity: 0.8;
-  animation: none;
+  /* a filter, not opacity/animation: the rise's forwards fill owns opacity,
+     and changing the animation list would replay the entrance */
+  filter: saturate(0.45) brightness(0.8);
   cursor: not-allowed;
 }
 .w3-ui .w3-cta[aria-disabled='true']:hover {
@@ -1219,20 +1220,19 @@ html.voxel-style .voxel-page .aurora-brand {
     display: none;
   }
 }
-/* popovers center on phones: trigger-anchored panels clip at the screen
-   edges when the trigger sits at the composer's sides (Radix portals to
-   body, so scope by the style class + its popper wrapper) */
-@media (max-aspect-ratio: 1/1), (max-width: 760px) {
-  html.voxel-style [data-radix-popper-content-wrapper] {
-    position: fixed !important;
-    left: 50% !important;
-    top: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    max-width: calc(100vw - 24px);
-  }
-  html.voxel-style [data-radix-popper-content-wrapper] > * {
-    max-height: 72dvh;
-  }
+/* popovers center in the viewport at every size: trigger-anchored panels
+   hug the composer's side chips, while dialogs (curriculum) sit centered —
+   they must match (Radix portals to body, so scope by the style class +
+   its popper wrapper) */
+html.voxel-style [data-radix-popper-content-wrapper] {
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  max-width: min(calc(100vw - 24px), 480px);
+}
+html.voxel-style [data-radix-popper-content-wrapper] > * {
+  max-height: min(72dvh, 560px);
 }
 
 /* NOTE: the world deliberately does not honor prefers-reduced-motion —
