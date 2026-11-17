@@ -233,8 +233,11 @@ type PreparationError = Error & { warnings?: string[] };
 export function CurriculumLessonPicker({
   disabled = false,
   onGenerate,
+  triggerLabel,
 }: {
   disabled?: boolean;
+  /** Replaces the default label in the launcher (the voxel hero's compact chips). */
+  triggerLabel?: string;
   onGenerate: (input: {
     request: CurriculumGenerationRequest;
     prepared: CurriculumGenerationPreparation;
@@ -545,7 +548,7 @@ export function CurriculumLessonPicker({
           )}
         >
           <GraduationCap className="size-4" aria-hidden="true" />
-          {t('curriculum.openPicker')}
+          {triggerLabel ?? t('curriculum.openPicker')}
         </button>
       </DialogTrigger>
       <DialogContent

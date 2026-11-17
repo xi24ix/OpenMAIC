@@ -1,0 +1,1199 @@
+/* ═══════════════════════════════════════════════════════════════
+   World3D — the "living voxel world" homepage (the 3d-final-ver design).
+   Scoped under .w3-* and activated by the voxel style only: the fixed world
+   scene (components/voxel/world-scene.tsx) + a hero laid out in design
+   pixels of the 1672x941 art, scaled to the viewport. The library keeps its
+   aurora DOM and scrolls over the fixed world below the hero.
+
+   Coordinates are design px of the 1672x941 art; --u converts them to
+   responsive units. Cairo is the design's face (self-hosted in globals.css).
+   ═══════════════════════════════════════════════════════════════ */
+
+.w3-world,
+.w3-hero {
+  --orange: #fb5c3c;
+  --w3-line: rgba(205, 205, 255, 0.85);
+  --fx: 0.35; /* horizontal focus of the world when cropped */
+}
+
+/* ============================== WORLD ============================== */
+.w3-world {
+  position: fixed;
+  inset: 0;
+  /* below all page content, like the old voxel canvas — the world is the
+     background plate every style layer paints over */
+  z-index: -2;
+  overflow: hidden;
+  background: #0d0a32;
+  --n: 0;
+  --hue: 0;
+  --hov: 0;
+  --pf: 0;
+}
+.w3-stage {
+  --sw: max(100vw, 177.68vh);
+  position: absolute;
+  width: var(--sw);
+  aspect-ratio: 1672 / 941;
+  left: calc((100vw - var(--sw)) * var(--fx));
+  top: calc((100vh - var(--sw) * 941 / 1672) * 0.5);
+  container-type: size;
+  --u: calc(100cqw / 1672);
+  transform-origin: 50% 50%;
+  will-change: transform;
+  background: #0d0a32;
+  transform: scale(1.004);
+  opacity: 0;
+  animation: w3-appear 1.6s 0.1s ease-out forwards;
+}
+@keyframes w3-appear {
+  to {
+    opacity: 1;
+  }
+}
+.w3-stage > * {
+  position: absolute;
+  pointer-events: none;
+}
+.w3-gl,
+.w3-fx,
+.w3-cl {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+.w3-gl {
+  display: none;
+}
+
+/* depth parallax: every effect carries --z (0 far .. 1 near); --ax/--ay (px)
+   come from the camera */
+.w3-g,
+.w3-aur,
+.w3-ring,
+.w3-flare,
+.w3-fall,
+.w3-wrap,
+.w3-sp {
+  translate: calc((var(--z, 0.5) - 0.5) * var(--ax, 0px) + var(--sx, 0px))
+    calc((var(--z, 0.5) - 0.5) * var(--ay, 0px) + var(--sy, 0px));
+}
+.w3-wrap .w3-sp {
+  translate: none;
+}
+/* animated sprites cut out of the art (lanterns, heads) */
+.w3-sp {
+  left: calc(var(--x) * var(--u));
+  top: calc(var(--y) * var(--u));
+  width: calc(var(--w) * var(--u));
+  height: calc(var(--h) * var(--u));
+}
+.w3-sp img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.w3-sw {
+  transform-origin: calc(var(--px0) * var(--u)) calc(var(--py0) * var(--u));
+  rotate: var(--rot, 0deg);
+}
+.w3-sp .w3-lid {
+  position: absolute;
+  opacity: 0;
+  left: calc(50 * var(--u));
+  top: calc(30 * var(--u));
+  width: calc(17 * var(--u));
+  height: calc(20 * var(--u));
+  transition: opacity 0.09s;
+}
+.w3-wrap {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: calc(var(--wx) * var(--u)) calc(var(--wy) * var(--u));
+  animation: w3-breathe2 var(--t) ease-in-out infinite;
+  animation-delay: var(--d, 0s);
+}
+.w3-wrap > * {
+  position: absolute;
+  pointer-events: none;
+}
+
+/* ---- time of day + UI<->world reactions: the variables live on .w3-world ---- */
+.w3-g.w3-atm {
+  filter: hue-rotate(calc(var(--hue) * 1deg)) brightness(calc(1 - var(--n) * 0.2));
+}
+.w3-g.w3-lit {
+  filter: brightness(calc(1 + var(--n) * 1.5));
+  scale: calc(1 + var(--n) * 0.3);
+}
+.w3-g.w3-lamp {
+  filter: brightness(calc(1 + var(--n) * 0.45 + var(--hov) * 0.9));
+}
+.w3-g.w3-portal,
+.w3-ring.w3-portal {
+  filter: brightness(calc(1 + var(--pf) * 0.9)) saturate(calc(1 + var(--pf) * 0.5));
+  scale: calc(1 + var(--pf) * 0.26);
+}
+.w3-dusk {
+  display: none;
+  inset: 0;
+  mix-blend-mode: multiply;
+  background: linear-gradient(
+    180deg,
+    rgba(60, 50, 140, calc(var(--n) * 0.5)),
+    rgba(110, 60, 150, calc(var(--n) * 0.4))
+  );
+}
+
+/* ---------- glow sprites (positions are design px) ---------- */
+.w3-g {
+  left: calc(var(--x) * var(--u));
+  top: calc(var(--y) * var(--u));
+  width: calc(var(--w) * var(--u));
+  height: calc(var(--h, var(--w)) * var(--u));
+  background: var(--c);
+  -webkit-mask-image: radial-gradient(closest-side, #000 0, rgba(0, 0, 0, 0.42) 28%, rgba(0, 0, 0, 0.13) 62%, transparent 100%);
+  mask-image: radial-gradient(closest-side, #000 0, rgba(0, 0, 0, 0.42) 28%, rgba(0, 0, 0, 0.13) 62%, transparent 100%);
+  mix-blend-mode: screen;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: var(--a, w3-pulse) var(--t, 5s) ease-in-out infinite;
+  animation-delay: var(--d, 0s);
+}
+@keyframes w3-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(0.92);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+}
+@keyframes w3-breathe {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes w3-flick {
+  0%,
+  100% {
+    opacity: 0.85;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  6% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(0.93);
+  }
+  13% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.06);
+  }
+  31% {
+    opacity: 0.66;
+    transform: translate(-50%, -50%) scale(0.96);
+  }
+  47% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.09);
+  }
+  63% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(0.94);
+  }
+  80% {
+    opacity: 0.92;
+    transform: translate(-50%, -50%) scale(1.03);
+  }
+}
+@keyframes w3-win {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  20% {
+    opacity: 1;
+  }
+  45% {
+    opacity: 0.7;
+  }
+  70% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 0.45;
+  }
+}
+
+/* aurora ribbons in the empty sky */
+.w3-aur {
+  left: calc(var(--x) * var(--u));
+  top: calc(var(--y) * var(--u));
+  width: calc(var(--w) * var(--u));
+  height: calc(var(--h) * var(--u));
+  background: radial-gradient(closest-side, var(--c), transparent);
+  filter: blur(calc(30 * var(--u)));
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: w3-aur var(--t) ease-in-out infinite alternate;
+  animation-delay: var(--d, 0s);
+}
+@keyframes w3-aur {
+  0% {
+    opacity: 0.03;
+    transform: translateX(calc(-60 * var(--u))) rotate(-6deg);
+  }
+  100% {
+    opacity: 0.2;
+    transform: translateX(calc(80 * var(--u))) rotate(4deg);
+  }
+}
+
+/* portal swirl */
+.w3-ring {
+  left: calc(1547 * var(--u));
+  top: calc(626 * var(--u));
+  width: calc(86 * var(--u));
+  height: calc(112 * var(--u));
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0 6%,
+    #f0b6ff 14%,
+    transparent 30%,
+    #a96bff 48%,
+    transparent 66%,
+    #ff9fe6 82%,
+    transparent 96%
+  );
+  -webkit-mask: radial-gradient(closest-side, transparent 0 12%, #000 42%, transparent 78%);
+  mask: radial-gradient(closest-side, transparent 0 12%, #000 42%, transparent 78%);
+  animation: w3-spin 6s linear infinite;
+  opacity: 0.9;
+  transform: translate(-50%, -50%);
+}
+.w3-ring.w3-b {
+  width: calc(58 * var(--u));
+  height: calc(76 * var(--u));
+  animation-duration: 3.8s;
+  animation-direction: reverse;
+  opacity: 0.8;
+}
+@keyframes w3-spin {
+  from {
+    transform: translate(-50%, -50%) rotate(0);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* gem-cube lens flare */
+.w3-flare {
+  left: calc(1268 * var(--u));
+  top: calc(78 * var(--u));
+  width: calc(120 * var(--u));
+  height: calc(120 * var(--u));
+  background:
+    linear-gradient(90deg, transparent, rgba(200, 215, 255, 0.9), transparent) center / 100% 2px no-repeat,
+    linear-gradient(0deg, transparent, rgba(200, 215, 255, 0.9), transparent) center / 2px 100% no-repeat;
+  mix-blend-mode: screen;
+  transform: translate(-50%, -50%);
+  animation: w3-flare 6s ease-in-out infinite;
+}
+@keyframes w3-flare {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: translate(-50%, -50%) rotate(0) scale(0.7);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translate(-50%, -50%) rotate(45deg) scale(1);
+  }
+}
+
+/* waterfalls: flowing streaks */
+.w3-fall {
+  left: calc(var(--x) * var(--u));
+  top: calc(var(--y) * var(--u));
+  width: calc(var(--w) * var(--u));
+  height: calc(var(--h) * var(--u));
+  background:
+    repeating-linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0) 0,
+      rgba(255, 255, 255, 0) calc(10 * var(--u)),
+      rgba(205, 235, 255, 0.85) calc(15 * var(--u)),
+      rgba(255, 255, 255, 0) calc(26 * var(--u)),
+      rgba(255, 255, 255, 0) calc(34 * var(--u))
+    ),
+    linear-gradient(90deg, transparent, rgba(120, 180, 255, 0.3), transparent);
+  mix-blend-mode: screen;
+  opacity: 0.32;
+  animation: w3-fall var(--t, 1.2s) linear infinite;
+  -webkit-mask: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent), linear-gradient(180deg, #000 80%, transparent);
+  mask: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+}
+@keyframes w3-fall {
+  to {
+    background-position:
+      0 calc(34 * var(--u)),
+      0 0;
+  }
+}
+
+/* character: breathing overlay cut from the same art (feathered) */
+.w3-char {
+  left: calc(var(--x) * var(--u));
+  top: calc(var(--y) * var(--u));
+  width: calc(var(--w) * var(--u));
+  height: calc(var(--h) * var(--u));
+  background-repeat: no-repeat;
+  background-size:
+    calc(1672 * var(--u)) calc(941 * var(--u));
+  background-position: calc(var(--x) * var(--u) * -1) calc(var(--y) * var(--u) * -1);
+  -webkit-mask-image: radial-gradient(closest-side, #000 74%, transparent);
+  mask-image: radial-gradient(closest-side, #000 74%, transparent);
+}
+@keyframes w3-breathe2 {
+  0%,
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+  50% {
+    transform: translateY(calc(-1 * var(--u))) scale(1.002, 1.006);
+  }
+}
+
+/* very slow lighting cycle over the whole world */
+.w3-vig {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 44%, transparent 62%, rgba(8, 6, 30, calc(0.19 + var(--n) * 0.2)) 100%);
+}
+.w3-wash {
+  inset: 0;
+  mix-blend-mode: soft-light;
+  animation: w3-wash 28s ease-in-out infinite alternate;
+}
+@keyframes w3-wash {
+  0% {
+    background: rgba(255, 120, 60, 0.06);
+  }
+  50% {
+    background: rgba(140, 80, 255, 0.06);
+  }
+  100% {
+    background: rgba(255, 80, 160, 0.05);
+  }
+}
+
+/* ============================== HERO UI ============================== */
+/* The hero occupies the first viewport; the world behind it is fixed, so
+   scrolling moves the hero away and the library arrives over the world. */
+.w3-hero {
+  position: relative;
+  height: 100dvh;
+  min-height: 560px;
+  width: 100%;
+  overflow: hidden;
+  z-index: 10;
+}
+.w3-ui {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1672px;
+  height: 941px;
+  z-index: 10;
+  /* the pre-hydration guess for common desktop windows; fit() corrects it */
+  transform: translate(-50%, -50%) scale(var(--s, 0.85));
+  pointer-events: none;
+  font-family: 'Cairo', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.w3-ui > * {
+  position: absolute;
+  pointer-events: auto;
+}
+.w3-ui button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: 0;
+  background: none;
+  padding: 0;
+}
+.w3-ui svg {
+  display: block;
+}
+
+.w3-badge {
+  left: 703px;
+  top: 71px;
+  width: 264px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  direction: ltr;
+  border-radius: 23px;
+  background: rgba(18, 16, 64, 0.72);
+  border: 1.5px solid rgba(150, 145, 235, 0.45);
+  backdrop-filter: blur(8px);
+  font-weight: 800;
+  font-size: 14.5px;
+  letter-spacing: calc(0.2em + 0.6px);
+  color: #f3f0ff;
+  box-shadow: 0 0 30px rgba(90, 70, 230, 0.35);
+}
+.w3-badge i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ff4538;
+  box-shadow:
+    0 0 0 3px rgba(255, 69, 56, 0.25),
+    0 0 12px #ff4538;
+  animation: w3-blink 1.8s ease-in-out infinite;
+}
+@keyframes w3-blink {
+  50% {
+    opacity: 0.45;
+    transform: scale(0.8);
+  }
+}
+
+.w3-headline {
+  left: 0;
+  top: 150px;
+  width: 1672px;
+  margin: 0;
+  text-align: center;
+  font-weight: 900;
+  font-size: 65px;
+  line-height: 86px;
+  pointer-events: none;
+  letter-spacing: -0.005em;
+  color: #fff;
+}
+.w3-headline .w3-t {
+  display: inline-block;
+  background: linear-gradient(180deg, #efecff 25%, #cfc8ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 4px 12px rgba(10, 8, 50, 0.55)) drop-shadow(0 0 26px rgba(120, 100, 255, 0.3));
+}
+.w3-headline .w3-hl {
+  background: linear-gradient(90deg, #f7787f 0%, #f66a4a 38%, #f8aa88 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.w3-swoosh {
+  left: 626px;
+  top: 308px;
+  width: 420px;
+  height: 36px;
+  overflow: visible;
+  filter: drop-shadow(0 0 5px rgba(251, 92, 60, 0.45));
+}
+
+.w3-composer {
+  left: 371px;
+  top: 370px;
+  width: 930px;
+  height: 239px;
+  border-radius: 42px;
+  direction: rtl;
+  background: linear-gradient(180deg, rgba(30, 32, 90, 0.72), rgba(50, 43, 108, 0.62));
+  border: 1.6px solid var(--w3-line);
+  backdrop-filter: blur(16px) saturate(1.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    0 0 18px rgba(130, 120, 255, 0.35),
+    inset 0 -14px 22px -12px rgba(255, 120, 80, 0.16),
+    inset 0 0 40px rgba(110, 90, 255, 0.1),
+    0 0 46px rgba(110, 80, 255, 0.32),
+    0 22px 50px rgba(6, 4, 40, 0.45);
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
+}
+.w3-composer:focus-within {
+  border-color: rgba(255, 160, 125, 0.8);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 0 60px rgba(251, 92, 60, 0.32),
+    0 22px 50px rgba(6, 4, 40, 0.45);
+}
+.w3-spark {
+  left: 24px;
+  top: 30px;
+  font-size: 30px;
+  width: 30px;
+  height: 30px;
+  color: #fff;
+  fill: currentColor;
+  stroke: none;
+  filter: drop-shadow(0 0 8px #fff);
+  animation: w3-twinkle 3.4s ease-in-out infinite;
+  position: absolute;
+}
+@keyframes w3-twinkle {
+  50% {
+    transform: scale(0.85) rotate(20deg);
+    opacity: 0.75;
+  }
+}
+.w3-field {
+  position: absolute;
+  left: 96px;
+  right: 34px;
+  top: 26px;
+  height: 122px;
+}
+.w3-field textarea {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  resize: none;
+  background: none;
+  border: 0;
+  outline: 0;
+  color: #fff;
+  font:
+    600 19px/30.5px 'Cairo',
+    sans-serif;
+  direction: rtl;
+  text-align: right;
+  padding: 0;
+}
+.w3-hints {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  text-align: right;
+  transition: opacity 0.2s;
+}
+.w3-hints p {
+  margin: 0;
+  font-size: 19px;
+  line-height: 30.5px;
+  color: #e4e1fa;
+  font-weight: 500;
+}
+.w3-hints p:first-child {
+  font-size: 17px;
+  color: #a9a5cf;
+  font-weight: 500;
+}
+.w3-field.has-text .w3-hints {
+  opacity: 0;
+}
+.w3-row {
+  position: absolute;
+  left: 21px;
+  right: 22px;
+  top: 176px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  direction: rtl;
+}
+.w3-chips {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  direction: rtl;
+}
+/* the real composer controls (SkillPicker / LearnerOptions / Speech /
+   Curriculum) restyled as the design's chips */
+.w3-chips .w3-chip-slot > button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 43px;
+  padding: 0 14px 4px;
+  justify-content: center;
+  border-radius: 17px;
+  font-weight: 700;
+  font-size: 16px;
+  font-family: 'Cairo', sans-serif;
+  color: #ece8ff;
+  background: rgba(255, 255, 255, 0.075);
+  border: 1.4px solid rgba(180, 172, 250, 0.38);
+  transition: 0.2s;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.w3-chips .w3-chip-slot > button:hover {
+  background: rgba(255, 255, 255, 0.17);
+  transform: translateY(-1px);
+}
+.w3-chips .w3-chip-slot > button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.w3-chips .w3-chip-slot > button svg {
+  width: 20px;
+  height: 20px;
+}
+/* the curriculum chip reads as a quieter, optional action (the design's
+   "رفع الفصل" state); the [data-testid] rule beats voxel.css's orange
+   launcher override */
+.w3-chips .w3-chip-slot.w3-chip-curriculum > button {
+  opacity: 0.85;
+}
+html.voxel-style
+  .w3-chips
+  .w3-chip-slot.w3-chip-curriculum
+  > button[data-testid='curriculum-lesson-launcher'] {
+  background: rgba(255, 255, 255, 0.075) !important;
+  background-color: rgba(255, 255, 255, 0.075) !important;
+  border-color: rgba(180, 172, 250, 0.38) !important;
+  color: #ece8ff !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+html.voxel-style
+  .w3-chips
+  .w3-chip-slot.w3-chip-curriculum
+  > button[data-testid='curriculum-lesson-launcher']:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.17) !important;
+  box-shadow: none !important;
+}
+/* the round mic chip */
+.w3-chips .w3-chip-slot.w3-chip-mic > button {
+  width: 44px;
+  padding: 0 4px;
+  justify-content: center;
+  border-radius: 50%;
+}
+/* the attach button (course materials) — the design's round paperclip */
+.w3-attach {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 25px;
+  background: rgba(255, 255, 255, 0.075);
+  border: 1.4px solid rgba(180, 172, 250, 0.38);
+  transition: 0.2s;
+}
+.w3-attach:hover {
+  background: rgba(255, 255, 255, 0.17);
+}
+/* the attach button (course materials) — the design's round paperclip.
+   The toolbar nests its trigger in a row div, so target any descendant. */
+.w3-row > .w3-attach-slot button {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.075);
+  border: 1.4px solid rgba(180, 172, 250, 0.38);
+  transition: 0.2s;
+  cursor: pointer;
+  color: #ece8ff;
+  position: relative;
+  padding: 0;
+}
+.w3-row > .w3-attach-slot button:hover {
+  background: rgba(255, 255, 255, 0.17);
+}
+.w3-row > .w3-attach-slot button svg {
+  width: 24px;
+  height: 24px;
+}
+.w3-row > .w3-attach-slot button > span {
+  display: none;
+}
+/* the attached-materials count bubble sits on the slot (the hero renders it) */
+.w3-row > .w3-attach-slot > .w3-count {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: var(--orange);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.w3-ui .w3-cta {
+  left: 709px;
+  top: 628px;
+  width: 254px;
+  height: 70px;
+  border-radius: 30px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  direction: rtl;
+  font-weight: 700;
+  font-size: 17.5px;
+  white-space: nowrap;
+  color: #fff;
+  z-index: 3;
+  background: linear-gradient(180deg, #ff8350 0%, #fb5c3c 55%, #ec4524 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -3px 8px rgba(160, 30, 0, 0.3),
+    0 0 0 1.5px rgba(255, 160, 110, 0.55),
+    0 10px 30px rgba(251, 92, 60, 0.55),
+    0 0 80px rgba(251, 92, 60, 0.3);
+  animation: w3-ctaGlow 3.4s ease-in-out infinite;
+  transition: transform 0.2s;
+}
+.w3-ui .w3-cta::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 36%;
+  left: -60%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  transform: skewX(-20deg);
+  animation: w3-shine 4.2s ease-in-out infinite;
+}
+.w3-ui .w3-cta span {
+  position: relative;
+  top: -2px;
+}
+.w3-ui .w3-cta:hover {
+  transform: translateY(-3px) scale(1.035);
+}
+.w3-ui .w3-cta svg {
+  width: 27px;
+  height: 27px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.25s;
+}
+.w3-ui .w3-cta:hover svg {
+  transform: translateX(5px);
+}
+.w3-ui .w3-cta[aria-disabled='true'] {
+  opacity: 0.55;
+  animation: none;
+  cursor: not-allowed;
+}
+.w3-ui .w3-cta[aria-disabled='true']:hover {
+  transform: none;
+}
+@keyframes w3-ctaGlow {
+  50% {
+    box-shadow:
+      inset 0 2px 0 rgba(255, 255, 255, 0.4),
+      inset 0 -3px 8px rgba(160, 30, 0, 0.3),
+      0 0 0 1.5px rgba(255, 185, 140, 0.85),
+      0 10px 38px rgba(251, 92, 60, 0.8),
+      0 0 120px rgba(251, 92, 60, 0.4);
+  }
+}
+@keyframes w3-shine {
+  0%,
+  55% {
+    left: -60%;
+  }
+  100% {
+    left: 130%;
+  }
+}
+
+/* run-start errors surface under the CTA (same glass language, red ink) */
+.w3-error {
+  left: 371px;
+  top: 714px;
+  width: 930px;
+  border-radius: 20px;
+  padding: 10px 18px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffc9c0;
+  background: rgba(70, 16, 20, 0.55);
+  border: 1.4px solid rgba(255, 120, 100, 0.45);
+  backdrop-filter: blur(10px);
+}
+
+.w3-features {
+  left: 338px;
+  top: 775px;
+  width: 992px;
+  height: 85px;
+  display: grid;
+  grid-template-columns: 207fr 210fr 278fr 297fr;
+  direction: rtl;
+  border-radius: 28px;
+  background: rgba(21, 19, 68, 0.82);
+  border: 1.5px solid rgba(140, 134, 230, 0.28);
+  backdrop-filter: blur(10px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 40px rgba(90, 60, 220, 0.22),
+    0 14px 40px rgba(6, 3, 30, 0.45);
+}
+.w3-feat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-weight: 600;
+  font-size: 15px;
+  color: #dcd8ff;
+  white-space: nowrap;
+  transition: 0.25s;
+  direction: rtl;
+}
+.w3-feat + .w3-feat {
+  border-right: 1.5px solid rgba(170, 164, 240, 0.2);
+}
+.w3-feat svg {
+  width: 31px;
+  height: 31px;
+  fill: currentColor;
+  fill-opacity: 0.2;
+  stroke: currentColor;
+  stroke-width: 2.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: none;
+  transition: transform 0.25s;
+}
+.w3-feat .l {
+  position: relative;
+  top: -4px;
+}
+.w3-feat:nth-child(3) {
+  padding-left: 20px;
+}
+.w3-feat:nth-child(4) {
+  padding-left: 38px;
+}
+.w3-feat:hover {
+  text-shadow: 0 0 14px rgba(255, 255, 255, 0.55);
+}
+.w3-feat:hover svg {
+  transform: scale(1.18) rotate(-7deg);
+}
+.w3-feat:nth-child(1) svg {
+  fill-opacity: 1;
+  filter: drop-shadow(0 0 5px rgba(122, 92, 255, 0.85));
+}
+.w3-feat:nth-child(2) svg {
+  color: #ff8a5a;
+  filter: drop-shadow(0 0 8px #ff6a3a);
+}
+.w3-feat:nth-child(3) svg {
+  color: #a37dff;
+  filter: drop-shadow(0 0 9px #8a5bff);
+}
+.w3-feat:nth-child(4) svg {
+  color: #ff7e6a;
+  filter: drop-shadow(0 0 8px #ff6a4a);
+}
+
+.w3-scroll {
+  left: 818px;
+  top: 856px;
+  width: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 3;
+  cursor: pointer;
+}
+.w3-mouse {
+  width: 23px;
+  height: 37px;
+  border: 2px solid rgba(225, 220, 255, 0.9);
+  border-radius: 13px;
+  position: relative;
+}
+.w3-mouse::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 7px;
+  width: 4px;
+  height: 7px;
+  margin-left: -2px;
+  border-radius: 2px;
+  background: #fff;
+  animation: w3-wheel 1.8s ease-in-out infinite;
+}
+.w3-scroll svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: #e6e0ff;
+  animation: w3-bounce 1.8s ease-in-out infinite;
+}
+@keyframes w3-wheel {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  80%,
+  100% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+@keyframes w3-bounce {
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+.w3-rise {
+  opacity: 0;
+  animation: w3-rise 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation-delay: var(--d, 0s);
+}
+@keyframes w3-rise {
+  from {
+    opacity: 0;
+    margin-top: 22px;
+  }
+  to {
+    opacity: 1;
+    margin-top: 0;
+  }
+}
+
+/* ====================== the library, over the fixed world ====================== */
+/* A translucent night panel so the shelf stays readable over the art. */
+.voxel-page .w3-library-wrap {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  /* gutters the voxel root no longer provides (its hero is full-bleed) */
+  padding: 0 16px;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 7, 38, 0) 0%,
+    rgba(10, 7, 38, 0.66) 90px,
+    rgba(10, 7, 38, 0.74) 100%
+  );
+}
+.voxel-page .w3-library-wrap .aurora-footer {
+  padding-bottom: 20px;
+}
+
+/* the topbar: the design's floating glass pills instead of a full-width bar */
+html.voxel-style .voxel-page .aurora-home-topbar {
+  background: none;
+  border-bottom: 0;
+  backdrop-filter: none;
+  box-shadow: none;
+  pointer-events: none;
+  /* float the pills off the top edge like the design (20px) */
+  padding-top: 14px;
+}
+html.voxel-style .voxel-page .aurora-home-topbar > * {
+  pointer-events: auto;
+}
+html.voxel-style .voxel-page .aurora-utilities {
+  background: rgba(26, 24, 78, 0.62);
+  border: 1.5px solid rgba(150, 145, 230, 0.38);
+  backdrop-filter: blur(10px);
+  border-radius: 30px;
+  padding: 0 10px;
+  height: 52px;
+  gap: 2px;
+  box-shadow: 0 6px 26px rgba(5, 3, 30, 0.4);
+}
+html.voxel-style .voxel-page .aurora-brand-group {
+  background: rgba(26, 24, 78, 0.5);
+  border: 1.5px solid rgba(150, 145, 230, 0.3);
+  backdrop-filter: blur(10px);
+  border-radius: 30px;
+  padding: 6px 16px 6px 12px;
+  box-shadow: 0 6px 26px rgba(5, 3, 30, 0.4);
+}
+html.voxel-style .voxel-page .aurora-brand {
+  color: #fff;
+}
+
+/* ====================== phones / portrait ====================== */
+@media (max-aspect-ratio: 1/1), (max-width: 760px) {
+  :root {
+    --fx: 0;
+  }
+  .w3-hero {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+  .w3-ui {
+    position: relative;
+    inset: auto;
+    left: auto;
+    top: auto;
+    width: auto;
+    height: auto;
+    transform: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 74px 14px 20px;
+    overflow: visible;
+  }
+  .w3-ui > * {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    right: auto !important;
+  }
+  .w3-badge {
+    margin-top: 6px;
+    width: auto;
+    padding: 0 22px;
+    height: 40px;
+    font-size: 12px;
+  }
+  .w3-headline {
+    width: 100%;
+    font-size: clamp(30px, 9vw, 46px);
+    line-height: 1.3;
+  }
+  .w3-swoosh {
+    display: none;
+  }
+  .w3-headline .w3-t {
+    filter: drop-shadow(0 2px 6px rgba(10, 8, 50, 0.45));
+  }
+  .w3-composer {
+    width: 100%;
+    height: 230px;
+    background: rgba(20, 19, 72, 0.84);
+  }
+  .w3-field {
+    left: 60px;
+  }
+  .w3-spark {
+    left: 16px;
+  }
+  .w3-hints p {
+    font-size: 15px;
+    line-height: 26px;
+  }
+  .w3-hints p:first-child {
+    font-size: 14px;
+  }
+  .w3-row {
+    left: 12px;
+    right: 12px;
+  }
+  .w3-chips {
+    gap: 8px;
+  }
+  .w3-chips .w3-chip-slot > button {
+    padding: 0 11px 3px;
+    font-size: 13px;
+    height: 40px;
+  }
+  .w3-chips .w3-chip-slot.w3-chip-mic > button {
+    width: 40px;
+  }
+  /* the reference drops the quieter upload chip on phones */
+  .w3-chips .w3-chip-slot.w3-chip-curriculum {
+    display: none;
+  }
+  .w3-row > .w3-attach-slot > button {
+    width: 44px;
+    height: 44px;
+  }
+  .w3-cta {
+    width: 100%;
+    max-width: 340px;
+    margin-top: -6px;
+  }
+  .w3-error {
+    width: auto;
+    max-width: 100%;
+  }
+  .w3-features {
+    width: 100%;
+    height: auto;
+    grid-template-columns: 1fr 1fr;
+  }
+  .w3-feat {
+    padding: 14px 6px;
+    font-size: 13px;
+    gap: 8px;
+  }
+  .w3-feat svg {
+    width: 24px;
+    height: 24px;
+  }
+  .w3-feat + .w3-feat {
+    border-right: 0;
+  }
+  .w3-feat:nth-child(odd) {
+    border-left: 1.5px solid rgba(170, 164, 240, 0.2);
+  }
+  .w3-feat:nth-child(n + 3) {
+    border-top: 1.5px solid rgba(170, 164, 240, 0.2);
+  }
+  .w3-scroll {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .w3-world *,
+  .w3-ui *,
+  .w3-ui *::before,
+  .w3-ui *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .w3-stage {
+    opacity: 1;
+  }
+  .w3-rise {
+    opacity: 1;
+  }
+}

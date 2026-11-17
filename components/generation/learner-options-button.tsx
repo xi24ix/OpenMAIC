@@ -153,6 +153,8 @@ type LearnerOptionsButtonProps = Omit<
     value: LearnerOptions;
     onChange: (value: LearnerOptions) => void;
     disabled?: boolean;
+    /** Replaces the summary in the trigger (the voxel hero's compact chips). */
+    triggerLabel?: string;
   };
 
 /**
@@ -162,7 +164,7 @@ type LearnerOptionsButtonProps = Omit<
  * of toggles, so the composer stays one line.
  */
 export const LearnerOptionsButton = forwardRef<HTMLButtonElement, LearnerOptionsButtonProps>(
-  function LearnerOptionsButton({ value, onChange, disabled, className, ...buttonProps }, ref) {
+  function LearnerOptionsButton({ value, onChange, disabled, className, triggerLabel, ...buttonProps }, ref) {
     const { t } = useI18n();
     const customized =
       value.audience !== DEFAULT_LEARNER_OPTIONS.audience ||
@@ -213,7 +215,7 @@ export const LearnerOptionsButton = forwardRef<HTMLButtonElement, LearnerOptions
             )}
           >
             <Users aria-hidden="true" className="size-3.5" />
-            <span className="max-w-[220px] truncate">{summary}</span>
+            <span className="max-w-[220px] truncate">{triggerLabel ?? summary}</span>
             <ChevronDown aria-hidden="true" className="size-3 opacity-50" />
           </button>
         </PopoverTrigger>

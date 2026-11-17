@@ -10,7 +10,18 @@
     "close": "Fermer"
   },
   "home": {
-    "slogan": "Créez une leçon qui captive vos élèves dès la première minute"
+    "slogan": "Créez une leçon qui captive vos élèves dès la première minute",
+    "sloganLine1": "Créez une leçon qui captive",
+    "sloganLine2": "vos élèves dès la",
+    "sloganHighlight": "première minute",
+    "cta": "Créer une leçon du programme",
+    "chipControls": "Réglages",
+    "chipLessonHelp": "Aide à la leçon",
+    "chipUploadClass": "Importer un chapitre",
+    "featureInteractive": "Contenu interactif",
+    "featureCustom": "Leçons sur mesure",
+    "featureAI": "IA avancée",
+    "featureFun": "Apprendre en s’amusant"
   },
   "curriculum": {
     "openPicker": "Build from curriculum",

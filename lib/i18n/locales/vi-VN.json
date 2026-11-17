@@ -10,7 +10,18 @@
     "close": "Đóng"
   },
   "home": {
-    "slogan": "Tạo bài học thu hút học sinh ngay từ phút đầu tiên"
+    "slogan": "Tạo bài học thu hút học sinh ngay từ phút đầu tiên",
+    "sloganLine1": "Tạo bài học thu hút",
+    "sloganLine2": "học sinh ngay từ",
+    "sloganHighlight": "phút đầu tiên",
+    "cta": "Tạo bài học từ chương trình",
+    "chipControls": "Tinh chỉnh",
+    "chipLessonHelp": "Hỗ trợ bài học",
+    "chipUploadClass": "Tải chương lên",
+    "featureInteractive": "Nội dung tương tác",
+    "featureCustom": "Bài học riêng biệt",
+    "featureAI": "AI tiên tiến",
+    "featureFun": "Trải nghiệm học thú vị"
   },
   "curriculum": {
     "openPicker": "Build from curriculum",

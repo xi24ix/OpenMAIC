@@ -39,7 +39,18 @@
     "signOut": "تسجيل الخروج"
   },
   "home": {
-    "slogan": "اصنع درسًا تفاعليًا يشدّ طلابك من أول دقيقة"
+    "slogan": "اصنع درسًا تفاعليًا يشدّ طلابك من أول دقيقة",
+    "sloganLine1": "اصنع درسًا تفاعليًا يشدّ",
+    "sloganLine2": "طلابك من",
+    "sloganHighlight": "أول دقيقة",
+    "cta": "إنشاء درس من المنهج",
+    "chipControls": "الضوابط",
+    "chipLessonHelp": "مساعدة الدرس",
+    "chipUploadClass": "رفع الفصل",
+    "featureInteractive": "محتوى تفاعلي",
+    "featureCustom": "دروس مخصصة",
+    "featureAI": "ذكاء اصطناعي متقدم",
+    "featureFun": "تجربة تعليمية ممتعة"
   },
   "curriculum": {
     "openPicker": "إنشاء درس من المنهج",

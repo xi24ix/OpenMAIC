@@ -10,7 +10,18 @@
     "close": "Fechar"
   },
   "home": {
-    "slogan": "Crie uma aula que prenda os alunos desde o primeiro minuto"
+    "slogan": "Crie uma aula que prenda os alunos desde o primeiro minuto",
+    "sloganLine1": "Crie uma aula que prenda",
+    "sloganLine2": "os alunos desde o",
+    "sloganHighlight": "primeiro minuto",
+    "cta": "Criar aula do currículo",
+    "chipControls": "Ajustes",
+    "chipLessonHelp": "Ajuda da aula",
+    "chipUploadClass": "Enviar capítulo",
+    "featureInteractive": "Conteúdo interativo",
+    "featureCustom": "Aulas sob medida",
+    "featureAI": "IA avançada",
+    "featureFun": "Aprender é divertido"
   },
   "curriculum": {
     "openPicker": "Build from curriculum",

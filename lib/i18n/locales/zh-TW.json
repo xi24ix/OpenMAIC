@@ -10,7 +10,18 @@
     "close": "關閉"
   },
   "home": {
-    "slogan": "打造從第一分鐘就抓住學生的課堂"
+    "slogan": "打造從第一分鐘就抓住學生的課堂",
+    "sloganLine1": "打造從第一分鐘就",
+    "sloganLine2": "抓住學生的",
+    "sloganHighlight": "課堂",
+    "cta": "從課程建立一節課",
+    "chipControls": "微調",
+    "chipLessonHelp": "課程助手",
+    "chipUploadClass": "上傳章節",
+    "featureInteractive": "互動內容",
+    "featureCustom": "量身訂製",
+    "featureAI": "先進 AI",
+    "featureFun": "快樂學習體驗"
   },
   "curriculum": {
     "openPicker": "Build from curriculum",

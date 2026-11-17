@@ -10,7 +10,18 @@
     "close": "关闭"
   },
   "home": {
-    "slogan": "打造从第一分钟就抓住学生的课堂"
+    "slogan": "打造从第一分钟就抓住学生的课堂",
+    "sloganLine1": "打造从第一分钟就",
+    "sloganLine2": "抓住学生的",
+    "sloganHighlight": "课堂",
+    "cta": "从课程创建一节课",
+    "chipControls": "微调",
+    "chipLessonHelp": "课程助手",
+    "chipUploadClass": "上传章节",
+    "featureInteractive": "互动内容",
+    "featureCustom": "量身定制",
+    "featureAI": "先进 AI",
+    "featureFun": "快乐学习体验"
   },
   "curriculum": {
     "openPicker": "Build from curriculum",

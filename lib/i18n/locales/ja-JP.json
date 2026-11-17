@@ -10,7 +10,18 @@
     "close": "閉じる"
   },
   "home": {
-    "slogan": "最初の1分から生徒を引き込むレッスンを作ろう"
+    "slogan": "最初の1分から生徒を引き込むレッスンを作ろう",
+    "sloganLine1": "最初の1分から生徒を引き込む",
+    "sloganLine2": "レッスンを",
+    "sloganHighlight": "作ろう",
+    "cta": "カリキュラムからレッスンを作成",
+    "chipControls": "調整",
+    "chipLessonHelp": "レッスン支援",
+    "chipUploadClass": "章をアップロード",
+    "featureInteractive": "インタラクティブな内容",
+    "featureCustom": "オーダーメイドの授業",
+    "featureAI": "高度なAI",
+    "featureFun": "楽しい学習体験"
   },
   "curriculum": {
     "openPicker": "Build from curriculum",

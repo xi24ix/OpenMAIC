@@ -39,7 +39,18 @@
     "signOut": "Sign out"
   },
   "home": {
-    "slogan": "Build a lesson that hooks your students from minute one"
+    "slogan": "Build a lesson that hooks your students from minute one",
+    "sloganLine1": "Build a lesson that hooks",
+    "sloganLine2": "your students from",
+    "sloganHighlight": "minute one",
+    "cta": "Create a lesson from the curriculum",
+    "chipControls": "Controls",
+    "chipLessonHelp": "Lesson assist",
+    "chipUploadClass": "Upload chapter",
+    "featureInteractive": "Interactive content",
+    "featureCustom": "Tailored lessons",
+    "featureAI": "Advanced AI",
+    "featureFun": "A joyful learning experience"
   },
   "curriculum": {
     "openPicker": "Build from curriculum",

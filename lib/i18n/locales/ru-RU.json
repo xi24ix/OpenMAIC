@@ -10,7 +10,18 @@
     "close": "Закрыть"
   },
   "home": {
-    "slogan": "Создайте урок, который увлечёт учеников с первой минуты"
+    "slogan": "Создайте урок, который увлечёт учеников с первой минуты",
+    "sloganLine1": "Создайте урок, который увлечёт",
+    "sloganLine2": "учеников с",
+    "sloganHighlight": "первой минуты",
+    "cta": "Создать урок из программы",
+    "chipControls": "Настройки",
+    "chipLessonHelp": "Помощь с уроком",
+    "chipUploadClass": "Загрузить главу",
+    "featureInteractive": "Интерактивный контент",
+    "featureCustom": "Уроки под запрос",
+    "featureAI": "Продвинутый ИИ",
+    "featureFun": "Обучение в удовольствие"
   },
   "curriculum": {
     "openPicker": "Build from curriculum",

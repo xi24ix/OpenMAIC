@@ -10,7 +10,18 @@
     "close": "닫기"
   },
   "home": {
-    "slogan": "첫 1분부터 학생을 사로잡는 수업을 만들어 보세요"
+    "slogan": "첫 1분부터 학생을 사로잡는 수업을 만들어 보세요",
+    "sloganLine1": "첫 1분부터 학생을 사로잡는",
+    "sloganLine2": "수업을",
+    "sloganHighlight": "만들어 보세요",
+    "cta": "커리큘럼으로 수업 만들기",
+    "chipControls": "설정",
+    "chipLessonHelp": "수업 도움",
+    "chipUploadClass": "단원 업로드",
+    "featureInteractive": "인터랙티브 콘텐츠",
+    "featureCustom": "맞춤형 수업",
+    "featureAI": "고급 AI",
+    "featureFun": "즐거운 학습 경험"
   },
   "curriculum": {
     "openPicker": "Build from curriculum",

@@ -10,7 +10,18 @@
     "close": "Schließen"
   },
   "home": {
-    "slogan": "Baue eine Stunde, die deine Schüler ab der ersten Minute mitreißt"
+    "slogan": "Baue eine Stunde, die deine Schüler ab der ersten Minute mitreißt",
+    "sloganLine1": "Baue eine Stunde, die deine Schüler",
+    "sloganLine2": "ab der",
+    "sloganHighlight": "ersten Minute mitreißt",
+    "cta": "Lektion aus dem Lehrplan erstellen",
+    "chipControls": "Einstellungen",
+    "chipLessonHelp": "Lektionshilfe",
+    "chipUploadClass": "Kapitel hochladen",
+    "featureInteractive": "Interaktive Inhalte",
+    "featureCustom": "Maßgeschneiderte Lektionen",
+    "featureAI": "Fortgeschrittene KI",
+    "featureFun": "Lernen mit Freude"
   },
   "curriculum": {
     "openPicker": "Build from curriculum",

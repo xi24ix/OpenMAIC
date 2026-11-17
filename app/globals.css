@@ -7,6 +7,8 @@
    rules win over utility classes (no !important needed). */
 @import './aurora.css';
 @import './voxel.css';
+/* World3D hero — the voxel style's living-world homepage (scoped .w3-*). */
+@import './world3d.css';
 
 /* ── Alostad brand type: Cairo ───────────────────────────────────────────
    Self-hosted from public/fonts/cairo (fontsource woff2, OFL) — no CDN and

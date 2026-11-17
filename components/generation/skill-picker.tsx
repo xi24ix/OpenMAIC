@@ -21,10 +21,13 @@ export function SkillPicker({
   value,
   onChange,
   disabled = false,
+  triggerLabel,
 }: {
   value: readonly GenerationSkill[];
   onChange: (skills: GenerationSkill[]) => void;
   disabled?: boolean;
+  /** Replaces the default label in the trigger (the voxel hero's compact chips). */
+  triggerLabel?: string;
 }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
@@ -88,11 +91,11 @@ export function SkillPicker({
             disabled ? 'cursor-not-allowed opacity-40' : 'hover:bg-muted/70 hover:text-foreground',
             value.length > 0 ? 'text-foreground' : 'text-muted-foreground',
           )}
-          aria-label={t('toolbar.skillPicker')}
-          title={t('toolbar.skillPicker')}
+          aria-label={triggerLabel ?? t('toolbar.skillPicker')}
+          title={triggerLabel ?? t('toolbar.skillPicker')}
         >
           <Sparkles className="size-3.5" />
-          <span>{t('toolbar.skillPicker')}</span>
+          <span>{triggerLabel ?? t('toolbar.skillPicker')}</span>
           {value.length > 0 && (
             <span className="rounded-full bg-primary/12 px-1.5 text-[10px] font-medium tabular-nums text-primary">
               {value.length}

@@ -24,7 +24,7 @@ import { useModelCapabilities } from '@/lib/model-settings/use-model-settings';
 
 /** The voxel world keeps running behind the generation flow in the Minecraft style. */
 const VoxelWorld = dynamic(
-  () => import('@/components/voxel/voxel-world').then((m) => m.VoxelWorld),
+  () => import('@/components/voxel/world-scene').then((m) => m.WorldScene),
   { ssr: false },
 );
 import type { SceneOutline } from '@/lib/types/generation';

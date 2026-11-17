@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef, useDeferredValue } from 'react';
+import type { ComponentProps } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -34,13 +35,17 @@ import { LanguageSwitcher } from '@/components/language-switcher';
 import { AlostadLogo } from '@/components/brand/alostad-logo';
 import { AccountMenu } from '@/components/auth/account-menu';
 import { useStyleTheme } from '@/lib/hooks/use-style-theme';
+import { VoxelHero } from '@/components/home/voxel-hero';
 import dynamic from 'next/dynamic';
 
-/** The Minecraft voxel world background — client-only (WebGL + video). */
-const VoxelWorld = dynamic(
-  () => import('@/components/voxel/voxel-world').then((m) => m.VoxelWorld),
+/** The voxel world background — the lightweight living-world scene (client-only). */
+const WorldScene = dynamic(
+  () => import('@/components/voxel/world-scene').then((m) => m.WorldScene),
   { ssr: false },
 );
+// The voxel hero itself is a plain client component: it has no window access
+// outside effects, so it server-renders (no empty first viewport) and the
+// design-pixel fit() runs on hydration.
 import { createLogger } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
 import { InputGroup, InputGroupInput, InputGroupButton } from '@/components/ui/input-group';
@@ -689,6 +694,22 @@ function HomePage() {
   // Generate waits for every attached material to be uploaded and extracted.
   const canGenerate = !!form.requirement.trim() && hasUsableProvider && courseMaterials.allReady;
 
+  // The curriculum picker's lesson start (shared by both hero styles). A quick
+  // test run is capped to 3 scenes (teaching + interactive + quiz — the
+  // smallest shape the lesson mix still guarantees), so repeated platform
+  // tests cost a fraction of a full 8-scene lesson.
+  const handleCurriculumGenerate: ComponentProps<typeof CurriculumLessonPicker>['onGenerate'] =
+    async ({ prepared, testRun }) => {
+      const started = await handleGenerate({
+        requirement: prepared.requirement,
+        skillIds: prepared.skillIds,
+        maxScenes: testRun ? 3 : 8,
+        sourceVisuals: prepared.visuals,
+        interactive: true,
+      });
+      if (!started) throw new Error(t('curriculum.generationFailed'));
+    };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       e.preventDefault();
@@ -699,14 +720,18 @@ function HomePage() {
   return (
     <div
       className={cn(
-        'aurora-home min-h-[100dvh] w-full flex flex-col items-center p-4 pt-16 md:p-8 md:pt-16 overflow-x-hidden',
+        'min-h-[100dvh] w-full flex flex-col items-center overflow-x-hidden',
         // The voxel style forces the app's own dark palette inside the page
         // (its literal dark: utilities) and layers the world's tokens on top.
-        styleTheme === 'voxel' && 'voxel-page dark',
+        // Its hero carries no page padding: it is the world's first viewport,
+        // laid out in design pixels (components/home/voxel-hero.tsx).
+        styleTheme === 'voxel'
+          ? 'voxel-page dark aurora-home'
+          : 'aurora-home p-4 pt-16 md:p-8 md:pt-16',
       )}
     >
-      {/* The Minecraft world renders behind everything in the voxel style. */}
-      {styleTheme === 'voxel' && <VoxelWorld />}
+      {/* The living voxel world renders behind everything in the voxel style. */}
+      {styleTheme === 'voxel' && <WorldScene />}
       <input
         ref={fileInputRef}
         type="file"
@@ -905,7 +930,75 @@ function HomePage() {
         />
       </div>
 
-      {/* ═══ Hero section: title + input (centered, wider) ═══ */}
+      {/* ═══ Hero section ═══
+          Voxel style: the world's own hero (components/home/voxel-hero.tsx) —
+          the 3d-final-ver design in design pixels, with the composer controls
+          as the design's chips. Aurora keeps the original hero. */}
+      {styleTheme === 'voxel' ? (
+        <VoxelHero
+          requirement={form.requirement}
+          onRequirementChange={(value) => updateForm('requirement', value)}
+          onKeyDown={handleKeyDown}
+          canGenerate={canGenerate}
+          preparing={preparingGenerate}
+          onGenerate={() => void handleGenerate()}
+          error={error}
+          materialsCount={courseMaterials.materials.length}
+          toolbarSlot={
+            <GenerationToolbar
+              courseMaterials={courseMaterials.materials}
+              onCourseMaterialsAdd={(files) => void addCourseMaterials(files)}
+              onCourseMaterialRemove={removeCourseMaterial}
+              onCourseMaterialRetry={(id) => {
+                if (!preparingGenerate) courseMaterials.retry(id);
+              }}
+              onCourseMaterialPages={(id, pages) => {
+                if (!preparingGenerate) courseMaterials.selectPages(id, pages);
+              }}
+              onPdfError={setError}
+              materialsLocked={preparingGenerate}
+              onSettingsOpen={(section) => {
+                setSettingsSection(section);
+                setSettingsOpen(true);
+              }}
+            />
+          }
+          learnerSlot={
+            <LearnerOptionsButton
+              value={learner}
+              onChange={updateLearner}
+              disabled={preparingGenerate}
+              triggerLabel={t('home.chipControls')}
+            />
+          }
+          skillsSlot={
+            <SkillPicker
+              value={selectedSkills}
+              onChange={setSelectedSkills}
+              disabled={preparingGenerate}
+              triggerLabel={t('home.chipLessonHelp')}
+            />
+          }
+          speechSlot={
+            <SpeechButton
+              size="md"
+              onTranscription={(text) => {
+                setForm((prev) => {
+                  const next = prev.requirement + (prev.requirement ? ' ' : '') + text;
+                  return { ...prev, requirement: next };
+                });
+              }}
+            />
+          }
+          curriculumSlot={
+            <CurriculumLessonPicker
+              disabled={preparingGenerate}
+              triggerLabel={t('home.chipUploadClass')}
+              onGenerate={handleCurriculumGenerate}
+            />
+          }
+        />
+      ) : (
       <div
         className={cn(
           'aurora-hero relative z-20 w-full max-w-[1240px] flex flex-col items-center',
@@ -1047,19 +1140,7 @@ function HomePage() {
 
         <CurriculumLessonPicker
           disabled={preparingGenerate}
-          onGenerate={async ({ prepared, testRun }) => {
-            // A quick test run is capped to 3 scenes (teaching + interactive +
-            // quiz — the smallest shape the lesson mix still guarantees), so
-            // repeated platform tests cost a fraction of a full 8-scene lesson.
-            const started = await handleGenerate({
-              requirement: prepared.requirement,
-              skillIds: prepared.skillIds,
-              maxScenes: testRun ? 3 : 8,
-              sourceVisuals: prepared.visuals,
-              interactive: true,
-            });
-            if (!started) throw new Error(t('curriculum.generationFailed'));
-          }}
+          onGenerate={handleCurriculumGenerate}
         />
 
         {showVocationalTestUi && (
@@ -1124,6 +1205,7 @@ function HomePage() {
           )}
         </AnimatePresence>
       </div>
+      )}
 
       {/* ═══ Recent classrooms — collapsible ═══ */}
       {/* The library action bar is always present: it carries the New-folder /
@@ -1131,7 +1213,17 @@ function HomePage() {
           zero folders can still create the first folder or import. One stable
           action surface across root, folder, and empty. Until the library and
           folder reads resolve, the section shows a skeleton of its own layout
-          (server-rendered, so it is on screen before the page's scripts run). */}
+          (server-rendered, so it is on screen before the page's scripts run).
+          In the voxel style the wrapper is also the night panel the hero's
+          scroll indicator targets (#w3-library): the world stays fixed behind
+          and the library scrolls over it (app/world3d.css). */}
+      <div
+        id={styleTheme === 'voxel' ? 'w3-library' : undefined}
+        className={cn(
+          'w-full flex flex-col items-center',
+          styleTheme === 'voxel' && 'w3-library-wrap',
+        )}
+      >
       <div className="aurora-library relative z-10 mt-10 w-full max-w-6xl flex flex-col items-center">
         {/* Trigger — divider-line with centered text. Fixed height keeps the
               bar geometrically stable when the New-folder action or the folder
@@ -1474,6 +1566,7 @@ function HomePage() {
           )}
         </AnimatePresence>
       </div>
+      </div>
 
       {/* Folder dialogs — mounted at the top level so they are reachable even
           while the Recent section is collapsed or the course list is empty. */}
@@ -1487,6 +1580,7 @@ function HomePage() {
         onCreate={handleCreateFolder}
       />
 
+      {/* Footer — flows with content, at the very end */}
       {/* Footer — flows with content, at the very end */}
       <div className="aurora-footer mt-auto pt-12 pb-4 text-center text-xs text-muted-foreground/40">
         Alostad الأستاذ

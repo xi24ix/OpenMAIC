@@ -155,7 +155,9 @@ html.voxel-style .voxel-page {
   --aurora-shadow: 0 24px 60px -26px rgba(4, 2, 16, 0.75);
   --aurora-shadow-soft: 0 16px 40px -24px rgba(4, 2, 16, 0.6);
 
-  font-family: 'Baloo Bhaijaan 2', var(--font-sans);
+  /* the world3d design's face: Cairo (self-hosted in globals.css) carries the
+     hero and every voxel surface; Baloo stays as the fallback */
+  font-family: 'Cairo', 'Baloo Bhaijaan 2', var(--font-sans);
 }
 
 /* ── topbar: a floating glass pill over the sky ── */

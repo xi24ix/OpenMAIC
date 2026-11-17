@@ -10,7 +10,18 @@
     "close": "Cerrar"
   },
   "home": {
-    "slogan": "Crea una lección que enganche a tus alumnos desde el primer minuto"
+    "slogan": "Crea una lección que enganche a tus alumnos desde el primer minuto",
+    "sloganLine1": "Crea una lección que enganche",
+    "sloganLine2": "a tus alumnos desde el",
+    "sloganHighlight": "primer minuto",
+    "cta": "Crear lección del currículo",
+    "chipControls": "Controles",
+    "chipLessonHelp": "Ayuda de lección",
+    "chipUploadClass": "Subir capítulo",
+    "featureInteractive": "Contenido interactivo",
+    "featureCustom": "Lecciones a medida",
+    "featureAI": "IA avanzada",
+    "featureFun": "Aprender es divertido"
   },
   "curriculum": {
     "openPicker": "Build from curriculum",
