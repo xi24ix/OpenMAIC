@@ -16,7 +16,7 @@ import {
   RotateCw,
   X,
 } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverClose, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Select,
   SelectContent,
@@ -302,8 +302,17 @@ export function GenerationToolbar({
         </PopoverTrigger>
         <PopoverContent
           align="start"
-          className="max-h-[calc(var(--radix-popover-content-available-height)-8px)] w-72 overflow-y-auto p-0"
+          className="relative max-h-[calc(var(--radix-popover-content-available-height)-8px)] w-72 overflow-y-auto p-0"
         >
+          {/* centered popovers sit far from their trigger — an explicit close */}
+          <PopoverClose
+            className={cn(
+              'absolute end-2 top-2 z-10 grid size-6 shrink-0 place-items-center rounded-md text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground',
+            )}
+            aria-label={t('common.close')}
+          >
+            <X className="size-3.5" />
+          </PopoverClose>
           {/* Extractor selector: the workspace's document slot, shown only
               where the user may change it (not when the deployment locks it). */}
           {documentEditable && (

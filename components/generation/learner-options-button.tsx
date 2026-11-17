@@ -1,8 +1,8 @@
 'use client';
 
 import { forwardRef, type ComponentPropsWithoutRef } from 'react';
-import { Check, ChevronDown, Users, Volume2 } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Check, ChevronDown, Users, Volume2, X } from 'lucide-react';
+import { Popover, PopoverClose, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import { useSlotTTSProvidersConfig, useTTSSelection } from '@/lib/audio/use-tts-selection';
@@ -223,8 +223,17 @@ export const LearnerOptionsButton = forwardRef<HTMLButtonElement, LearnerOptions
           side="top"
           align="end"
           sideOffset={6}
-          className="w-80 max-w-[calc(100vw-1.5rem)] space-y-4 p-4"
+          className="relative w-80 max-w-[calc(100vw-1.5rem)] space-y-4 p-4"
         >
+        {/* centered popovers sit far from their trigger — an explicit close */}
+        <PopoverClose
+          className={cn(
+            'absolute end-2 top-2 z-10 grid size-6 shrink-0 place-items-center rounded-md text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground',
+          )}
+          aria-label={t('common.close')}
+        >
+          <X className="size-3.5" />
+        </PopoverClose>
           <div className="space-y-1">
             <p className="text-sm font-semibold text-foreground">{t('composerLearner.title')}</p>
             <p className="text-xs leading-snug text-foreground/90">

@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Check, Loader2, Search, Sparkles } from 'lucide-react';
+import { Check, Loader2, Search, Sparkles, X } from 'lucide-react';
 
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverClose, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/hooks/use-i18n';
 
@@ -107,8 +107,17 @@ export function SkillPicker({
         align="start"
         side="top"
         collisionPadding={12}
-        className="w-80 max-w-[calc(100vw-24px)] overflow-hidden p-0"
+        className="relative w-80 max-w-[calc(100vw-24px)] overflow-hidden p-0"
       >
+        {/* centered popovers sit far from their trigger — an explicit close */}
+        <PopoverClose
+          className={cn(
+            'absolute end-2 top-2 z-10 grid size-6 shrink-0 place-items-center rounded-md text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground',
+          )}
+          aria-label={t('common.close')}
+        >
+          <X className="size-3.5" />
+        </PopoverClose>
         <div className="border-b border-border/60 px-3 py-2">
           <p className="text-xs font-medium">{t('toolbar.skillPickerTitle')}</p>
           <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
@@ -166,11 +175,6 @@ export function SkillPicker({
                       <span className="truncate text-xs font-medium">
                         {skill.title ?? skill.name}
                       </span>
-                      {skill.title && (
-                        <span className="shrink-0 text-[10px] text-muted-foreground">
-                          {skill.name}
-                        </span>
-                      )}
                     </span>
                     <span className="mt-0.5 line-clamp-2 block text-[10px] leading-snug text-muted-foreground">
                       {skill.description}
