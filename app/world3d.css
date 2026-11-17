@@ -773,7 +773,9 @@ html.voxel-style
     0 0 0 1.5px rgba(255, 160, 110, 0.55),
     0 10px 30px rgba(251, 92, 60, 0.55),
     0 0 80px rgba(251, 92, 60, 0.3);
-  animation: w3-ctaGlow 3.4s ease-in-out infinite;
+  animation:
+    w3-ctaGlow 3.4s ease-in-out infinite,
+    w3-rise 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.7s forwards;
   transition: transform 0.2s;
 }
 .w3-ui .w3-cta::before {
@@ -808,7 +810,7 @@ html.voxel-style
   transform: translateX(5px);
 }
 .w3-ui .w3-cta[aria-disabled='true'] {
-  opacity: 0.55;
+  opacity: 0.8;
   animation: none;
   cursor: not-allowed;
 }
@@ -860,7 +862,7 @@ html.voxel-style
   grid-template-columns: 207fr 210fr 278fr 297fr;
   direction: rtl;
   border-radius: 28px;
-  background: rgba(21, 19, 68, 0.82);
+  background: rgba(21, 19, 68, 0.92);
   border: 1.5px solid rgba(140, 134, 230, 0.28);
   backdrop-filter: blur(10px);
   box-shadow:
@@ -1168,10 +1170,7 @@ html.voxel-style .voxel-page .aurora-brand {
   .w3-chips .w3-chip-slot.w3-chip-mic > button {
     width: 40px;
   }
-  /* the reference drops the quieter upload chip on phones */
-  .w3-chips .w3-chip-slot.w3-chip-curriculum {
-    display: none;
-  }
+
   .w3-row > .w3-attach-slot button {
     width: 46px;
     height: 46px;
@@ -1188,11 +1187,20 @@ html.voxel-style .voxel-page .aurora-brand {
     width: 100%;
     height: auto;
     grid-template-columns: 1fr 1fr;
+    padding: 3px 4px;
   }
   .w3-feat {
-    padding: 14px 6px;
+    padding: 13px 6px;
     font-size: 13px;
     gap: 8px;
+    justify-content: center;
+  }
+  .w3-feat:nth-child(3),
+  .w3-feat:nth-child(4) {
+    padding-left: 6px;
+  }
+  .w3-feat .l {
+    top: 0;
   }
   .w3-feat svg {
     width: 24px;
@@ -1211,6 +1219,22 @@ html.voxel-style .voxel-page .aurora-brand {
     display: none;
   }
 }
+/* popovers center on phones: trigger-anchored panels clip at the screen
+   edges when the trigger sits at the composer's sides (Radix portals to
+   body, so scope by the style class + its popper wrapper) */
+@media (max-aspect-ratio: 1/1), (max-width: 760px) {
+  html.voxel-style [data-radix-popper-content-wrapper] {
+    position: fixed !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    max-width: calc(100vw - 24px);
+  }
+  html.voxel-style [data-radix-popper-content-wrapper] > * {
+    max-height: 72dvh;
+  }
+}
+
 /* NOTE: the world deliberately does not honor prefers-reduced-motion —
    embedded preview browsers and OS-level "animations off" all report it,
    which froze the world into a dead painting (components/voxel/

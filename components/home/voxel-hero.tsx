@@ -71,11 +71,19 @@ export function VoxelHero({
   // Failsafe for throttled webviews: a backgrounded pane can freeze the
   // .w3-rise entrance animations mid-delay, leaving the CTA invisible. By the
   // time this runs (2.6s) the animation is long done on real devices, so this
-  // only ever force-completes a frozen one.
+  // only ever force-completes a frozen one. Infinite loops (the CTA glow)
+  // can't be finished and would throw, so each animation is guarded.
   useEffect(() => {
     const timer = setTimeout(() => {
       document.querySelectorAll<HTMLElement>('.w3-rise').forEach((el) => {
-        el.getAnimations?.().forEach((a) => a.finish());
+        el.getAnimations?.().forEach((a) => {
+          try {
+            if (a.effect?.getComputedTiming?.().iterations === Infinity) return;
+            a.finish();
+          } catch {
+            /* not finishable — leave it */
+          }
+        });
       });
     }, 2600);
     return () => clearTimeout(timer);
