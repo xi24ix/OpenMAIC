@@ -9,6 +9,15 @@ export const MAX_PDF_CONTENT_CHARS = 50000;
 // Maximum number of images to send as vision content parts
 export const MAX_VISION_IMAGES = 20;
 
+// One inline vision attachment may not exceed this base64 payload size; the
+// preparation pipeline re-encodes oversized images down to fit before they
+// reach a provider request (lib/server/generation/vision-images.ts).
+export const MAX_VISION_IMAGE_BASE64_BYTES = 1024 * 1024;
+
+// Inline vision attachments are downscaled so their longest side fits this
+// dimension before re-encoding.
+export const MAX_VISION_IMAGE_DIMENSION = 2048;
+
 // Size cap for one course material document (bytes), enforced by the extract
 // route on both the multipart and asset-id forms and by the vision-image
 // resolution (`resolveVisionImagesForPrompt`) so an oversized asset is

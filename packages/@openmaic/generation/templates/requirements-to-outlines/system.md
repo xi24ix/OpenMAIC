@@ -387,7 +387,8 @@ Rules:
 | type              | string                   | ✅       | `"slide"`, `"quiz"`, `"interactive"`, or `"pbl"`                                                 |
 | title             | string                   | ✅       | Scene title, concise and clear                                                                   |
 | description       | string                   | ✅       | 1-2 sentences describing teaching purpose                                                        |
-| keyPoints         | string[]                 | ✅       | Up to 3 core points (pacing: keep light)                                                         |
+| keyPoints         | string[]                 | ✅       | 3-5 core points, each a full sentence of substance (not a headline)                               |
+| design            | string                   | ❌       | Slide scenes only: one line on how the page should LOOK — what it shows at a glance and its visual style (e.g. "Full-bleed photo of a magnet over iron filings, headline top-left, three labeled callout chips bottom"). Direction for the designer, never page text |
 | teachingObjective | string                   | ❌       | Corresponding learning objective                                                                 |
 | estimatedDuration | number                   | ❌       | Estimated duration (seconds)                                                                     |
 | order             | number                   | ✅       | Sort order, starting from 1                                                                      |

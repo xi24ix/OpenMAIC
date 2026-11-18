@@ -41,6 +41,8 @@ export interface FallbackResolution {
   model: LanguageModel;
   /** Canonical `provider:model` string of the fallback, for logs. */
   modelString: string;
+  /** Known maximum output tokens of the fallback; absent for unknown models. */
+  outputWindow?: number;
 }
 
 /**
@@ -59,7 +61,7 @@ export async function resolveFallbackModel(): Promise<FallbackResolution | null>
   const apiKey = resolveApiKey(providerId, '');
   const baseUrl = resolveBaseUrl(providerId);
   const proxy = resolveProxy(providerId);
-  const { model } = getModel({
+  const { model, modelInfo } = getModel({
     providerId,
     modelId,
     apiKey,
@@ -68,7 +70,7 @@ export async function resolveFallbackModel(): Promise<FallbackResolution | null>
     // Re-validate every redirect hop of the outbound request, same as resolveModel.
     fetchImpl: fetchWithRedirectValidation,
   });
-  return { model, modelString: fallbackStr };
+  return { model, modelString: fallbackStr, outputWindow: modelInfo?.outputWindow };
 }
 
 /**

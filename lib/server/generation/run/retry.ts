@@ -20,8 +20,13 @@ import { upstreamHttpStatus } from '@/lib/server/llm-error-response';
 
 /** 1.1.x's browser retries for the first scene. */
 export const FIRST_SCENE_MAX_RETRIES = 2;
-/** Two retries after the first attempt for every later scene. */
-export const SCENE_MAX_RETRIES = 2;
+/**
+ * 1.1.x's browser retries for every later scene (the withGenerationRetry
+ * default, upstream 1.5's value). In parallel mode a burned retry budget is a
+ * SKIPPED scene, not a slow one — the halved budget turned model hiccups into
+ * missing or worse final scenes far more often than it saved wall time.
+ */
+export const SCENE_MAX_RETRIES = 5;
 
 /**
  * A failure carrying the status the step's route would have answered, for

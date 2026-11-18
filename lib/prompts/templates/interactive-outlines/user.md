@@ -49,16 +49,20 @@ Infer the course language directive by applying the decision rules from the syst
 
 A balanced lesson that teaches AND lets the learner do:
 
-- **~50% slide scenes** (introductions, concept explanations, transitions, summary)
-- **~30% interactive scenes** (widgets: simulation, diagram, code, game — 1-2 hands-on explorations)
+- **~40% interactive scenes** (widgets: simulation, diagram, code, game — the lesson's attraction)
+- **~40% slide scenes** (introductions, concept explanations, transitions, summary)
 - **~20% quiz scenes** (check-understanding assessments; omit only for courses under 3 scenes)
 
-Slides carry the teaching; widgets let the learner apply it; quizzes measure it.
+Slides carry the teaching; widgets let the learner apply it; quizzes measure it. A lesson of
+6 scenes should carry roughly 2-3 hands-on widgets — a lesson that only explains teaches shallowly.
 
-## Widget Type Constraints
+## Widget Type Constraints (MANDATORY for courses of 5 or more scenes)
 
-- Match each widget to the content that genuinely benefits (see the selection guide) — quotas do not apply.
-- An interactive scene that would repeat what a slide teaches more clearly should BE a slide.
+- **At least one `simulation`** — a process the learner controls, not watches.
+- **At least one `game`** — practice through play (see the game guidance below).
+- **At most two `diagram` scenes** — a diagram is a walkthrough, not an attraction.
+- Still match each widget to the content that genuinely benefits (see the selection guide);
+  an interactive scene that would repeat what a slide teaches more clearly should BE a slide.
 
 ## CRITICAL: Required Fields for Interactive Scenes
 

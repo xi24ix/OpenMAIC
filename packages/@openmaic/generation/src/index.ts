@@ -100,6 +100,7 @@ export {
   formatImageDescription,
   formatImagePlaceholder,
   formatTeacherPersonaForPrompt,
+  parseBase64DataUrl,
 } from './prompt-formatters.js';
 export type {
   ImageMapping,

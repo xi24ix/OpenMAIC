@@ -21,6 +21,7 @@ import type {
 } from '@/lib/types/generation';
 import { resolveVocationalActive } from '@/lib/config/feature-flags';
 import { MAX_VISION_IMAGES } from '@/lib/constants/generation';
+import { prepareVisionImages } from '@/lib/server/generation/vision-images';
 import { sortDocumentImagesForVision } from '@/lib/document/bundle';
 import { generatePBLV2Project } from '@/lib/pbl/v2/agents/planner';
 
@@ -114,7 +115,12 @@ export async function generateSceneContent(
       // ids, so the image srcs reach here as ids. Resolve them to the same
       // bytes the base64 path would send BEFORE prompt assembly, keeping the
       // vision prompt byte-identical in both modes (RFC #1153 part 2 B).
-      const resolvedImages = await ctx.resolveVisionImages(images);
+      // Preparation bounds each attachment to the provider payload so one
+      // oversized PDF-page render cannot fail the whole call.
+      const resolvedImages = await prepareVisionImages(
+        await ctx.resolveVisionImages(images),
+        log,
+      );
       const result = await callLLM(
         {
           model: languageModel,
@@ -243,15 +249,24 @@ export async function generateSceneContent(
       }
       let attempted: VisionPromptImage[] | '__vision-resolution-budget-expired__';
       try {
+        // Preparation (decode + re-encode) runs OUTSIDE the phase budget: it
+        // meters store probes, not pixel transforms, so one slow JPEG ladder
+        // cannot starve the remaining probes. A probe whose image cannot be
+        // encoded down to the payload cap resolves to [] — the same
+        // unresolvable path as a store miss — which advances the fuse and
+        // strips the id from the mapping below.
         attempted = await Promise.race([
-          ctx.resolveVisionImages([
-            {
-              id: candidate.id,
-              src: imageMapping[candidate.id],
-              ...(candidate.width !== undefined ? { width: candidate.width } : {}),
-              ...(candidate.height !== undefined ? { height: candidate.height } : {}),
-            },
-          ]),
+          prepareVisionImages(
+            await ctx.resolveVisionImages([
+              {
+                id: candidate.id,
+                src: imageMapping[candidate.id],
+                ...(candidate.width !== undefined ? { width: candidate.width } : {}),
+                ...(candidate.height !== undefined ? { height: candidate.height } : {}),
+              },
+            ]),
+            log,
+          ),
           phaseBudget,
         ]);
       } catch (error) {

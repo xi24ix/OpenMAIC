@@ -108,7 +108,13 @@ slots:
 
   # Web-search query rewriting and the agent roster: tiny calls the GLM
   # flash answers in seconds.
-  course.research: router:z-ai/glm-5.3-flash
+  # Research is the outline's only external context — one small call per run,
+  # so it rides the same Haiku as the outline itself (the GLM flash wrote
+  # queries that surfaced thin sources, and thin research makes thin lessons).
+  # The agent roster stays on the GLM flash: personas are low-stakes.
+  course.research:
+    model: router:anthropic/claude-haiku-5.5
+    fallback: router:z-ai/glm-5.3-flash
   course.agents: router:z-ai/glm-5.3-flash
 
   # Course outlines and scene titles: structured JSON the deepseek flash route

@@ -9,7 +9,7 @@
  * package's outline prompt. The stream is retried on the same model, then
  * once on the stage's fallback model, and every retry is reported as an event.
  */
-import { attachedModelFallback } from '@/lib/ai/model-fallbacks';
+import { attachedModelFallback, fallbackMaxOutputTokens } from '@/lib/ai/model-fallbacks';
 import { callLLM, streamLLM } from '@/lib/ai/llm';
 import {
   resolveFallbackModel,
@@ -33,6 +33,7 @@ import {
   type DesignDirective,
 } from '@openmaic/generation';
 import { MAX_PDF_CONTENT_CHARS, MAX_VISION_IMAGES } from '@/lib/constants/generation';
+import { prepareVisionImages } from '@/lib/server/generation/vision-images';
 import { MAX_OUTLINE_SCENES, normalizeSceneOutlines } from '@/lib/server/generation/outline-schema';
 import { nanoid } from 'nanoid';
 import type {
@@ -58,7 +59,10 @@ import {
   type WorkspaceStepContext,
 } from './context';
 
-const MAX_STREAM_RETRIES = 1;
+// Stream attempts before the fallback round takes over (upstream 1.5's value:
+// two retries = three attempts on the primary). The outline is the run's
+// highest-leverage call — one flaky stream here shapes the whole lesson.
+const MAX_STREAM_RETRIES = 2;
 // Hard ceiling on the accumulated stream buffer. Legitimate outline JSON is
 // small (tens of KB); anything past this is a runaway/degenerate generation
 // and must not be allowed to grow the heap unbounded.
@@ -179,6 +183,24 @@ function extractCourseTitleFromComplete(buffer: string): string | null {
  * markdown ```json fence (the array is located by content, not by stripping).
  * Returns newly found objects plus the index to resume scanning from next time.
  */
+/**
+ * The first `[` of `buffer` that is NOT inside a JSON string. A naive
+ * `buffer.indexOf('[')` mislocates the outlines array when the wrapper's
+ * earlier text (a language directive, a title) contains a `[`.
+ */
+function firstArrayStart(buffer: string): number {
+  let inString = false;
+  let escaped = false;
+  for (let i = 0; i < buffer.length; i++) {
+    const char = buffer[i];
+    if (escaped) escaped = false;
+    else if (char === '\\' && inString) escaped = true;
+    else if (char === '"') inString = !inString;
+    else if (char === '[' && !inString) return i;
+  }
+  return -1;
+}
+
 function extractNewOutlines(
   buffer: string,
   scanFrom: number,
@@ -194,7 +216,7 @@ function extractNewOutlines(
     // Locate the outlines array opening once.
     const outlinesKeyIdx = buffer.indexOf('"outlines"');
     const arrayStart =
-      outlinesKeyIdx >= 0 ? buffer.indexOf('[', outlinesKeyIdx) : buffer.indexOf('[');
+      outlinesKeyIdx >= 0 ? buffer.indexOf('[', outlinesKeyIdx) : firstArrayStart(buffer);
     if (arrayStart === -1) return { outlines: results, scanFrom: 0 };
     i = arrayStart + 1;
   }
@@ -470,13 +492,19 @@ async function prepareOutline(
       // vision prompt byte-identical in both modes (RFC #1153 part 2 B). An
       // id the server cannot resolve is dropped here, so the placeholder
       // text below never promises an image that will not be attached.
-      const resolvedVisionImages = await ctx.resolveVisionImages(
-        visionSlice.map((img) => ({
-          id: img.id,
-          src: imageMapping[img.id],
-          ...(img.width !== undefined ? { width: img.width } : {}),
-          ...(img.height !== undefined ? { height: img.height } : {}),
-        })),
+      // Preparation (decode + re-encode) bounds each attachment to the
+      // provider's payload: an image that cannot fit is dropped the same way,
+      // keeping the `[see attached]` promises honest.
+      const resolvedVisionImages = await prepareVisionImages(
+        await ctx.resolveVisionImages(
+          visionSlice.map((img) => ({
+            id: img.id,
+            src: imageMapping[img.id],
+            ...(img.width !== undefined ? { width: img.width } : {}),
+            ...(img.height !== undefined ? { height: img.height } : {}),
+          })),
+        ),
+        ctx.log,
       );
       const resolvedIds = new Set(resolvedVisionImages.map((img) => img.id));
       const visionImageById = new Map(sortedImages.map((img) => [img.id, img] as const));
@@ -683,7 +711,13 @@ async function streamOutlines(
       log.warn('Outline fallback unavailable: the slot carries no fallback model');
       return false;
     }
-    streamParams = { ...streamParams, model: fallback.model };
+    // The caller's output cap belongs to the primary model: clamp it to what
+    // the fallback itself can produce, so its stream cannot be cut mid-JSON.
+    streamParams = {
+      ...streamParams,
+      model: fallback.model,
+      maxOutputTokens: fallbackMaxOutputTokens(streamParams.maxOutputTokens, fallback.outputWindow),
+    };
     fellBack = true;
     logFallbackFired(
       'scene-outlines-stream',

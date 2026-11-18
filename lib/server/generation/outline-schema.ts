@@ -299,6 +299,7 @@ function sceneOutline(value: unknown, index: number): SceneOutline {
     title: text(raw.title) ?? '',
     description: text(raw.description) ?? '',
     keyPoints: texts(raw.keyPoints, { nonEmpty: true }) ?? [],
+    design: text(raw.design),
     teachingObjective: text(raw.teachingObjective),
     estimatedDuration: finite(raw.estimatedDuration),
     order,

@@ -41,6 +41,11 @@ import {
 } from './prompt-formatters.js';
 import type { PromptId } from './prompts/types.js';
 import { buildPrompt, PROMPT_IDS } from './prompts/index.js';
+import {
+  formatAdditionalWidgetRequirements,
+  formatWidgetVariables,
+  resolveWidgetDesignIdea,
+} from './widget-outline-format.js';
 import type {
   GeneratedInteractiveContent,
   GeneratedPBLContent,
@@ -733,6 +738,8 @@ async function generateSlideContent(
     title: outline.title,
     description: outline.description,
     keyPoints: (outline.keyPoints || []).map((p, i) => `${i + 1}. ${p}`).join('\n'),
+    // The outline model's per-slide designer brief, when it wrote one.
+    design: outline.design?.trim() || '',
     elements: '（根据要点自动生成）',
     assignedImages: assignedImagesText,
     canvas_width: canvasWidth,
@@ -1267,8 +1274,11 @@ export async function generateWidgetContent(
         conceptName: widgetOutline.concept || outline.title,
         conceptOverview: outline.description,
         keyPoints: (outline.keyPoints || []).join('\n'),
-        variables: widgetOutline.keyVariables?.join(', ') || '',
-        designIdea: '',
+        // Variables may be plain names or `{ name, range, unit }` records:
+        // format both into readable prompt text (a raw join prints
+        // `[object Object]` for the records the outline model sends).
+        variables: formatWidgetVariables(widgetOutline.keyVariables),
+        designIdea: resolveWidgetDesignIdea(outline),
         languageDirective: languageDirective || '',
         designDirective: designDirectiveText,
       };
@@ -1385,6 +1395,11 @@ export async function generateWidgetContent(
       log.warn(`Unknown widget type: ${widgetType}`);
       return null;
   }
+
+  // Widget outline fields no selected widget prompt has a slot for (controls,
+  // readouts, design ideas for non-simulation widgets, ...) still reach the
+  // page writer instead of being silently dropped.
+  variables.additionalRequirements = formatAdditionalWidgetRequirements(outline, widgetType);
 
   const prompts = buildPrompt(promptId, variables);
   if (!prompts) {

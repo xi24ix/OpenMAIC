@@ -38,9 +38,31 @@ export interface UserRequirements {
   requirementPrepared?: boolean;
 }
 
+/**
+ * A controllable simulation variable. Outlines may list plain names or records
+ * such as `{ name: 'angle', range: [0, 90], unit: 'deg' }`.
+ */
+export interface WidgetVariable {
+  name?: string;
+  label?: string;
+  range?: unknown;
+  min?: number;
+  max?: number;
+  unit?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Widget configuration for an interactive scene. Producers (outline prompts,
+ * agent tools) send open objects, so fields beyond the ones listed here, such
+ * as controls or readouts, are expected and are passed to the widget prompt as
+ * additional design requirements.
+ */
 export interface WidgetOutline {
   concept?: string;
-  keyVariables?: string[];
+  keyVariables?: Array<string | WidgetVariable>;
+  /** Free-text description of the intended interactions and layout. */
+  designIdea?: string;
   diagramType?: 'flowchart' | 'mindmap' | 'hierarchy' | 'system';
   language?: 'python' | 'javascript' | 'typescript' | 'java' | 'cpp';
   gameType?: 'quiz' | 'puzzle' | 'strategy' | 'card' | 'action';
@@ -82,6 +104,8 @@ export interface WidgetOutline {
   beatCount?: number;
   /** Group identity shared by every sibling of an exploded group. */
   groupId?: string;
+  /** Extra fields the outline model chose to send (controls, readouts, ...). */
+  [key: string]: unknown;
 }
 
 export interface MediaGenerationRequest {
@@ -99,6 +123,12 @@ export interface SceneOutline {
   title: string;
   description: string;
   keyPoints: string[];
+  /**
+   * Slide only: a designer brief for the page's look (what it shows at a
+   * glance, visual style, layout regions). Direction for the generator, never
+   * page text; content stays in `description` and `keyPoints`.
+   */
+  design?: string;
   teachingObjective?: string;
   estimatedDuration?: number;
   order: number;

@@ -6,6 +6,7 @@
  * POST /api/generate/scene-actions.
  */
 import { callLLM } from '@/lib/ai/llm';
+import { isActionType } from '@openmaic/dsl';
 import {
   generateSceneActions as generateActions,
   buildCompleteScene,
@@ -23,6 +24,7 @@ import type {
 import type { Action, SpeechAction } from '@/lib/types/action';
 import type { PBLContent } from '@/lib/types/stage';
 import { normalizeLegacyPBLContent } from '@/lib/pbl/legacy/read';
+import { prepareVisionImages } from '@/lib/server/generation/vision-images';
 
 import { StepRefusal, type StepContext, type StepLanguageModel } from './context';
 
@@ -107,6 +109,9 @@ export async function generateSceneActions(
     images?: Array<{ id: string; src: string }>,
   ): Promise<string> => {
     if (images?.length && hasVision) {
+      // Bound each attachment to the provider payload before the request: an
+      // oversized image is dropped here, never fails the actions call.
+      const safeImages = await prepareVisionImages(images, log);
       const result = await callLLM(
         {
           model: languageModel,
@@ -116,7 +121,7 @@ export async function generateSceneActions(
           messages: [
             {
               role: 'user' as const,
-              content: buildVisionUserContent(userPrompt, images),
+              content: buildVisionUserContent(userPrompt, safeImages),
             },
           ],
           maxOutputTokens: modelInfo?.outputWindow,
@@ -168,12 +173,33 @@ export async function generateSceneActions(
     | GeneratedPBLContent;
 
   const actionsStartedAt = Date.now();
-  const actions = await generateActions(outline, generationContent, aiCall, {
+  const generated = await generateActions(outline, generationContent, aiCall, {
     ctx: generationCtx,
     agents,
     userProfile,
     languageDirective,
   });
+
+  // A model can invent an action type. The run's write boundary rejects a
+  // scene holding one (dsl validate: "unknown action type") and playback has
+  // no way to run it, so one invented action must not cost the whole scene
+  // after its retries: drop it and say so.
+  const known = generated.filter((action) => {
+    if (isActionType(action.type)) return true;
+    log.warn(`Dropping generated action with unknown type: ${JSON.stringify(action.type)}`);
+    return false;
+  });
+  // Nothing usable left is the same as an empty response, which the generator
+  // already answers with its default actions.
+  const actions =
+    generated.length > 0 && known.length === 0
+      ? await generateActions(outline, generationContent, async () => '[]', {
+          ctx: generationCtx,
+          agents,
+          userProfile,
+          languageDirective,
+        })
+      : known;
 
   log.info(
     `Generated ${actions.length} actions for: "${outline.title}" in ${Date.now() - actionsStartedAt}ms`,

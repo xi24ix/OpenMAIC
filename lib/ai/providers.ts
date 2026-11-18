@@ -1302,6 +1302,46 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
     requiresApiKey: true,
     icon: '/logos/openrouter.svg',
     models: [
+      // The deployment's lesson workhorse (openmaic.yml course.* slots). The
+      // registry entry matters beyond the settings UI: generation steps read
+      // modelInfo.capabilities.vision to decide whether material images ride
+      // the prompt, and modelInfo.outputWindow to cap scene-HTML output.
+      // Without it, vision silently turns off — the outline only sees text
+      // descriptions of textbook figures.
+      {
+        id: 'anthropic/claude-haiku-5.5',
+        name: 'Claude Haiku 5.5 (OpenRouter)',
+        contextWindow: 200000,
+        outputWindow: 64000,
+        capabilities: {
+          streaming: true,
+          tools: true,
+          vision: true,
+          thinking: {
+            toggleable: true,
+            budgetAdjustable: true,
+            defaultEnabled: false,
+          },
+        },
+      },
+      // The deployment's fallback / research / agents model (openmaic.yml).
+      // Native multimodal — same metadata as the glm provider's entry.
+      {
+        id: 'z-ai/glm-5.3-flash',
+        name: 'GLM-5.3-Flash (OpenRouter)',
+        contextWindow: 1000000,
+        outputWindow: 128000,
+        capabilities: {
+          streaming: true,
+          tools: true,
+          vision: true,
+          thinking: {
+            toggleable: false,
+            budgetAdjustable: false,
+            defaultEnabled: true,
+          },
+        },
+      },
       {
         id: 'deepseek/deepseek-v4-pro',
         name: 'DeepSeek V4 Pro',
@@ -1323,6 +1363,11 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
         outputWindow: 131072,
         capabilities: { streaming: true, tools: true, vision: false },
       },
+      // Deliberately unregistered: `openrouter/free` is a rotating last-resort
+      // route, not a fixed model, so a guessed outputWindow could exceed what
+      // the underlying model of the day accepts and hard-error the request.
+      // No registry entry means no cap is sent and vision stays off — the
+      // status quo for a credit-exhausted fallback, and safe.
     ],
   },
 

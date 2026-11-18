@@ -22,6 +22,7 @@ import {
 } from '@/lib/server/generation-run-hooks/runtime';
 import {
   attachedModelFallback,
+  fallbackMaxOutputTokens,
   type FallbackLoader,
   type FallbackModel,
 } from '@/lib/ai/model-fallbacks';
@@ -498,7 +499,13 @@ export async function callLLM<T extends GenerateTextParams>(
       // AbortSignal.timeout that already fired would make the fallback round
       // impossible to run.
       const round = await runRound(
-        { ...params, model: fallback.model, maxRetries: 0, abortSignal: undefined } as T,
+        {
+          ...params,
+          model: fallback.model,
+          maxOutputTokens: fallbackMaxOutputTokens(params.maxOutputTokens, fallback.outputWindow),
+          maxRetries: 0,
+          abortSignal: undefined,
+        } as T,
         'fallback',
       );
       if (round.ok) return round.result;
@@ -781,6 +788,7 @@ function withStreamFallback(
     try {
       const result = await served.doStream({
         ...params,
+        maxOutputTokens: fallbackMaxOutputTokens(params.maxOutputTokens, fallback.outputWindow),
         providerOptions: providerOptionsFor(fallback) as typeof params.providerOptions,
       });
       return track(result, served);

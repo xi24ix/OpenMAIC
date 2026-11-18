@@ -161,7 +161,13 @@ export async function slotLanguageModel(
     // A retry on a model that cannot do what the slot needs would only fail again.
     if (!fallback || fallbackUnmet) return null;
     const built = await languageModelFor(fallback, resolution.thinking);
-    return { model: built.model, modelString: built.modelString };
+    return {
+      model: built.model,
+      modelString: built.modelString,
+      // The fallback round must not name an output cap the fallback model
+      // itself cannot honor (the caller's cap belongs to the primary).
+      outputWindow: fallback.catalogue === false ? undefined : built.modelInfo?.outputWindow,
+    };
   });
   return { ...resolved, resolution };
 }
